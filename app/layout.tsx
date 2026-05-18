@@ -68,10 +68,8 @@ export default async function RootLayout({
                       <Link
                         key={item.href}
                         href={item.href}
-                        className="px-3 py-1.5 rounded-md text-sm transition-all duration-150"
+                        className="px-3 py-1.5 rounded-md text-sm transition-all duration-150 hover:text-[var(--color-fg)]"
                         style={{ color: "var(--color-fg-secondary)" }}
-                        onMouseEnter={(e) => (e.currentTarget.style.color = "var(--color-fg)")}
-                        onMouseLeave={(e) => (e.currentTarget.style.color = "var(--color-fg-secondary)")}
                       >
                         {item.label}
                       </Link>
