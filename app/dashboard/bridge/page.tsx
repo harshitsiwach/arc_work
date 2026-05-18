@@ -14,7 +14,7 @@ import { Loader2, ArrowRightLeft, ExternalLink, Wallet, CheckCircle2 } from "luc
 import { toast } from "sonner";
 
 export default function BridgePage() {
-  const { address, chainId, isConnected, connect, switchChain } = useWallet();
+  const { address, chainId, isConnected, connect } = useWallet();
   const [loading, setLoading] = useState(false);
   const [amount, setAmount] = useState("");
   const [selectedChain, setSelectedChain] = useState(SUPPORTED_SOURCE_CHAINS[0]);
@@ -32,13 +32,11 @@ export default function BridgePage() {
       return;
     }
 
-    // Check chain matches
-    if (chainId !== selectedChain.id) {
-      await switchChain(selectedChain.id);
-      // After switching, they'll need to click again
-      toast.info(`Switch to ${selectedChain.name} and try again`);
-      return;
-    }
+      // If on wrong chain, show a message
+      if (chainId !== selectedChain.id) {
+        toast.error(`Switch your wallet to ${selectedChain.name} and try again`);
+        return;
+      }
 
     setLoading(true);
     setTxHash(null);
