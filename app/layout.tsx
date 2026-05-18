@@ -25,6 +25,8 @@ import { Toaster } from "@/components/ui/sonner";
 import Link from "next/link";
 import "./globals.css";
 import { ThemeSwitcher } from "@/components/theme-switcher";
+import { WalletProvider } from "@/lib/web3/wallet-provider";
+import { WalletConnectButton } from "@/components/wallet-connect-button";
 
 const oxanium = Oxanium({
   subsets: ["latin"],
@@ -37,8 +39,8 @@ const defaultUrl = process.env.NEXT_PUBLIC_VERCEL_URL
 
 export const metadata = {
   metadataBase: new URL(defaultUrl),
-  title: "Workflow Escrow",
-  description: "Automated escrow agent that facilitates secure transactions",
+  title: "Arc Work",
+  description: "Decentralized freelance marketplace on Arc blockchain",
 };
 
 export default async function RootLayout({
@@ -56,6 +58,7 @@ export default async function RootLayout({
           disableTransitionOnChange
         >
           <Toaster expand />
+          <WalletProvider>
           <div className="min-h-screen flex flex-col">
             {/* Fixed Header */}
             <nav className="fixed top-0 left-0 right-0 z-50 border-b bg-background/80 backdrop-blur-sm border-b-foreground/10 h-16">
@@ -66,11 +69,25 @@ export default async function RootLayout({
                     href={"/"}
                     className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-amber-600 font-bold text-lg hover:opacity-80 transition-opacity"
                   >
-                    Workflow Escrow
+                    Arc Work
                   </Link>
-                  <div className="flex items-center gap-2"></div>
+                  <div className="flex items-center gap-4 text-sm">
+                    <Link href="/dashboard" className="text-muted-foreground hover:text-foreground transition-colors">
+                      Dashboard
+                    </Link>
+                    <Link href="/dashboard/marketplace" className="text-muted-foreground hover:text-foreground transition-colors">
+                      Marketplace
+                    </Link>
+                    <Link href="/dashboard/bridge" className="text-muted-foreground hover:text-foreground transition-colors">
+                      Bridge
+                    </Link>
+                    <Link href="/dashboard/agents" className="text-muted-foreground hover:text-foreground transition-colors">
+                      Agents
+                    </Link>
+                  </div>
                 </div>
                 {!hasEnvVars ? <EnvVarWarning /> : <HeaderAuth />}
+                <WalletConnectButton />
               </div>
             </nav>
 
@@ -79,6 +96,7 @@ export default async function RootLayout({
               <div className="w-full max-w-7xl">{children}</div>
             </main>
           </div>
+          </WalletProvider>
         </ThemeProvider>
       </body>
     </html>

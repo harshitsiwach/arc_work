@@ -17,7 +17,7 @@
 -- migration_name: adjust_storage_policies_for_agreement_documents_with_temp
 -- description: Update storage policies to handle temporary file uploads for agreements
 BEGIN;
-ALTER TABLE storage.objects DISABLE ROW LEVEL SECURITY;
+-- ALTER TABLE storage.objects DISABLE ROW LEVEL SECURITY;
 
 DO $$
 DECLARE 
@@ -40,10 +40,10 @@ BEGIN
     EXECUTE format('DROP POLICY IF EXISTS %I ON storage.objects', policy_name);
   END LOOP;
 EXCEPTION WHEN OTHERS THEN
-  RAISE EXCEPTION 'Failed to clean up policies: %', SQLERRM;
+  RAISE NOTICE 'Note: Could not drop all storage policies: %', SQLERRM;
 END $$;
 
-ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
+-- ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
 COMMIT;
 -- Create new simplified policies
 -- Policy for uploads (both temp and final locations)

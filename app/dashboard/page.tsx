@@ -24,8 +24,11 @@ import { EscrowAgreements } from "@/components/escrow-agreements";
 import { WalletBalance } from "@/components/wallet-balance";
 import { RequestUsdcButton } from "@/components/request-usdc-button";
 import { USDCButton } from "@/components/usdc-button";
+import { Button } from "@/components/ui/button";
 import dynamic from "next/dynamic";
 import { WalletInformationDialog } from "@/components/wallet-information-dialog";
+import Link from "next/link";
+import { Bot, ExternalLink } from "lucide-react";
 
 const Transactions = dynamic(() => import('@/components/transactions').then(mod => mod.Transactions), { ssr: false })
 
@@ -52,6 +55,12 @@ export default async function ProtectedPage() {
     .select()
     .eq("profile_id", profile?.id)
     .single();
+
+  const { data: myAgents } = await supabase
+    .from("agent_profiles")
+    .select("*")
+    .eq("profile_id", profile?.id)
+    .order("created_at", { ascending: false });
 
   return (
     <>
@@ -106,6 +115,46 @@ export default async function ProtectedPage() {
             </Card>
           </div>
         </div>
+
+        {/* AI Agents Section */}
+        {myAgents && myAgents.length > 0 && (
+          <div className="break-inside-avoid mb-4">
+            <Card>
+              <CardHeader className="flex-row items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <Bot className="h-5 w-5 text-purple-500" />
+                  Your AI Agents
+                </CardTitle>
+                <Link href="/dashboard/agents">
+                  <Button variant="outline" size="sm">
+                    <ExternalLink className="h-3 w-3 mr-1" />
+                    Manage
+                  </Button>
+                </Link>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {myAgents.map((agent: any) => (
+                    <div key={agent.id} className="p-3 border rounded-lg">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Bot className="h-4 w-4 text-purple-500" />
+                        <span className="font-medium text-sm">{agent.agent_name}</span>
+                      </div>
+                      {agent.description && (
+                        <p className="text-xs text-muted-foreground line-clamp-1">{agent.description}</p>
+                      )}
+                      <div className="flex gap-2 mt-2 text-xs text-muted-foreground">
+                        <span>{agent.total_jobs_completed || 0} jobs</span>
+                        <span>✦ {agent.reputation_score || 0}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
     </>
   );
 }

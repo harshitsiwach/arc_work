@@ -35,6 +35,13 @@ yarn-error.log*
 # vercel
 .vercel
 
+# helper scripts
+generate-entity-secret.mjs
+register-entity-secret.mjs
+register-direct.mjs
+recovery/
+recovery_file_*.dat
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
