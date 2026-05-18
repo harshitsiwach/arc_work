@@ -1,25 +1,11 @@
 /**
- * Copyright 2026 Circle Internet Group, Inc.  All rights reserved.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *
- * SPDX-License-Identifier: Apache-2.0
+ * Arc Work - Root Layout
+ * Premium minimal design with Inter font and page transitions
  */
-
 import { EnvVarWarning } from "@/components/env-var-warning";
 import HeaderAuth from "@/components/header-auth";
 import { hasEnvVars } from "@/lib/utils/supabase/check-env-vars";
-import { Oxanium } from "next/font/google";
+import { Inter } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/sonner";
 import Link from "next/link";
@@ -28,9 +14,10 @@ import { ThemeSwitcher } from "@/components/theme-switcher";
 import { WalletProvider } from "@/lib/web3/wallet-provider";
 import { WalletConnectButton } from "@/components/wallet-connect-button";
 
-const oxanium = Oxanium({
+const inter = Inter({
   subsets: ["latin"],
   variable: "--font-sans",
+  display: "swap",
 });
 
 const defaultUrl = process.env.NEXT_PUBLIC_VERCEL_URL
@@ -49,8 +36,8 @@ export default async function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={oxanium.variable} suppressHydrationWarning>
-      <body className="bg-background text-foreground font-sans">
+    <html lang="en" className={inter.variable} suppressHydrationWarning>
+      <body className="font-sans antialiased">
         <ThemeProvider
           attribute="class"
           defaultTheme="dark"
@@ -61,39 +48,49 @@ export default async function RootLayout({
           <WalletProvider>
           <div className="min-h-screen flex flex-col">
             {/* Fixed Header */}
-            <nav className="fixed top-0 left-0 right-0 z-50 border-b bg-background/80 backdrop-blur-sm border-b-foreground/10 h-16">
-              <div className="w-full max-w-7xl mx-auto flex justify-between items-center h-full px-5 text-sm">
-                <div className="flex gap-5 items-center font-semibold">
-                  <ThemeSwitcher />
+            <nav className="fixed top-0 left-0 right-0 z-50 h-14 border-b" style={{ borderColor: "var(--color-bd)", backgroundColor: "color-mix(in srgb, var(--color-bg) 85%, transparent)", backdropFilter: "blur(12px)" }}>
+              <div className="w-full max-w-7xl mx-auto flex justify-between items-center h-full px-6 text-sm">
+                <div className="flex items-center gap-6">
                   <Link
                     href={"/"}
-                    className="bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-amber-600 font-bold text-lg hover:opacity-80 transition-opacity"
+                    className="font-semibold text-base tracking-tight hover:opacity-70 transition-opacity"
+                    style={{ color: "var(--color-fg)" }}
                   >
-                    Arc Work
+                    arc work
                   </Link>
-                  <div className="flex items-center gap-4 text-sm">
-                    <Link href="/dashboard" className="text-muted-foreground hover:text-foreground transition-colors">
-                      Dashboard
-                    </Link>
-                    <Link href="/dashboard/marketplace" className="text-muted-foreground hover:text-foreground transition-colors">
-                      Marketplace
-                    </Link>
-                    <Link href="/dashboard/bridge" className="text-muted-foreground hover:text-foreground transition-colors">
-                      Bridge
-                    </Link>
-                    <Link href="/dashboard/agents" className="text-muted-foreground hover:text-foreground transition-colors">
-                      Agents
-                    </Link>
+                  <div className="flex items-center gap-1">
+                    {[
+                      { href: "/dashboard", label: "Dashboard" },
+                      { href: "/dashboard/marketplace", label: "Marketplace" },
+                      { href: "/dashboard/bridge", label: "Bridge" },
+                      { href: "/dashboard/agents", label: "Agents" },
+                    ].map((item) => (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className="px-3 py-1.5 rounded-md text-sm transition-all duration-150"
+                        style={{ color: "var(--color-fg-secondary)" }}
+                        onMouseEnter={(e) => (e.currentTarget.style.color = "var(--color-fg)")}
+                        onMouseLeave={(e) => (e.currentTarget.style.color = "var(--color-fg-secondary)")}
+                      >
+                        {item.label}
+                      </Link>
+                    ))}
                   </div>
                 </div>
-                {!hasEnvVars ? <EnvVarWarning /> : <HeaderAuth />}
-                <WalletConnectButton />
+                <div className="flex items-center gap-3">
+                  <ThemeSwitcher />
+                  {!hasEnvVars ? <EnvVarWarning /> : <HeaderAuth />}
+                  <WalletConnectButton />
+                </div>
               </div>
             </nav>
 
-            {/* Main Content with padding-top to prevent header overlap */}
-            <main className="flex-1 flex flex-col items-center pt-24 px-4">
-              <div className="w-full max-w-7xl">{children}</div>
+            {/* Main Content */}
+            <main className="flex-1 flex flex-col items-center pt-20 px-6">
+              <div className="w-full max-w-7xl animate-fade-in-up">
+                {children}
+              </div>
             </main>
           </div>
           </WalletProvider>

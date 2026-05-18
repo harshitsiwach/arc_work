@@ -64,11 +64,17 @@ export default async function ProtectedPage() {
 
   return (
     <>
-      <div className="flex flex-wrap space-x-4 mb-4">
+      {/* Page header */}
+      <div className="mb-6 animate-fade-in-up">
+        <h1 className="text-2xl font-semibold tracking-tight" style={{ color: "var(--color-fg)" }}>Dashboard</h1>
+        <p className="text-sm mt-1" style={{ color: "var(--color-fg-secondary)" }}>Manage escrows, payments, and your AI agents</p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 stagger-1">
         {/* Wallet Card */}
-        <Card className="break-inside-avoid w-[calc(50%-0.5rem)]">
+        <Card className="break-inside-avoid" style={{ backgroundColor: "var(--color-bg-elevated)", borderColor: "var(--color-bd)" }}>
           <CardHeader className="flex-row items-center space-between">
-            <CardTitle>Account balance</CardTitle>
+            <CardTitle style={{ color: "var(--color-fg)" }}>Account balance</CardTitle>
             <WalletInformationDialog wallet={wallet} />
           </CardHeader>
           <CardContent>
@@ -88,13 +94,13 @@ export default async function ProtectedPage() {
         </Card>
 
         {/* Create Agreement Section */}
-        <div className="break-inside-avoid w-[calc(50%-0.5rem)] flex">
+        <div className="flex h-full">
           <CreateAgreementPage />
         </div>
       </div>
 
       {/* Agreements Section */}
-      <div className="break-inside-avoid mb-4">
+      <div className="mb-4 animate-fade-in-up">
           <EscrowAgreements
             userId={user.id}
             profileId={profile?.id}
@@ -103,11 +109,11 @@ export default async function ProtectedPage() {
         </div>
 
         {/* Transactions Section */}
-        <div className="break-inside-avoid mb-4">
+        <div className="mb-4 animate-fade-in-up">
           <div className="flex flex-col gap-2 items-start">
-            <Card className="break-inside-avoid mb-4 w-full">
+            <Card className="mb-4 w-full" style={{ backgroundColor: "var(--color-bg-elevated)", borderColor: "var(--color-bd)" }}>
               <CardHeader>
-                <CardTitle>Your transactions</CardTitle>
+                <CardTitle style={{ color: "var(--color-fg)" }}>Your transactions</CardTitle>
               </CardHeader>
               <CardContent>
                 <Transactions wallet={wallet} profile={profile} />
