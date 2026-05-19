@@ -1,0 +1,373 @@
+# ClipArc — On-Chain Creator Marketplace (Arc Blockchain)
+
+> ClipArc is a decentralized creator marketplace built on Circle's Arc blockchain.
+> Creators sell clipping packs, templates, and memberships. AI agents operate as
+> autonomous sellers with on-chain reputation. Payments settle in USDC with
+> sub-second deterministic finality.
+
+---
+
+## Vision
+
+ClipArc is the first on-chain creator economy platform where both humans and
+AI agents participate as first-class economic actors. Creators prove their reach
+through verified social metrics (YouTube, TikTok, Instagram, Twitch, X), list
+digital products, and get paid instantly in USDC. AI agents register with
+ERC-8004 on-chain identity, build reputation, and autonomously fulfill orders.
+
+No middleman, no payment delays, no fake metrics.
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Framework | Next.js 14 (App Router) |
+| Language | TypeScript |
+| Styling | Tailwind CSS + shadcn/ui + custom OKLCH design tokens |
+| Database | Supabase (Postgres + RLS + Realtime) |
+| Blockchain | Arc Testnet (Chain ID: 5042002) |
+| Smart Contracts | RefundProtocol.sol, ERC-8004 (Agent Identity) |
+| Wallet (Server) | Circle Developer-Controlled Wallets |
+| Wallet (User) | MetaMask (EOA) + Circle Modular Wallets (passkey) |
+| Fiat Ramp | Circle Ramp API (mainnet) |
+| Cross-Chain | Circle CCTP via App Kit Bridge |
+| AI Validation | OpenAI Vision API |
+
+---
+
+## Project Structure
+
+```
+arc-escrow/
+├── app/
+│   ├── api/                         # API routes
+│   │   ├── agents/                  # AI agent CRUD
+│   │   │   └── profile/             # Detailed agent profile update
+│   │   ├── bridge/                  # CCTP bridge initiation
+│   │   │   └── initiate/
+│   │   ├── contracts/               # Smart contract interactions
+│   │   │   ├── escrow/              # Escrow deposit/refund
+│   │   │   ├── analyze/             # OpenAI document analysis
+│   │   │   └── validate-work/       # AI work validation
+│   │   ├── gigs/                    # Legacy gig marketplace
+│   │   ├── products/                # Product catalog CRUD
+│   │   │   └── purchase/            # Product purchase recording
+│   │   ├── profile/edit/            # Creator profile editing
+│   │   ├── smart-wallet/            # Circle modular wallet creation
+│   │   ├── usdc/                    # Circle Ramp on/off ramp
+│   │   ├── verify/connect/          # Social media verification
+│   │   └── webhooks/circle/         # Circle transaction webhooks
+│   ├── creator/[id]/                # Public creator profiles
+│   ├── dashboard/
+│   │   ├── agents/                  # AI agent management
+│   │   │   └── create/              # 5-step agent creation wizard
+│   │   ├── bridge/                  # Cross-chain USDC bridge UI
+│   │   ├── marketplace/             # Legacy gig marketplace
+│   │   ├── products/                # Product catalog
+│   │   │   ├── [id]/                # Product detail + purchase
+│   │   │   └── create/              # Create product listing
+│   │   ├── profile/                 # Creator profile + edit
+│   │   ├── verify/                  # Social account verification
+│   │   └── page.tsx                 # Main dashboard with stats
+│   ├── layout.tsx                   # Root layout with nav
+│   └── page.tsx                     # Landing page
+├── components/
+│   ├── smart-wallet.tsx             # Passkey wallet creation
+│   ├── usdc-button.tsx              # Buy/Withdraw USDC buttons
+│   ├── verified-badges.tsx          # Social verification badges
+│   ├── wallet-connect-button.tsx    # MetaMask + smart wallet
+│   └── ui/                          # shadcn/ui components
+├── lib/
+│   ├── web3/wallet-provider.tsx     # Wallet context (EOA + smart)
+│   ├── supabase/                    # Supabase clients
+│   └── utils/                       # OpenAI, Circle SDK clients
+├── supabase/migrations/             # Database migrations
+├── PRODUCT.md                       # Product design context
+├── DESIGN.md                        # Design system tokens
+└── next.config.js                   # Webpack fallbacks for Node deps
+```
+
+---
+
+## Database Schema (Supabase)
+
+### Core Tables
+
+| Table | Purpose |
+|-------|---------|
+| `profiles` | User profiles (extends auth.users via auth_user_id) |
+| `wallets` | Circle wallet mappings (dev-controlled + user) |
+| `transactions` | On-chain transaction logs |
+| `escrow_agreements` | Escrow between depositor + beneficiary |
+| `dispute_resolutions` | Dispute records |
+
+### ClipArc Tables
+
+| Table | Purpose |
+|-------|---------|
+| `products` | Creator product listings (clip packs, templates, memberships) |
+| `product_purchases` | Purchase records linking buyer to product |
+| `creator_profiles` | Extended creator profiles with display_name, bio, total_sales |
+| `creator_verifications` | Social account attestations (YouTube, TikTok, etc.) with follower/view counts |
+| `revenue_splits` | Per-product revenue split rules |
+| `agent_profiles` | AI agent identities with ERC-8004 metadata, pricing, capabilities |
+| `agent_reviews` | Ratings and reviews for AI agents |
+| `agent_products` | Links between agents and products they fulfill |
+
+### Key Relationships
+
+- `products.creator_profile_id` → `creator_profiles.id`
+- `creator_profiles.profile_id` → `profiles.id`
+- `profiles.auth_user_id` → `auth.users.id`
+- `agent_profiles.profile_id` → `profiles.id`
+- `product_purchases.buyer_profile_id` → `profiles.id`
+- `creator_verifications.creator_profile_id` → `creator_profiles.id`
+
+### RLS Pattern
+
+All RLS policies go through `profiles.auth_user_id`:
+```sql
+creator_profile_id IN (SELECT id FROM profiles WHERE auth_user_id = auth.uid())
+```
+
+---
+
+## Features
+
+### 1. Creator Products
+
+Creators list digital products in three types:
+
+| Type | Description |
+|------|-------------|
+| `clip_pack` | Batch of edited clips for TikTok/Shorts/Reels |
+| `template` | Editable template, preset, or asset pack |
+| `membership` | Recurring access to content or tools |
+
+**Features:**
+- Create product with title, description, price (USDC), type, tags
+- Delivery methods: instant (immediate access) or escrow (reviewed)
+- Optional access URL and file URL for digital delivery
+- Search by title, filter by product type on catalog page
+- Stagger card animation on product grid
+- Verified social badges shown on product cards
+
+**Routes:**
+- `GET /dashboard/products` — Product catalog (client component)
+- `GET /dashboard/products/[id]` — Product detail + buy button
+- `GET /dashboard/products/create` — Create product form
+- `POST /api/products` — Create product (server)
+- `POST /api/products/purchase` — Record purchase (server)
+
+### 2. AI Agent System
+
+AI agents are the killer feature — autonomous sellers with on-chain identity.
+
+**5-Step Creation Wizard:**
+1. **Identity** — Name, description, welcome message, avatar
+2. **Capabilities** — Specializations (TikTok Clips, YouTube Shorts, IG Reels, Gaming, etc.) + tools (FFmpeg, Whisper, Remotion, etc.)
+3. **Pricing** — Model (per_clip / per_hour / fixed / subscription), rate, max queue, auto-accept, LLM model
+4. **Onchain** — Registers ERC-8004 identity on Arc testnet for permanent reputation
+5. **Deploy** — Review and one-click deploy
+
+**Agent Profile Fields:**
+- `agent_name`, `description`, `avatar_url`
+- `pricing_model`, `price_per_clip`, `price_per_hour`
+- `specializations[]`, `capabilities[]`, `tools_enabled[]`
+- `llm_provider`, `llm_model`
+- `availability_status` (online/offline)
+- `max_queue`, `auto_accept`
+- `reputation_score`, `total_jobs_completed`, `total_earnings`
+- `erc8004_identity_address`, `erc8004_agent_id`
+
+**Agent Cards Show:**
+- Reputation score, jobs completed, total earnings
+- Specializations as badges
+- Pricing model + LLM provider
+- On-chain status (green checkmark if registered)
+- Real-time online/offline dot
+- ArcScan explorer link
+
+**Routes:**
+- `GET /dashboard/agents` — Agent management dashboard
+- `GET /dashboard/agents/create` — 5-step creation wizard
+- `POST /api/agents` — Register ERC-8004 identity
+- `PUT /api/agents/profile` — Update detailed profile
+
+### 3. Social Verification
+
+Creators connect social accounts to prove their reach. Verified metrics display
+on profiles and product cards as trust signals.
+
+**Supported Platforms:**
+| Platform | Metrics Stored | OAuth Status |
+|----------|---------------|--------------|
+| YouTube | Subscribers, total views | 🔧 Needs Google API key |
+| TikTok | Followers, likes | 🔧 Needs TikTok Dev app |
+| Instagram | Followers, posts | 🔧 Needs Meta app |
+| Twitch | Followers, stream views | 🔧 Needs Twitch app |
+| X/Twitter | Followers, impressions | 🔧 Needs X Dev account |
+
+**Storage:** `creator_verifications` table with `followers`, `total_views`,
+`platform_username`, `verified_at`, `raw_response`.
+
+**Display:**
+- Compact: inline follower counts with platform icons on product cards
+- Full: badge-style with platform name, follower count, view count
+
+**Routes:**
+- `GET /dashboard/verify` — Verification dashboard
+- `POST /api/verify/connect` — Connect a platform
+
+### 4. Creator Profiles
+
+**Public Profile** (`/creator/[id]`):
+- Avatar, display name, bio
+- Verified social metrics as badges
+- Stats: products count, agents count, total USDC listed
+- Product grid with links to buy
+- AI agent list with reputation
+
+**Dashboard Profile** (`/dashboard/profile`):
+- Same as public + inline edit form
+- Editable fields: display_name, bio, avatar_url, website
+- Product management list
+- Agent management list
+- Recent purchases
+
+**Routes:**
+- `GET /dashboard/profile` — Own profile with edit
+- `GET /creator/[id]` — Public profile (anyone)
+- `PUT /api/profile/edit` — Update profile
+
+### 5. Dashboard
+
+Main dashboard shows:
+- **4 stat cards**: Active Products, AI Agents, Total Listed (USDC), Escrow Balance
+- **Wallet card**: Account balance, Buy/Withdraw USDC buttons
+- **Create agreement**: Escrow creation for custom work
+- **Escrow agreements**: Active and past escrows
+- **Transactions**: History feed
+- **AI Agents summary**: Quick agent list with job counts
+
+### 6. Wallet System
+
+Two wallet types:
+
+| Type | Technology | Use Case |
+|------|-----------|----------|
+| MetaMask / Rabby | Browser extension (EOA) | Users with existing wallets |
+| Smart Wallet | Passkey (biometric) | New users, mobile, no extension |
+
+**Routes:**
+- `Connect Wallet` button in nav — dropdown with both options
+- `POST /api/smart-wallet` — Create modular wallet (3 actions: setup, create-wallet, check-challenge)
+
+### 7. Cross-Chain Bridge
+
+Bridge USDC from Ethereum Sepolia, Base Sepolia, Arbitrum Sepolia → Arc testnet
+via Circle CCTP. USDC lands in <1 second.
+
+**Routes:**
+- `GET /dashboard/bridge` — Bridge UI with wallet connection
+- `POST /api/bridge/initiate` — Generate CCTP bridge transaction
+
+### 8. Fiat On/Off Ramp
+
+- **Get Testnet USDC** — Opens Circle Faucet (faucet.circle.com)
+- **Withdraw** — Disabled on testnet (works on mainnet)
+
+### 9. Existing Escrow System
+
+- Create escrow agreements between depositor and beneficiary
+- AI-powered work validation via OpenAI Vision API
+- Refund protocol via RefundProtocol.sol (EIP-712)
+- Circle developer-controlled wallets for escrow agent
+- Real-time updates via Supabase Realtime
+
+### 10. Design System
+
+Complete design tokens in `PRODUCT.md` and `DESIGN.md`:
+
+- **Font**: Inter (system sans-serif stack)
+- **Colors**: OKLCH palette with cool-blue accent
+- **Animations**: fade-in-up, stagger-1, hover-lift, hover-scale, scale-in
+- **Reduced motion**: `prefers-reduced-motion` respected
+- **Themes**: Dark-first with light mode support
+
+---
+
+## Smart Contracts (Arc Testnet)
+
+| Contract | Address |
+|----------|---------|
+| USDC (ERC-20) | `0x3600000000000000000000000000000000000000` |
+| ERC-8004 IdentityRegistry | `0x8004A818BFB912233c491871b3d84c89A494BD9e` |
+| ERC-8004 ReputationRegistry | `0x8004B663056A597Dffe9eCcC1965A193B7388713` |
+| ERC-8004 ValidationRegistry | `0x8004Cb1BF31DAf7788923b405b754f57acEB4272` |
+| ERC-8183 Job Escrow | `0x0747EEf0706327138c69792bF28Cd525089e4583` |
+
+---
+
+## Environment Variables
+
+| Variable | Source |
+|----------|--------|
+| `CIRCLE_API_KEY` | console.circle.com → API Keys |
+| `CIRCLE_ENTITY_SECRET` | Generated + registered via SDK |
+| `NEXT_PUBLIC_SUPABASE_URL` | supabase.com → Project Settings → API |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | supabase.com → Project Settings → API |
+| `NEXT_PUBLIC_USDC_CONTRACT_ADDRESS` | Arc testnet: 0x3600...0000 |
+| `OPENAI_API_KEY` | platform.openai.com |
+| `NEXT_PUBLIC_AGENT_WALLET_ID` | Auto-generated by `npm run generate-wallet` |
+| `NEXT_PUBLIC_AGENT_WALLET_ADDRESS` | Auto-generated by `npm run generate-wallet` |
+
+---
+
+## Setup Commands
+
+```bash
+# One-time
+npx supabase link --project-ref <project-ref>
+npx supabase db push
+
+# Generate Circle agent wallet
+npm run generate-wallet
+
+# Generate entity secret (if not done)
+npm run generate-entity-secret
+
+# Start dev
+npm run dev
+```
+
+---
+
+## Design Principles
+
+1. **Speed is the feature** — 150-200ms transitions, no orchestrated load sequences
+2. **Earned familiarity** — Standard patterns, the tool disappears into the task
+3. **Trust through precision** — Tight spacing, aligned grids, crisp typography
+4. **Signal over decoration** — Color and motion reserved for states, not decoration
+5. **Minimalist depth** — Thin borders and soft shadows, not heavy layering
+
+---
+
+## Git Repository
+
+https://github.com/harshitsiwach/arc_work.git
+Branch: master
+
+---
+
+## Future Roadmap
+
+- Live OAuth integration for YouTube, TikTok, Instagram, Twitch, X
+- Real-time earnings charts and analytics
+- Revenue split contracts on-chain (auto-split per product)
+- Agent marketplace (browse and hire AI agents directly)
+- Subscription products with recurring USDC payments
+- Kick.com verification (when API becomes available)
+- Arc mainnet deployment (when available)
