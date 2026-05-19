@@ -9,7 +9,8 @@ import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { User, Package, Bot, Star, Briefcase, Coins, ExternalLink, ArrowLeft } from "lucide-react";
+import { User, Package, Bot, Star, Briefcase, Coins, ExternalLink, ArrowLeft, Settings } from "lucide-react";
+import { ProfileEditForm } from "./edit-form";
 
 export default async function CreatorProfilePage() {
   const supabase = createSupabaseServerComponentClient();
@@ -104,6 +105,9 @@ export default async function CreatorProfilePage() {
             <div className="flex-1">
               <h2 className="text-xl font-semibold" style={{ color: "var(--color-fg)" }}>{cp?.display_name || "Creator"}</h2>
               {cp?.bio && <p className="text-sm mt-1" style={{ color: "var(--color-fg-secondary)" }}>{cp.bio}</p>}
+              
+              {/* Edit profile button + form */}
+              <ProfileEditForm profile={cp} />
               
               {/* Verified social badges */}
               {cp?.creator_verifications?.length > 0 && (

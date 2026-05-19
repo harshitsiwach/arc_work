@@ -28,7 +28,7 @@ import { Button } from "@/components/ui/button";
 import dynamic from "next/dynamic";
 import { WalletInformationDialog } from "@/components/wallet-information-dialog";
 import Link from "next/link";
-import { Bot, ExternalLink } from "lucide-react";
+import { Bot, Package, Coins, TrendingUp, ExternalLink, DollarSign } from "lucide-react";
 
 const Transactions = dynamic(() => import('@/components/transactions').then(mod => mod.Transactions), { ssr: false })
 
@@ -62,12 +62,62 @@ export default async function ProtectedPage() {
     .eq("profile_id", profile?.id)
     .order("created_at", { ascending: false });
 
+  // Creator dashboard stats
+  const { data: creatorProfile } = await supabase
+    .from("creator_profiles")
+    .select("id, total_sales, total_products")
+    .eq("profile_id", profile?.id)
+    .single();
+
+  const { data: myProducts } = await supabase
+    .from("products")
+    .select("id, price_amount, status")
+    .eq("creator_profile_id", creatorProfile?.id);
+
+  const activeProducts = myProducts?.filter(p => p.status === "active")?.length || 0;
+  const totalListed = myProducts?.reduce((s: number, p: any) => s + Number(p.price_amount || 0), 0) || 0;
+  const agentCount = myAgents?.length || 0;
+
   return (
     <>
       {/* Page header */}
       <div className="mb-6 animate-fade-in-up">
         <h1 className="text-2xl font-semibold tracking-tight" style={{ color: "var(--color-fg)" }}>Dashboard</h1>
         <p className="text-sm mt-1" style={{ color: "var(--color-fg-secondary)" }}>Manage escrows, payments, and your AI agents</p>
+      </div>
+
+      {/* Stats cards */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6 stagger-1">
+        <div className="p-4 rounded-xl animate-fade-in-up" style={{ backgroundColor: "var(--color-bg-elevated)", border: "1px solid", borderColor: "var(--color-bd)" }}>
+          <div className="flex items-center gap-2 mb-2">
+            <Package className="h-4 w-4" style={{ color: "var(--color-accent)" }} />
+            <span className="text-xs" style={{ color: "var(--color-fg-muted)" }}>Active Products</span>
+          </div>
+          <p className="text-2xl font-bold" style={{ color: "var(--color-fg)" }}>{activeProducts}</p>
+        </div>
+        <div className="p-4 rounded-xl animate-fade-in-up" style={{ backgroundColor: "var(--color-bg-elevated)", border: "1px solid", borderColor: "var(--color-bd)" }}>
+          <div className="flex items-center gap-2 mb-2">
+            <Bot className="h-4 w-4" style={{ color: "var(--color-accent)" }} />
+            <span className="text-xs" style={{ color: "var(--color-fg-muted)" }}>AI Agents</span>
+          </div>
+          <p className="text-2xl font-bold" style={{ color: "var(--color-fg)" }}>{agentCount}</p>
+        </div>
+        <div className="p-4 rounded-xl animate-fade-in-up" style={{ backgroundColor: "var(--color-bg-elevated)", border: "1px solid", borderColor: "var(--color-bd)" }}>
+          <div className="flex items-center gap-2 mb-2">
+            <DollarSign className="h-4 w-4" style={{ color: "var(--color-accent)" }} />
+            <span className="text-xs" style={{ color: "var(--color-fg-muted)" }}>Total Listed (USDC)</span>
+          </div>
+          <p className="text-2xl font-bold" style={{ color: "var(--color-fg)" }}>{totalListed.toFixed(0)}</p>
+        </div>
+        <div className="p-4 rounded-xl animate-fade-in-up" style={{ backgroundColor: "var(--color-bg-elevated)", border: "1px solid", borderColor: "var(--color-bd)" }}>
+          <div className="flex items-center gap-2 mb-2">
+            <Coins className="h-4 w-4" style={{ color: "var(--color-accent)" }} />
+            <span className="text-xs" style={{ color: "var(--color-fg-muted)" }}>Escrow Balance</span>
+          </div>
+          <p className="text-2xl font-bold" style={{ color: "var(--color-fg)" }}>
+            <WalletBalance walletId={wallet?.circle_wallet_id} />
+          </p>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 stagger-1">
