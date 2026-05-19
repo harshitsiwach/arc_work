@@ -64,6 +64,7 @@ export default async function RootLayout({
                       { href: "/dashboard/products", label: "Products" },
                       { href: "/dashboard/products/create", label: "Create" },
                       { href: "/dashboard/bridge", label: "Bridge" },
+                      { href: "/dashboard/profile", label: "Profile" },
                       { href: "/dashboard/verify", label: "Verify" },
                       { href: "/dashboard/agents", label: "Agents" },
                     ].map((item) => (
