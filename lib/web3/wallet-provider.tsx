@@ -5,6 +5,7 @@
 
 import { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
+import { useAppKitAccount, useDisconnect, useAppKit } from '@reown/appkit/react';
 
 export type SupportedChain = {
   id: number;
@@ -63,6 +64,20 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   const [smartWallet, setSmartWallet] = useState<SmartWalletInfo | null>(null);
   const [activeWalletType, setActiveWalletType] = useState<WalletType>("none");
 
+  const { address: appKitAddress, isConnected: isAppKitConnected } = useAppKitAccount();
+  const { disconnect: disconnectAppKit } = useDisconnect();
+
+  // Sync AppKit
+  useEffect(() => {
+    if (isAppKitConnected && appKitAddress) {
+      setAddress(appKitAddress.toLowerCase());
+      setActiveWalletType("metamask");
+    } else if (activeWalletType === "metamask" && !isAppKitConnected && address) {
+      setAddress(null);
+      setActiveWalletType("none");
+    }
+  }, [isAppKitConnected, appKitAddress, activeWalletType, address]);
+
   // Read MetaMask accounts on mount
   useEffect(() => {
     if (typeof window !== "undefined" && (window as any).ethereum) {
@@ -92,29 +107,22 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
+  const { open } = useAppKit();
+
   const connect = useCallback(async () => {
-    if (typeof window === "undefined" || !(window as any).ethereum) {
-      toast.error("Install MetaMask or Rabby to connect an EOA wallet");
-      return;
-    }
     setIsConnecting(true);
     try {
-      const eth = (window as any).ethereum;
-      const accounts = await eth.request({ method: "eth_requestAccounts" });
-      setAddress(accounts[0].toLowerCase());
-      const chainIdHex = await eth.request({ method: "eth_chainId" });
-      setChainId(parseInt(chainIdHex, 16));
-      setActiveWalletType("metamask");
-      localStorage.setItem("arc_work_wallet_type", "metamask");
+      await open();
     } catch (err: any) {
-      toast.error(err.message || "Failed to connect wallet");
+      toast.error(err.message || "Failed to open AppKit modal");
     } finally { setIsConnecting(false); }
-  }, []);
+  }, [open]);
 
   const disconnect = useCallback(() => {
     setAddress(null); setChainId(null); setActiveWalletType("none");
     localStorage.removeItem("arc_work_wallet_type");
-  }, []);
+    if (disconnectAppKit) disconnectAppKit();
+  }, [disconnectAppKit]);
 
   const handleSetSmartWallet = useCallback((info: SmartWalletInfo | null) => {
     setSmartWallet(info);

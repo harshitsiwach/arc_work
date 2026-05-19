@@ -65,8 +65,8 @@ export function WalletConnectButton() {
             >
               <Wallet className="h-5 w-5 text-blue-500 shrink-0" />
               <div>
-                <p className="text-sm font-medium">MetaMask / Rabby</p>
-                <p className="text-xs text-muted-foreground">Connect your browser wallet</p>
+                <p className="text-sm font-medium">Connect Wallet</p>
+                <p className="text-xs text-muted-foreground">AppKit / Web3 Wallets</p>
               </div>
             </button>
 

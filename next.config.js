@@ -4,6 +4,7 @@ const nextConfig = {
     serverComponentsExternalPackages: ["pdf-parse"],
   },
   webpack: (config, { isServer }) => {
+    config.externals.push("pino-pretty", "lokijs", "encoding", "accounts");
     if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,

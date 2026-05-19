@@ -11,6 +11,7 @@ import { Toaster } from "@/components/ui/sonner";
 import Link from "next/link";
 import "./globals.css";
 import { ThemeSwitcher } from "@/components/theme-switcher";
+import { AppKitProvider } from "@/lib/web3/appkit-provider";
 import { WalletProvider } from "@/lib/web3/wallet-provider";
 import { WalletConnectButton } from "@/components/wallet-connect-button";
 
@@ -45,6 +46,7 @@ export default async function RootLayout({
           disableTransitionOnChange
         >
           <Toaster expand />
+          <AppKitProvider>
           <WalletProvider>
           <div className="min-h-screen flex flex-col">
             {/* Fixed Header */}
@@ -95,6 +97,7 @@ export default async function RootLayout({
             </main>
           </div>
           </WalletProvider>
+          </AppKitProvider>
         </ThemeProvider>
       </body>
     </html>
