@@ -22,7 +22,7 @@ export const dynamic = "force-dynamic";
 
 import mammoth from "mammoth";
 import pdf from "pdf-parse";
-import { openai } from "@/lib/utils/openAIClient";
+import { getOpenAI } from "@/lib/utils/openAIClient";
 import { handleOpenAIError } from "@/lib/utils/openai-error-handler";
 
 // Configure accepted file types and their processors
@@ -97,7 +97,7 @@ export async function POST(req: Request) {
     // Analyze with OpenAI
     let completion;
     try {
-      completion = await openai.chat.completions.create({
+      completion = await getOpenAI().chat.completions.create({
         model: "gpt-4o-mini",
         messages: [
           {
