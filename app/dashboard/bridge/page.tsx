@@ -10,15 +10,32 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, ArrowRightLeft, ExternalLink, Wallet, CheckCircle2 } from "lucide-react";
+import { Loader2, ArrowRightLeft, ExternalLink, Wallet, CheckCircle2, RefreshCcw } from "lucide-react";
 import { toast } from "sonner";
+import { AppKit } from "@circle-fin/app-kit";
+import { createViemAdapterFromProvider } from "@circle-fin/adapter-viem-v2";
+import { useAppKitProvider, useAppKitNetwork } from "@reown/appkit/react";
+import { arcTestnet } from "@/lib/web3/appkit-provider";
+import { sepolia, baseSepolia, arbitrumSepolia } from "@reown/appkit/networks";
 
 export default function BridgePage() {
   const { address, chainId, isConnected, connect } = useWallet();
+  const { walletProvider } = useAppKitProvider("eip155");
+  const { switchNetwork } = useAppKitNetwork();
   const [loading, setLoading] = useState(false);
   const [amount, setAmount] = useState("");
   const [selectedChain, setSelectedChain] = useState(SUPPORTED_SOURCE_CHAINS[0]);
   const [txHash, setTxHash] = useState<string | null>(null);
+
+  const rawKitKey = process.env.NEXT_PUBLIC_CIRCLE_KIT_KEY || "";
+  const formattedKitKey = rawKitKey.startsWith("KIT_KEY:") || !rawKitKey ? rawKitKey : `KIT_KEY:${rawKitKey}`;
+
+  // Swap State
+  const [swapLoading, setSwapLoading] = useState(false);
+  const [swapAmount, setSwapAmount] = useState("");
+  const [swapTokenIn, setSwapTokenIn] = useState("USDC");
+  const [swapTokenOut, setSwapTokenOut] = useState("EURC");
+  const [swapTxHash, setSwapTxHash] = useState<string | null>(null);
 
   const handleBridge = async () => {
     if (!isConnected || !address) {
@@ -32,51 +49,136 @@ export default function BridgePage() {
       return;
     }
 
-      // If on wrong chain, show a message
-      if (chainId !== selectedChain.id) {
-        toast.error(`Switch your wallet to ${selectedChain.name} and try again`);
-        return;
+    // If on wrong chain, try to switch automatically
+    if (chainId !== selectedChain.id) {
+      if (switchNetwork) {
+        try {
+          const targetNet = [sepolia, baseSepolia, arbitrumSepolia].find(n => n.id === selectedChain.id);
+          if (targetNet) {
+            await switchNetwork(targetNet);
+            return; // Exit after triggering switch, user needs to click bridge again or we could proceed. Better to let them click again.
+          }
+        } catch (e) {
+          toast.error(`Switch your wallet to ${selectedChain.name} and try again`);
+          return;
+        }
       }
+      toast.error(`Switch your wallet to ${selectedChain.name} and try again`);
+      return;
+    }
 
     setLoading(true);
     setTxHash(null);
 
     try {
-      // Call our API which will orchestrate the bridge
-      const res = await fetch("/api/bridge/initiate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          sourceChain: selectedChain.arcName,
-          amount: numAmount.toString(),
-          userAddress: address,
-        }),
+      if (!walletProvider) throw new Error("Wallet provider not found");
+
+      const adapter = await createViemAdapterFromProvider({ provider: walletProvider as any });
+      const kit = new AppKit();
+      
+      const result = await kit.bridge({
+        from: { adapter, chain: selectedChain.arcName as any },
+        to: { adapter, chain: "Arc_Testnet" },
+        amount: numAmount.toString(),
       });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-
-      // If we get a tx request back, send it
-      if (data.txRequest) {
-        if (!(window as any).ethereum) throw new Error("No wallet found");
-        const tx = await (window as any).ethereum.request({
-          method: data.txRequest.method,
-          params: data.txRequest.params,
-        });
-        setTxHash(tx);
+      const burnStep = result.steps?.find((s: any) => s.name === "burn" || s.txHash);
+      if (burnStep && burnStep.txHash) {
+        setTxHash(burnStep.txHash);
         toast.success("Bridge transaction sent!");
-      } else if (data.txHash) {
-        setTxHash(data.txHash);
+      } else {
         toast.success("Bridge initiated!");
       }
 
-      if (data.explorerUrl) {
-        window.open(data.explorerUrl, "_blank");
+      const explorerUrl = (burnStep?.data as any)?.explorerUrl || (result.steps?.[0]?.data as any)?.explorerUrl;
+      if (explorerUrl) {
+        window.open(explorerUrl, "_blank");
       }
     } catch (err: any) {
       toast.error(err.message || "Bridge failed");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSwap = async () => {
+    if (!isConnected || !address) {
+      toast.error("Connect your wallet first");
+      return;
+    }
+
+    const numAmount = parseFloat(swapAmount);
+    if (!numAmount || numAmount <= 0) {
+      toast.error("Enter a valid amount");
+      return;
+    }
+
+    if (chainId !== 5042002) {
+      if (switchNetwork) {
+        try {
+          await switchNetwork(arcTestnet);
+          return;
+        } catch (e) {
+          toast.error("Switch your wallet to Arc Testnet to swap");
+          return;
+        }
+      }
+      toast.error("Switch your wallet to Arc Testnet to swap");
+      return;
+    }
+
+    setSwapLoading(true);
+    setSwapTxHash(null);
+
+    try {
+      if (!walletProvider) throw new Error("Wallet provider not found");
+
+      // Call Circle swap API server-side to avoid CORS restrictions.
+      // The /api/swap route uses the Circle SDK internally with correct body formatting.
+      const swapRes = await fetch("/api/swap", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          tokenIn: swapTokenIn,
+          tokenOut: swapTokenOut,
+          amountIn: numAmount.toString(),
+          fromAddress: address,
+        }),
+      });
+
+      const swapData: any = await swapRes.json().catch(() => ({}));
+
+      if (!swapRes.ok) {
+        throw new Error(swapData?.message || `Swap API error: ${swapRes.status}`);
+      }
+
+      // Circle returns a quote with transaction instructions to execute on-chain
+      if (!swapData?.transaction?.executionParams) {
+        throw new Error(swapData?.message || "No transaction data returned from swap quote");
+      }
+
+      const adapter = await createViemAdapterFromProvider({ provider: walletProvider as any });
+      const kit = new AppKit();
+
+      // Execute the swap using the kit with the pre-built quote
+      const result = await kit.swap({
+        from: { adapter, chain: "Arc_Testnet" },
+        tokenIn: swapTokenIn,
+        tokenOut: swapTokenOut,
+        amountIn: numAmount.toString(),
+        config: { kitKey: formattedKitKey },
+      });
+
+      if (result.txHash) {
+        setSwapTxHash(result.txHash);
+        toast.success("Swap completed!");
+        const explorerUrl = (result as any).explorerUrl || `https://testnet.arcscan.app/tx/${result.txHash}`;
+        if (explorerUrl && !explorerUrl.includes("undefined")) window.open(explorerUrl, "_blank");
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Swap failed");
+    } finally {
+      setSwapLoading(false);
     }
   };
 
@@ -90,8 +192,9 @@ export default function BridgePage() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Main bridge card */}
-        <div className="md:col-span-2">
+        {/* Main bridge & swap cards */}
+        <div className="md:col-span-2 space-y-6">
+          {/* Bridge card */}
           <Card>
             <CardHeader>
               <CardTitle>Bridge USDC to Arc</CardTitle>
@@ -200,6 +303,120 @@ export default function BridgePage() {
                   <p className="text-xs text-muted-foreground text-center">
                     USDC lands on Arc in under 1 second with deterministic finality
                   </p>
+                </>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Swap card */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Swap on Arc</CardTitle>
+              <CardDescription>
+                Swap tokens natively on Arc Testnet
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {!isConnected ? (
+                <div className="p-6 text-center border-2 border-dashed rounded-lg">
+                  <Wallet className="h-8 w-8 mx-auto text-muted-foreground mb-3" />
+                  <p className="text-muted-foreground mb-3">Connect your wallet to swap</p>
+                  <Button onClick={connect}>
+                    <Wallet className="mr-2 h-4 w-4" />
+                    Connect Wallet
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-center gap-4">
+                    <div className="flex-1">
+                      <Label>From Token</Label>
+                      <select
+                        className="w-full rounded-lg border bg-background px-3 py-2 text-sm mt-1"
+                        value={swapTokenIn}
+                        onChange={e => setSwapTokenIn(e.target.value)}
+                      >
+                        <option value="USDC">USDC</option>
+                        <option value="EURC">EURC</option>
+                      </select>
+                    </div>
+                    <div className="flex items-end pb-2">
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        onClick={() => {
+                          const temp = swapTokenIn;
+                          setSwapTokenIn(swapTokenOut);
+                          setSwapTokenOut(temp);
+                        }}
+                      >
+                        <ArrowRightLeft className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="flex-1">
+                      <Label>To Token</Label>
+                      <select
+                        className="w-full rounded-lg border bg-background px-3 py-2 text-sm mt-1"
+                        value={swapTokenOut}
+                        onChange={e => setSwapTokenOut(e.target.value)}
+                      >
+                        <option value="USDC">USDC</option>
+                        <option value="EURC">EURC</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <Label>Amount ({swapTokenIn})</Label>
+                    <Input
+                      type="number"
+                      step="0.01"
+                      min="1"
+                      placeholder="100"
+                      value={swapAmount}
+                      onChange={e => setSwapAmount(e.target.value)}
+                    />
+                  </div>
+
+                  <Button
+                    onClick={handleSwap}
+                    disabled={swapLoading || !swapAmount || swapTokenIn === swapTokenOut}
+                    className="w-full"
+                  >
+                    {swapLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Swapping...
+                      </>
+                    ) : chainId !== 5042002 ? (
+                      <>
+                        <ExternalLink className="mr-2 h-4 w-4" />
+                        Switch to Arc Testnet
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCcw className="mr-2 h-4 w-4" />
+                        Swap Tokens
+                      </>
+                    )}
+                  </Button>
+
+                  {swapTxHash && (
+                    <div className="p-3 bg-green-500/10 rounded-lg text-sm">
+                      <p className="text-green-600 font-medium">Swap successful!</p>
+                      <p className="text-muted-foreground text-xs mt-1 font-mono break-all">
+                        Tx: {swapTxHash}
+                      </p>
+                      <a
+                        href={`https://testnet.arcscan.app/tx/${swapTxHash}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-500 hover:underline text-xs mt-1 inline-block"
+                      >
+                        View on Arc Explorer →
+                      </a>
+                    </div>
+                  )}
                 </>
               )}
             </CardContent>

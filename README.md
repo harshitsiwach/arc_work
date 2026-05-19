@@ -8,6 +8,7 @@ Automate escrow-backed freelance agreements with AI-powered work validation usin
 
 - [Prerequisites](#prerequisites)
 - [Getting Started](#getting-started)
+- [Bridge & Swap](#bridge--swap)
 - [How It Works](#how-it-works)
 - [Environment Variables](#environment-variables)
 - [User Accounts](#user-accounts)
@@ -20,6 +21,7 @@ Automate escrow-backed freelance agreements with AI-powered work validation usin
 - **[ngrok](https://ngrok.com/)** — For local webhook testing
 - Circle Developer Controlled Wallets **[API key](https://console.circle.com/signin)** and **[Entity Secret](https://developers.circle.com/wallets/dev-controlled/register-entity-secret)**
 - **[OpenAI API key](https://platform.openai.com/api-keys)** — Used for AI-powered work validation
+- **MetaMask** (or any EVM wallet) — For browser-based bridging and swapping
 
 ## Getting Started
 
@@ -98,6 +100,57 @@ Automate escrow-backed freelance agreements with AI-powered work validation usin
    - Add a new webhook endpoint: `https://your-ngrok-url.ngrok.io/api/webhooks/circle`
    - Keep ngrok running while developing to receive webhook events
 
+## Bridge & Swap
+
+The dashboard includes a **Bridge & Swap** page (`/dashboard/bridge`) powered by the [Circle App Kit SDK](https://docs.arc.io/app-kit) and [Reown AppKit](https://reown.com/appkit) for browser wallet integration.
+
+### Bridge (USDC → Arc Testnet)
+
+Move USDC from EVM testnets to Arc Testnet via Circle's Cross-Chain Transfer Protocol (CCTP):
+
+1. Connect your MetaMask wallet.
+2. Select a source chain: **Ethereum Sepolia**, **Base Sepolia**, or **Arbitrum Sepolia**.
+3. Enter the amount of USDC to bridge.
+4. Click **Bridge to Arc** — the app will automatically prompt your wallet to switch to the selected source chain if needed, then orchestrate the `approve` + `burn` transactions.
+5. USDC arrives on Arc Testnet in under 1 second with deterministic finality.
+
+**Supported source chains:**
+
+| Chain | Chain ID |
+|---|---|
+| Ethereum Sepolia | 11155111 |
+| Base Sepolia | 84532 |
+| Arbitrum Sepolia | 421614 |
+
+### Swap (on Arc Testnet)
+
+Swap tokens natively on Arc Testnet (e.g., USDC ↔ EURC):
+
+1. Switch your wallet to **Arc Testnet** (Chain ID: `5042002`, RPC: `https://rpc.testnet.arc.network`).
+2. Select **From Token** and **To Token** (USDC or EURC).
+3. Enter the amount and click **Swap Tokens**.
+4. The app fetches a swap quote from Circle's API via our server-side `/api/swap` route (to avoid CORS restrictions).
+5. The quote includes a pre-built transaction via the **Fly DEX** on Arc Testnet — your wallet is prompted to `approve` spending and execute the swap.
+6. On success, a link to the transaction on [ArcScan](https://testnet.arcscan.app) is shown.
+
+> **Note:** Swapping requires a Circle **Kit Key** (`KIT_KEY:...`), which is separate from the Circle API Key. Get a free Kit Key at [developers.circle.com/w3s/keys#kit-keys](https://developers.circle.com/w3s/keys#kit-keys).
+
+**Token contract addresses on Arc Testnet:**
+
+| Token | Contract Address |
+|---|---|
+| USDC | `0x3600000000000000000000000000000000000000` |
+| EURC | `0x89B50855Aa3bE2F677cD6303Cec089B5F319D72a` |
+
+### Architecture Notes
+
+- **Bridge**: Uses `@circle-fin/app-kit` + `@circle-fin/adapter-viem-v2` with the user's connected wallet via `createViemAdapterFromProvider`. Orchestrates `approve` + `burn` via Circle's CCTP.
+- **Swap quote**: Fetched server-side via `/api/swap` (Next.js API route). Circle's API blocks the browser `x-user-agent` header via CORS, so all swap API calls go through the server. The route resolves token aliases to Arc Testnet contract addresses and converts amounts to base units (6 decimals).
+- **Swap execution**: After the quote is fetched, `kit.swap()` uses the connected wallet adapter to prompt MetaMask for `approve` + swap transaction signing.
+- **Automatic network switching**: Clicking Bridge or Swap triggers `switchNetwork()` via Reown AppKit if the wallet is on the wrong chain — no manual network changes needed.
+- **Arc Testnet** is registered as a custom chain in the AppKit provider (`lib/web3/appkit-provider.tsx`) with RPC `https://rpc.testnet.arc.network`.
+- **CORS proxy** (generic): A catch-all proxy at `/api/circle-proxy/[...path]` is also available to forward any Circle API request server-side.
+
 ## How It Works
 
 - Built with [Next.js](https://nextjs.org/) and [Supabase](https://supabase.com/)
@@ -135,6 +188,14 @@ CIRCLE_BLOCKCHAIN=
 
 # OpenAI
 OPENAI_API_KEY=
+
+# Google sign-in
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+
+# Circle App Kit — required for Swap feature
+# Get a free Kit Key at: https://developers.circle.com/w3s/keys#kit-keys
+NEXT_PUBLIC_CIRCLE_KIT_KEY=KIT_KEY:<keyId>:<keySecret>
 ```
 
 | Variable | Scope | Purpose |
@@ -150,6 +211,7 @@ OPENAI_API_KEY=
 | `CIRCLE_ENTITY_SECRET` | Server-side | Circle entity secret for signing transactions. |
 | `CIRCLE_BLOCKCHAIN` | Server-side | Blockchain network identifier (e.g., `ARC-TESTNET`). Auto-generated. |
 | `OPENAI_API_KEY` | Server-side | OpenAI API key for AI-powered work validation. |
+| `NEXT_PUBLIC_CIRCLE_KIT_KEY` | Public | Circle Kit Key for App Kit swap/bridge features. Format: `KIT_KEY:<id>:<secret>`. |
 
 ## User Accounts
 

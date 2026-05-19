@@ -5,7 +5,7 @@
 
 import { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
-import { useAppKitAccount, useDisconnect, useAppKit } from '@reown/appkit/react';
+import { useAppKitAccount, useDisconnect, useAppKit, useAppKitNetwork } from '@reown/appkit/react';
 
 export type SupportedChain = {
   id: number;
@@ -14,9 +14,9 @@ export type SupportedChain = {
 };
 
 export const SUPPORTED_SOURCE_CHAINS: SupportedChain[] = [
-  { id: 11155111, name: "Ethereum Sepolia", arcName: "ETH-SEPOLIA" },
-  { id: 84532, name: "Base Sepolia", arcName: "BASE-SEPOLIA" },
-  { id: 421614, name: "Arbitrum Sepolia", arcName: "ARBITRUM-SEPOLIA" },
+  { id: 11155111, name: "Ethereum Sepolia", arcName: "Ethereum_Sepolia" },
+  { id: 84532, name: "Base Sepolia", arcName: "Base_Sepolia" },
+  { id: 421614, name: "Arbitrum Sepolia", arcName: "Arbitrum_Sepolia" },
 ];
 
 export type WalletType = "none" | "metamask" | "smart";
@@ -65,6 +65,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   const [activeWalletType, setActiveWalletType] = useState<WalletType>("none");
 
   const { address: appKitAddress, isConnected: isAppKitConnected } = useAppKitAccount();
+  const { chainId: appKitChainId, caipNetwork } = useAppKitNetwork();
   const { disconnect: disconnectAppKit } = useDisconnect();
 
   // Sync AppKit
@@ -76,7 +77,12 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       setAddress(null);
       setActiveWalletType("none");
     }
-  }, [isAppKitConnected, appKitAddress, activeWalletType, address]);
+    
+    const rawChainId = appKitChainId || (caipNetwork?.id ? String(caipNetwork.id).split(':')[1] : null);
+    if (rawChainId) {
+      setChainId(typeof rawChainId === 'string' ? parseInt(rawChainId.replace('eip155:', ''), 10) : rawChainId);
+    }
+  }, [isAppKitConnected, appKitAddress, activeWalletType, address, appKitChainId, caipNetwork]);
 
   // Read MetaMask accounts on mount
   useEffect(() => {
