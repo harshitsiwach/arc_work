@@ -17,7 +17,7 @@
  */
 
 import { NextResponse } from "next/server";
-import { openai } from "@/lib/utils/openAIClient";
+import { getOpenAI } from "@/lib/utils/openAIClient";
 import { handleOpenAIError } from "@/lib/utils/openai-error-handler";
 import { createSupabaseServerClient } from "@/lib/supabase/server-client";
 import { circleContractSdk } from "@/lib/utils/smart-contract-platform-client";
@@ -140,7 +140,7 @@ export async function POST(request: Request) {
 
     let parsedPromptAnswerContent: ImageValidationResult;
     try {
-      const response = await openai.chat.completions.create({
+      const validation = await getOpenAI().chat.completions.create({
         model: "gpt-4o",
         messages: [
           {
@@ -162,7 +162,7 @@ export async function POST(request: Request) {
         temperature: 0,
       });
 
-      const [promptAnswer] = response.choices;
+      const [promptAnswer] = validation.choices;
       const promptAnswerContent = promptAnswer.message.content;
 
       if (!promptAnswerContent) {
