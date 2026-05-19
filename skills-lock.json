@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "skills": {
+    "appkit": {
+      "source": "reown-com/skills",
+      "sourceType": "github",
+      "skillPath": "skills/appkit/SKILL.md",
+      "computedHash": "32b308e4d99184d5847569e7c37823333a3fdd91d3218250e7f149cbaa1ad35f"
+    },
+    "oauth": {
+      "source": "vercel-labs/portless",
+      "sourceType": "github",
+      "skillPath": "skills/oauth/SKILL.md",
+      "computedHash": "9dbf0a5cc15d805924816a4df6654b105a163618ff986c79f6974211164b34a7"
+    },
+    "supabase-postgres-best-practices": {
+      "source": "supabase/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/supabase-postgres-best-practices/SKILL.md",
+      "computedHash": "8e41c7417894e6f394614ee7ca3ee5322b1e58d890255d441f42dea98732597f"
+    }
+  }
+}
