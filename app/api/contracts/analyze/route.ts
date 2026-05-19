@@ -17,6 +17,9 @@
  */
 
 import { NextResponse } from "next/server";
+
+export const dynamic = "force-dynamic";
+
 import mammoth from "mammoth";
 import pdf from "pdf-parse";
 import { openai } from "@/lib/utils/openAIClient";
