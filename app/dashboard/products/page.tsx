@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Search, Package, User, Tag, Loader2, AlertCircle } from "lucide-react";
+import { VerifiedBadges } from "@/components/verified-badges";
 
 const PRODUCT_TYPE_OPTIONS = [
   { value: "", label: "All Types" },
@@ -46,7 +47,7 @@ type Product = {
   status: string;
   featured: boolean | null;
   media_urls: string[] | null;
-  creator_profile: { display_name: string } | null;
+  creator_profile: { id: string; display_name: string } | null;
 };
 
 export default function ProductsPage() {
@@ -65,7 +66,7 @@ export default function ProductsPage() {
         .from("products")
         .select(`
           *,
-          creator_profile:creator_profiles!products_creator_profile_id_fkey(display_name)
+          creator_profile:creator_profiles!products_creator_profile_id_fkey(id, display_name)
         `)
         .eq("status", "active")
         .order("created_at", { ascending: false });
@@ -261,6 +262,9 @@ export default function ProductsPage() {
                       {product.creator_profile?.display_name || "Unknown Creator"}
                     </span>
                   </div>
+
+                  {/* Verified social badges */}
+                  <VerifiedBadges creatorProfileId={product.creator_profile?.id} compact />
 
                   {/* Tags row (remaining tags beyond header) */}
                   {product.tags && product.tags.length > 2 && (
