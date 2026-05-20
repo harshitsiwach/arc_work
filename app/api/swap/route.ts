@@ -48,11 +48,11 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify({
         tokenInChain: "Arc_Testnet",
         tokenOutChain: "Arc_Testnet",
-        tokenInAddress: tokenIn,   // USDC / EURC alias resolved by Circle
-        tokenOutAddress: tokenOut, // USDC / EURC alias resolved by Circle
+        tokenInAddress,
+        tokenOutAddress,
         amount: amountInBaseUnits,
         fromAddress,
-        toAddress: fromAddress,    // swap to same address (self)
+        toAddress: fromAddress,
       }),
     });
 

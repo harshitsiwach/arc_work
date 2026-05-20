@@ -114,17 +114,13 @@ export default function BridgePage() {
     }
 
     if (chainId !== 5042002) {
-      if (switchNetwork) {
-        try {
-          await switchNetwork(arcTestnet);
-          return;
-        } catch (e) {
-          toast.error("Switch your wallet to Arc Testnet to swap");
-          return;
-        }
+      try {
+        await switchNetwork(arcTestnet);
+        return;
+      } catch {
+        toast.error("Switch your wallet to Arc Testnet to swap");
+        return;
       }
-      toast.error("Switch your wallet to Arc Testnet to swap");
-      return;
     }
 
     setSwapLoading(true);
@@ -153,27 +149,45 @@ export default function BridgePage() {
       }
 
       // Circle returns a quote with transaction instructions to execute on-chain
-      if (!swapData?.transaction?.executionParams) {
+      if (!swapData?.transaction?.executionParams?.instructions) {
         throw new Error(swapData?.message || "No transaction data returned from swap quote");
       }
 
-      const adapter = await createViemAdapterFromProvider({ provider: walletProvider as any });
-      const kit = new AppKit();
+      const { instructions, gasLimit } = swapData.transaction.executionParams;
+      const ZERO_ADDR = "0x0000000000000000000000000000000000000000";
 
-      // Execute the swap using the kit with the pre-built quote
-      const result = await kit.swap({
-        from: { adapter, chain: "Arc_Testnet" },
-        tokenIn: swapTokenIn,
-        tokenOut: swapTokenOut,
-        amountIn: numAmount.toString(),
-        config: { kitKey: formattedKitKey },
-      });
+      // Helper: encode ERC-20 approve(spender, amount) calldata
+      const encodeApprove = (spender: string, amount: string) => {
+        const spenderHex = spender.replace("0x", "").padStart(64, "0");
+        const amountHex = BigInt(amount).toString(16).padStart(64, "0");
+        return `0x095ea7b3${spenderHex}${amountHex}`;
+      };
 
-      if (result.txHash) {
-        setSwapTxHash(result.txHash);
-        toast.success("Swap completed!");
-        const explorerUrl = (result as any).explorerUrl || `https://testnet.arcscan.app/tx/${result.txHash}`;
-        if (explorerUrl && !explorerUrl.includes("undefined")) window.open(explorerUrl, "_blank");
+      let lastTxHash: string | null = null;
+
+      // Execute each instruction via MetaMask directly — no SDK, no CORS
+      for (const instruction of instructions) {
+        const { target, data, value, tokenIn, amountToApprove } = instruction;
+
+        // Step 1: Approve token spending if required
+        if (amountToApprove && BigInt(amountToApprove) > 0n && tokenIn && tokenIn !== ZERO_ADDR) {
+          await (walletProvider as any).request({
+            method: "eth_sendTransaction",
+            params: [{ from: address, to: tokenIn, data: encodeApprove(target, amountToApprove) }],
+          });
+        }
+
+        // Step 2: Execute the instruction
+        lastTxHash = await (walletProvider as any).request({
+          method: "eth_sendTransaction",
+          params: [{ from: address, to: target, data, value: value || "0x0", gas: gasLimit }],
+        });
+      }
+
+      if (lastTxHash) {
+        setSwapTxHash(lastTxHash);
+        toast.success("Swap submitted!");
+        window.open(`https://testnet.arcscan.app/tx/${lastTxHash}`, "_blank");
       }
     } catch (err: any) {
       toast.error(err.message || "Swap failed");
