@@ -3,17 +3,15 @@
  * Premium minimal design with Inter font and page transitions
  */
 import { EnvVarWarning } from "@/components/env-var-warning";
-import HeaderAuth from "@/components/header-auth";
 import { hasEnvVars } from "@/lib/utils/supabase/check-env-vars";
 import { Inter } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/sonner";
-import Link from "next/link";
 import "./globals.css";
-import { ThemeSwitcher } from "@/components/theme-switcher";
 import { AppKitProvider } from "@/lib/web3/appkit-provider";
 import { WalletProvider } from "@/lib/web3/wallet-provider";
-import { WalletConnectButton } from "@/components/wallet-connect-button";
+import { NavBar } from "@/components/nav-bar";
+import { createSupabaseServerComponentClient } from "@/lib/supabase/server-client";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -28,7 +26,7 @@ const defaultUrl = process.env.NEXT_PUBLIC_VERCEL_URL
 export const metadata = {
   metadataBase: new URL(defaultUrl),
   title: "Arc Work",
-  description: "Decentralized freelance marketplace on Arc blockchain",
+  description: "The operating system for internet creators and AI workers",
 };
 
 export default async function RootLayout({
@@ -36,6 +34,9 @@ export default async function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const supabase = createSupabaseServerComponentClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
   return (
     <html lang="en" className={inter.variable} suppressHydrationWarning>
       <body className="font-sans antialiased">
@@ -49,46 +50,30 @@ export default async function RootLayout({
           <AppKitProvider>
           <WalletProvider>
           <div className="min-h-screen flex flex-col">
-            {/* Fixed Header */}
-            <nav className="fixed top-0 left-0 right-0 z-50 h-14 border-b" style={{ borderColor: "var(--color-bd)", backgroundColor: "color-mix(in srgb, var(--color-bg) 85%, transparent)", backdropFilter: "blur(12px)" }}>
-              <div className="w-full max-w-7xl mx-auto flex justify-between items-center h-full px-6 text-sm">
-                <div className="flex items-center gap-6">
-                  <Link
-                    href={"/"}
-                    className="font-semibold text-base tracking-tight hover:opacity-70 transition-opacity"
-                    style={{ color: "var(--color-fg)" }}
-                  >
+            {!hasEnvVars ? (
+              <nav
+                className="fixed top-0 left-0 right-0 z-50 border-b"
+                style={{
+                  height: "56px",
+                  borderColor: "color-mix(in srgb, var(--color-bd) 50%, transparent)",
+                  backgroundColor: "color-mix(in srgb, var(--color-bg) 80%, transparent)",
+                  backdropFilter: "blur(16px)",
+                  WebkitBackdropFilter: "blur(16px)",
+                }}
+              >
+                <div className="h-full max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-6">
+                  <span className="text-[15px] font-semibold tracking-[-0.02em]" style={{ color: "var(--color-fg)" }}>
                     arc work
-                  </Link>
-                  <div className="flex items-center gap-1">
-                    {[
-                      { href: "/dashboard", label: "Dashboard" },
-                      { href: "/dashboard/clipper", label: "Clipper" },
-                      { href: "/dashboard/products", label: "Products" },
-                      { href: "/dashboard/products/create", label: "Create" },
-                      { href: "/dashboard/bridge", label: "Bridge" },
-                      { href: "/dashboard/profile", label: "Profile" },
-                      { href: "/dashboard/verify", label: "Verify" },
-                      { href: "/dashboard/agents", label: "Agents" },
-                    ].map((item) => (
-                      <Link
-                        key={item.href}
-                        href={item.href}
-                        className="px-3 py-1.5 rounded-md text-sm transition-all duration-150 hover:text-[var(--color-fg)]"
-                        style={{ color: "var(--color-fg-secondary)" }}
-                      >
-                        {item.label}
-                      </Link>
-                    ))}
-                  </div>
+                  </span>
+                  <EnvVarWarning />
                 </div>
-                <div className="flex items-center gap-3">
-                  <ThemeSwitcher />
-                  {!hasEnvVars ? <EnvVarWarning /> : <HeaderAuth />}
-                  <WalletConnectButton />
-                </div>
-              </div>
-            </nav>
+              </nav>
+            ) : (
+              <NavBar
+                isAuthenticated={!!user}
+                userEmail={user?.email}
+              />
+            )}
 
             {/* Main Content */}
             <main className="flex-1 flex flex-col items-center pt-20 px-6">

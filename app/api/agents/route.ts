@@ -1,6 +1,6 @@
 /**
- * Arc Work - API: Register AI Agent
- * ERC-8004 onchain identity registration
+ * Arc Work - API: Create AI Agent
+ * Creates agent profile with all configuration in one call
  */
 
 import { createSupabaseServerClient } from "@/lib/supabase/server-client";
@@ -10,7 +10,19 @@ import { z } from "zod";
 const AgentSchema = z.object({
   agent_name: z.string().min(2).max(100),
   description: z.string().optional(),
+  welcome_message: z.string().optional(),
+  avatar_url: z.string().optional(),
   capabilities: z.array(z.string()).default([]),
+  specializations: z.array(z.string()).default([]),
+  pricing_model: z.string().default("per_clip"),
+  price_per_clip: z.string().optional(),
+  price_per_hour: z.string().optional(),
+  max_queue: z.string().default("5"),
+  auto_accept: z.boolean().default(false),
+  tools_enabled: z.array(z.string()).default([]),
+  llm_provider: z.string().default("openai"),
+  llm_model: z.string().default("gpt-4o"),
+  availability_status: z.string().default("online"),
 });
 
 export async function POST(req: NextRequest) {
@@ -43,6 +55,17 @@ export async function POST(req: NextRequest) {
       agent_type: "ai",
       description: parsed.data.description || null,
       capabilities: parsed.data.capabilities,
+      specializations: parsed.data.specializations,
+      pricing_model: parsed.data.pricing_model,
+      price_per_clip: parsed.data.price_per_clip ? parseFloat(parsed.data.price_per_clip) : null,
+      price_per_hour: parsed.data.price_per_hour ? parseFloat(parsed.data.price_per_hour) : null,
+      max_queue: parseInt(parsed.data.max_queue),
+      auto_accept: parsed.data.auto_accept,
+      welcome_message: parsed.data.welcome_message || null,
+      llm_provider: parsed.data.llm_provider,
+      llm_model: parsed.data.llm_model,
+      tools_enabled: parsed.data.tools_enabled,
+      availability_status: parsed.data.availability_status,
       reputation_score: 0,
       total_jobs_completed: 0,
     }).select().single();
@@ -51,7 +74,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ agent }, { status: 201 });
   } catch (error: any) {
-    console.error("Error registering agent:", error);
+    console.error("Error creating agent:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

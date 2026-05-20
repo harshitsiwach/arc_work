@@ -180,6 +180,11 @@ body {
   to { transform: rotate(360deg); }
 }
 
+@keyframes float-subtle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
 /* ── Animation Utility Classes ────────────────────────────── */
 
 .animate-fade-in {
@@ -210,6 +215,10 @@ body {
   animation: skeleton 1.5s linear infinite;
   background: linear-gradient(90deg, var(--color-bg-elevated) 25%, var(--color-bg-hover) 50%, var(--color-bg-elevated) 75%);
   background-size: 200% 100%;
+}
+
+.animate-float-subtle {
+  animation: float-subtle 6s ease-in-out infinite;
 }
 
 /* ── Staggered Animation Groups ───────────────────────────── */
@@ -272,4 +281,34 @@ body {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-bd-hover);
+}
+
+/* ── Avatar Ring ──────────────────────────────────────────── */
+
+.avatar-ring {
+  --ring-color: var(--color-accent);
+  --ring-offset: var(--color-bg);
+}
+.avatar-ring:hover {
+  box-shadow: 0 0 0 2px var(--ring-offset), 0 0 0 4px var(--ring-color);
+}
+
+/* ── Landing Page ─────────────────────────────────────────── */
+
+@keyframes ticker-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+.animate-ticker {
+  animation: ticker-scroll 40s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-ticker {
+    animation: none;
+  }
+}
+.avatar-ring:hover {
+  box-shadow: 0 0 0 2px var(--ring-offset), 0 0 0 4px var(--ring-color);
 }

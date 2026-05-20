@@ -111,7 +111,7 @@ export const signUpAction = async (formData: FormData) => {
         wallet_set_id: createdWalletSet.id,
         wallet_address: createdWallet.address,
         account_type: createdWallet.accountType,
-        blockchain: createdWallet.blockchain,
+        blockchain: createdwallet?.blockchain,
         currency: "USDC",
       })
       .select();

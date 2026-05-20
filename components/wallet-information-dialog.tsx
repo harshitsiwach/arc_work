@@ -40,8 +40,8 @@ export const WalletInformationDialog: FunctionComponent<Props> = props => {
     <Dialog>
       <DialogTrigger asChild>
         <Button className="ml-auto" variant="ghost" size="icon">
-        <Info className="h-4 w-4" />
-      </Button>
+          <Info className="h-4 w-4" />
+        </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
@@ -52,27 +52,27 @@ export const WalletInformationDialog: FunctionComponent<Props> = props => {
             Balance
           </h4>
           <div className="text-xl text-muted-foreground cursor-pointer mb-4">
-            <WalletBalance walletId={props.wallet.circle_wallet_id} />
+            <WalletBalance walletId={props.wallet?.circle_wallet_id} />
           </div>
           <h4 className="scroll-m-20 text-xl font-semibold tracking-tight mb-2">
             ID
           </h4>
           <div className="flex w-full items-center mb-4">
-            <Input disabled value={props.wallet.circle_wallet_id} />
-            <CopyButton text={props.wallet.circle_wallet_id} />
+            <Input disabled value={props.wallet?.circle_wallet_id} />
+            <CopyButton text={props.wallet?.circle_wallet_id} />
           </div>
           <h4 className="scroll-m-20 text-xl font-semibold tracking-tight mb-2">
             Address
           </h4>
           <div className="flex w-full items-center mb-4">
-            <Input disabled value={props.wallet.wallet_address} />
-            <CopyButton text={props.wallet.wallet_address} />
+            <Input disabled value={props.wallet?.wallet_address} />
+            <CopyButton text={props.wallet?.wallet_address} />
           </div>
           <h4 className="scroll-m-20 text-xl font-semibold tracking-tight mb-2">
             Blockchain
           </h4>
           <p className="text-xl text-muted-foreground cursor-pointer">
-            {props.wallet.blockchain || "No wallet found"}
+            {props.wallet?.blockchain || "No wallet found"}
           </p>
         </div>
       </DialogContent>

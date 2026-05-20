@@ -1,10 +1,11 @@
 /**
- * API: Update detailed AI agent profile
+ * API: Update AI Agent Profile
+ * PATCH — update fields on an existing agent
  */
 import { createSupabaseServerClient } from "@/lib/supabase/server-client";
 import { NextRequest, NextResponse } from "next/server";
 
-export async function PUT(req: NextRequest) {
+export async function PATCH(req: NextRequest) {
   try {
     const supabase = createSupabaseServerClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -23,36 +24,28 @@ export async function PUT(req: NextRequest) {
     }
 
     const body = await req.json();
+    const { agentId, ...updates } = body;
 
-    const { data: existing } = await supabase
+    if (!agentId) {
+      return NextResponse.json({ error: "agentId is required" }, { status: 400 });
+    }
+
+    // Verify ownership
+    const { data: existing, error: fetchError } = await supabase
       .from("agent_profiles")
       .select("id")
+      .eq("id", agentId)
       .eq("profile_id", profile.id)
       .single();
 
-    if (!existing) {
-      return NextResponse.json({ error: "Agent not registered yet. Create one first." }, { status: 400 });
+    if (fetchError || !existing) {
+      return NextResponse.json({ error: "Agent not found or access denied" }, { status: 404 });
     }
 
     const { data: agent, error } = await supabase
       .from("agent_profiles")
-      .update({
-        description: body.description,
-        avatar_url: body.avatar_url || null,
-        capabilities: body.capabilities || [],
-        specializations: body.specializations || [],
-        pricing_model: body.pricing_model || "fixed",
-        price_per_clip: body.price_per_clip ? parseFloat(body.price_per_clip) : null,
-        price_per_hour: body.price_per_hour ? parseFloat(body.price_per_hour) : null,
-        max_queue: body.max_queue ? parseInt(body.max_queue) : 5,
-        auto_accept: body.auto_accept || false,
-        welcome_message: body.welcome_message || null,
-        llm_provider: body.llm_provider || "openai",
-        llm_model: body.llm_model || null,
-        tools_enabled: body.tools_enabled || [],
-        availability_status: body.availability_status || "online",
-      })
-      .eq("id", existing.id)
+      .update(updates)
+      .eq("id", agentId)
       .select()
       .single();
 
@@ -60,7 +53,7 @@ export async function PUT(req: NextRequest) {
 
     return NextResponse.json({ agent });
   } catch (error: any) {
-    console.error("Error updating agent profile:", error);
+    console.error("Error updating agent:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

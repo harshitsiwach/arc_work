@@ -11,7 +11,7 @@ const ProductSchema = z.object({
   description: z.string().optional().default(""),
   price_amount: z.number().positive(),
   price_currency: z.string().optional().default("USDC"),
-  product_type: z.enum(["clip_pack", "template", "membership"]),
+  product_type: z.enum(["clip_pack", "template", "membership", "automation", "service", "community"]),
   delivery_type: z.string().optional().default("instant"),
   media_urls: z.array(z.string()).optional().default([]),
   file_url: z.string().optional().nullable().default(null),

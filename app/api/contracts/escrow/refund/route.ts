@@ -123,7 +123,7 @@ export async function POST(req: NextRequest) {
           feeLevel: "MEDIUM",
         }
       },
-      walletId: contractTransaction.beneficiary_wallet.circle_wallet_id
+      walletId: contractTransaction.beneficiary_wallet?.circle_wallet_id
     });
 
     await agreementService.createTransaction({

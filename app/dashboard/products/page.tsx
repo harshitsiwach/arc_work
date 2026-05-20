@@ -10,14 +10,19 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/browser-client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Search, Package, User, Tag, Loader2, AlertCircle } from "lucide-react";
+import { Search, Package, User, Tag, Loader2, AlertCircle, Plus } from "lucide-react";
 import { VerifiedBadges } from "@/components/verified-badges";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 const PRODUCT_TYPE_OPTIONS = [
   { value: "", label: "All Types" },
   { value: "clip_pack", label: "Clip Pack" },
   { value: "template", label: "Template" },
   { value: "membership", label: "Membership" },
+  { value: "automation", label: "AI Automation" },
+  { value: "service", label: "Service" },
+  { value: "community", label: "Community" },
 ] as const;
 
 const PRODUCT_TYPE_BADGES: Record<string, { label: string; className: string }> = {
@@ -32,6 +37,18 @@ const PRODUCT_TYPE_BADGES: Record<string, { label: string; className: string }> 
   membership: {
     label: "Membership",
     className: "bg-amber-500/10 text-amber-500 border-amber-500/20",
+  },
+  automation: {
+    label: "AI Automation",
+    className: "bg-green-500/10 text-green-500 border-green-500/20",
+  },
+  service: {
+    label: "Service",
+    className: "bg-cyan-500/10 text-cyan-500 border-cyan-500/20",
+  },
+  community: {
+    label: "Community",
+    className: "bg-pink-500/10 text-pink-500 border-pink-500/20",
   },
 };
 
@@ -107,13 +124,21 @@ export default function ProductsPage() {
   return (
     <div className="space-y-6">
       {/* Page header */}
-      <div className="animate-fade-in-up">
-        <h1 className="text-2xl font-semibold tracking-tight" style={{ color: "var(--color-fg)" }}>
-          Product Catalog
-        </h1>
-        <p className="text-sm mt-1" style={{ color: "var(--color-fg-secondary)" }}>
-          Browse clip packs, templates, and memberships from creators
-        </p>
+      <div className="flex items-center justify-between animate-fade-in-up">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight" style={{ color: "var(--color-fg)" }}>
+            Product Catalog
+          </h1>
+          <p className="text-sm mt-1" style={{ color: "var(--color-fg-secondary)" }}>
+            Browse clip packs, templates, AI automations, and more
+          </p>
+        </div>
+        <Link href="/dashboard/products/create">
+          <Button style={{ backgroundColor: "var(--color-accent)" }}>
+            <Plus className="mr-1.5 h-4 w-4" />
+            Create Product
+          </Button>
+        </Link>
       </div>
 
       {/* Search / Filter bar */}
