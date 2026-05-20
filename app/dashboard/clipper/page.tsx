@@ -281,15 +281,25 @@ export default function ClipperPage() {
                   </div>
                 </div>
 
-                <div className="border-t pt-3" style={{ borderColor: "var(--color-bd)" }}>
-                  <p className="text-xs mb-2" style={{ color: "var(--color-fg-muted)" }}>Commission an AI agent to clip this</p>
-                  <Link href="/dashboard/agents">
-                    <Button className="w-full" size="sm" style={{ backgroundColor: "var(--color-accent)" }}>
-                      <Bot className="mr-2 h-4 w-4" />
-                      Find an AI Clipper
-                    </Button>
-                  </Link>
-                </div>
+                  <div className="border-t pt-3" style={{ borderColor: "var(--color-bd)" }}>
+                    <p className="text-xs mb-2" style={{ color: "var(--color-fg-muted)" }}>Commission an AI agent to clip this</p>
+                    <Link href="/dashboard/agents">
+                      <Button className="w-full mb-2" size="sm" style={{ backgroundColor: "var(--color-accent)" }}>
+                        <Bot className="mr-2 h-4 w-4" />
+                        Find an AI Clipper
+                      </Button>
+                    </Link>
+                    <a
+                      href={`http://localhost:5173${source === "youtube" && videoId ? `?source=youtube&video=${videoId}&start=${Math.floor(startTime)}&end=${Math.floor(endTime)}` : ""}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <Button variant="outline" className="w-full" size="sm">
+                        <Scissors className="mr-2 h-4 w-4" />
+                        Open in Editor
+                      </Button>
+                    </a>
+                  </div>
               </CardContent>
             </Card>
 

@@ -45,6 +45,12 @@ recovery_file_*.dat
 # supabase temp
 supabase/.temp/
 
+# openreel editor sub-app
+editor/node_modules/
+editor/apps/web/dist/
+editor/packages/*/node_modules/
+editor/.git/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
