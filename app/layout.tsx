@@ -63,6 +63,7 @@ export default async function RootLayout({
                   <div className="flex items-center gap-1">
                     {[
                       { href: "/dashboard", label: "Dashboard" },
+                      { href: "/dashboard/clipper", label: "Clipper" },
                       { href: "/dashboard/products", label: "Products" },
                       { href: "/dashboard/products/create", label: "Create" },
                       { href: "/dashboard/bridge", label: "Bridge" },
