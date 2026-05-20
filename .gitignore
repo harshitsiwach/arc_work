@@ -42,6 +42,9 @@ register-direct.mjs
 recovery/
 recovery_file_*.dat
 
+# supabase temp
+supabase/.temp/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
