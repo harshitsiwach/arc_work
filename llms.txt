@@ -30,10 +30,12 @@ No middleman, no payment delays, no fake metrics.
 | Blockchain | Arc Testnet (Chain ID: 5042002) |
 | Smart Contracts | RefundProtocol.sol, ERC-8004 (Agent Identity) |
 | Wallet (Server) | Circle Developer-Controlled Wallets |
-| Wallet (User) | MetaMask (EOA) + Circle Modular Wallets (passkey) |
+| Wallet (User) | Reown AppKit (MetaMask, WalletConnect, Coinbase, etc.) + Circle Modular Wallets (passkey) |
 | Fiat Ramp | Circle Ramp API (mainnet) |
-| Cross-Chain | Circle CCTP via App Kit Bridge |
+| Cross-Chain | Circle CCTP via `@circle-fin/app-kit` |
+| Token Swap | Circle Swap API via `@circle-fin/app-kit` |
 | AI Validation | OpenAI Vision API |
+| Video Editor | OpenReel (browser-based CapCut alternative, sub-app at `editor/`) |
 
 ---
 
@@ -42,48 +44,56 @@ No middleman, no payment delays, no fake metrics.
 ```
 arc-escrow/
 ├── app/
-│   ├── api/                         # API routes
-│   │   ├── agents/                  # AI agent CRUD
-│   │   │   └── profile/             # Detailed agent profile update
-│   │   ├── bridge/                  # CCTP bridge initiation
-│   │   │   └── initiate/
-│   │   ├── contracts/               # Smart contract interactions
-│   │   │   ├── escrow/              # Escrow deposit/refund
-│   │   │   ├── analyze/             # OpenAI document analysis
-│   │   │   └── validate-work/       # AI work validation
-│   │   ├── gigs/                    # Legacy gig marketplace
-│   │   ├── products/                # Product catalog CRUD
-│   │   │   └── purchase/            # Product purchase recording
-│   │   ├── profile/edit/            # Creator profile editing
-│   │   ├── smart-wallet/            # Circle modular wallet creation
-│   │   ├── usdc/                    # Circle Ramp on/off ramp
-│   │   ├── verify/connect/          # Social media verification
-│   │   └── webhooks/circle/         # Circle transaction webhooks
-│   ├── creator/[id]/                # Public creator profiles
-│   ├── dashboard/
-│   │   ├── agents/                  # AI agent management
-│   │   │   └── create/              # 5-step agent creation wizard
-│   │   ├── bridge/                  # Cross-chain USDC bridge UI
-│   │   ├── marketplace/             # Legacy gig marketplace
-│   │   ├── products/                # Product catalog
-│   │   │   ├── [id]/                # Product detail + purchase
-│   │   │   └── create/              # Create product listing
-│   │   ├── profile/                 # Creator profile + edit
-│   │   ├── verify/                  # Social account verification
-│   │   └── page.tsx                 # Main dashboard with stats
-│   ├── layout.tsx                   # Root layout with nav
-│   └── page.tsx                     # Landing page
-├── components/
-│   ├── smart-wallet.tsx             # Passkey wallet creation
-│   ├── usdc-button.tsx              # Buy/Withdraw USDC buttons
-│   ├── verified-badges.tsx          # Social verification badges
-│   ├── wallet-connect-button.tsx    # MetaMask + smart wallet
-│   └── ui/                          # shadcn/ui components
+├── api/
+│   ├── agents/                  # AI agent CRUD
+│   │   └── profile/             # Detailed agent profile update
+│   ├── bridge/                  # CCTP bridge
+│   │   └── initiate/            # Bridge tx generation
+│   ├── circle-proxy/[...path]/  # Circle API proxy (CORS bypass)
+│   ├── contracts/               # Smart contract interactions
+│   │   ├── escrow/              # Escrow deposit/refund
+│   │   ├── analyze/             # OpenAI document analysis
+│   │   └── validate-work/       # AI work validation
+│   ├── gigs/                    # Legacy gig marketplace
+│   ├── products/                # Product catalog CRUD
+│   │   └── purchase/            # Product purchase recording
+│   ├── profile/edit/            # Creator profile editing
+│   ├── smart-wallet/            # Circle modular wallet creation
+│   ├── swap/                    # Token swap server-side proxy
+│   ├── usdc/                    # Circle Ramp on/off ramp
+│   ├── verify/connect/          # Social media verification
+│   └── webhooks/circle/         # Circle transaction webhooks
+├── creator/[id]/                # Public creator profiles
+├── dashboard/
+│   ├── agents/                  # AI agent management
+│   │   └── create/              # 5-step agent creation wizard
+│   ├── bridge/                  # Cross-chain USDC bridge + swap
+│   ├── clipper/                 # In-app video clipper (YT/Twitch embed)
+│   ├── marketplace/             # Legacy gig marketplace
+│   ├── products/                # Product catalog
+│   │   ├── [id]/                # Product detail + purchase
+│   │   └── create/              # Create product listing
+│   ├── profile/                 # Creator profile + edit
+│   │   └── edit-form.tsx        # Inline profile editor
+│   ├── verify/                  # Social account verification
+│   └── page.tsx                 # Main dashboard with stats
 ├── lib/
-│   ├── web3/wallet-provider.tsx     # Wallet context (EOA + smart)
-│   ├── supabase/                    # Supabase clients
-│   └── utils/                       # OpenAI, Circle SDK clients
-├── supabase/migrations/             # Database migrations
+│   ├── web3/
+│   │   ├── wallet-provider.tsx  # Wallet context (AppKit + smart)
+│   │   └── appkit-provider.tsx  # Reown AppKit setup (wagmi adapter)
+│   ├── supabase/                # Supabase clients
+│   └── utils/                   # OpenAI, Circle SDK clients
+├── components/
+│   ├── smart-wallet.tsx         # Passkey wallet creation
+│   ├── usdc-button.tsx          # Buy/Withdraw USDC buttons
+│   ├── verified-badges.tsx      # Social verification badges
+│   ├── wallet-connect-button.tsx# AppKit + smart wallet dropdown
+│   └── ui/                      # shadcn/ui components
+├── editor/                      # OpenReel video editor sub-app
+│   ├── apps/web/                # Vite-based editor app (port 5173)
+│   ├── packages/core/           # Video editing engine (130K+ loc)
+│   └── packages/ui/             # Editor UI components
+├── supabase/migrations/         # Database migrations
 ├── PRODUCT.md                       # Product design context
 ├── DESIGN.md                        # Design system tokens
 └── next.config.js                   # Webpack fallbacks for Node deps
@@ -254,25 +264,50 @@ Main dashboard shows:
 
 ### 6. Wallet System
 
-Two wallet types:
+Two wallet types with Reown AppKit integration:
 
 | Type | Technology | Use Case |
 |------|-----------|----------|
-| MetaMask / Rabby | Browser extension (EOA) | Users with existing wallets |
-| Smart Wallet | Passkey (biometric) | New users, mobile, no extension |
+| AppKit (MetaMask, WalletConnect, Coinbase, etc.) | Reown AppKit via wagmi adapter | Users connect with any browser wallet via modal |
+| Smart Wallet | Passkey (biometric) via Circle | New users, mobile, no extension |
+
+**Wallet connection flow:**
+- Nav button opens a dropdown → "MetaMask/Rabby" or "Smart Wallet (Passkey)"
+- AppKit modal opens on connect — supports 50+ wallets
+- `wallet-provider.tsx` syncs with AppKit state (address, chainId)
+- Active wallet type persisted in localStorage
 
 **Routes:**
 - `Connect Wallet` button in nav — dropdown with both options
-- `POST /api/smart-wallet` — Create modular wallet (3 actions: setup, create-wallet, check-challenge)
+- `POST /api/smart-wallet` — Create modular wallet
+- `lib/web3/appkit-provider.tsx` — Reown AppKit configuration
 
-### 7. Cross-Chain Bridge
+### 7. Cross-Chain Bridge + Swap
 
-Bridge USDC from Ethereum Sepolia, Base Sepolia, Arbitrum Sepolia → Arc testnet
-via Circle CCTP. USDC lands in <1 second.
+**Bridge** USDC from Ethereum Sepolia, Base Sepolia, Arbitrum Sepolia → Arc via Circle CCTP:
+
+- Uses `@circle-fin/app-kit` with `createViemAdapterFromProvider`
+- Calls `kit.bridge()` with source chain + amount
+- Handles chain switching via AppKit's `switchNetwork`
+- Auto-opens explorer link on success
+- USDC lands in <1 second
+
+**Swap** USDC ↔ EURC natively on Arc Testnet:
+
+- Uses Circle's `stablecoinKits/swap` API proxied server-side via `/api/swap`
+- Bypasses browser CORS restrictions via server proxy
+- Token aliases: USDC (`0x3600...`), EURC (`0x89B5...`)
+- Swaps execute client-side via `kit.swap()` after getting quote
+
+**Circle Proxy API** (`/api/circle-proxy/[...path]`):
+- Proxies Circle API calls server-side
+- Strips `x-user-agent` header that Circle blocks from browsers
+- Enables App Kit SDK usage without CORS issues
 
 **Routes:**
-- `GET /dashboard/bridge` — Bridge UI with wallet connection
-- `POST /api/bridge/initiate` — Generate CCTP bridge transaction
+- `GET /dashboard/bridge` — Bridge + Swap UI with wallet connection
+- `POST /api/swap` — Server-side swap quote
+- `GET/POST /api/circle-proxy/*` — Generic Circle API proxy
 
 ### 8. Fiat On/Off Ramp
 
@@ -287,7 +322,44 @@ via Circle CCTP. USDC lands in <1 second.
 - Circle developer-controlled wallets for escrow agent
 - Real-time updates via Supabase Realtime
 
-### 10. Design System
+### 10. In-App Video Clipper
+
+Users can paste YouTube or Twitch URLs, watch videos inline, set clip timestamps,
+and commission AI agents or open the professional editor.
+
+**Features:**
+- **YouTube embed** — official IFrame API with play/pause/seek controls
+- **Twitch embed** — player embed for videos and channels (requires proper `parent` param)
+- **Timestamp picker** — Mark Start / Mark End buttons set clip boundaries
+- **Progress bar** — clickable scrubber with start (blue) and end (red) markers
+- **Clip summary** — sidebar shows source, length, start/end, duration
+- **Commission AI agent** — click "Find an AI Clipper" → agents page
+- **Open in Editor** — passes video URL + timestamps to OpenReel editor
+
+**Routes:**
+- `GET /dashboard/clipper` — Video clipper interface
+
+### 11. OpenReel Video Editor (Sub-App)
+
+A full CapCut-level video editor running as a separate Vite app at `editor/`.
+
+**Features (130K+ lines):**
+- Multi-track timeline with unlimited tracks
+- Real-time preview with GPU acceleration
+- Frame-accurate trimming, cutting, splitting
+- 20+ video transitions and effects
+- Color grading (wheels, HSL, curves, LUTs)
+- Audio mixing with EQ, reverb, ducking, noise reduction
+- Text overlays with 20+ animation presets
+- Export to MP4 (H.264/H.265), WebM, ProRes
+- Hardware-accelerated encoding via WebCodecs
+- Auto-save to IndexedDB
+
+**Run with:** `npm run dev:editor` or `npm run dev:all`
+**Dev URL:** `http://localhost:5173/`
+**Integration:** Clipper page passes timestamps via URL params
+
+### 12. Design System
 
 Complete design tokens in `PRODUCT.md` and `DESIGN.md`:
 
@@ -319,7 +391,9 @@ Complete design tokens in `PRODUCT.md` and `DESIGN.md`:
 | `CIRCLE_ENTITY_SECRET` | Generated + registered via SDK |
 | `NEXT_PUBLIC_SUPABASE_URL` | supabase.com → Project Settings → API |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | supabase.com → Project Settings → API |
-| `NEXT_PUBLIC_USDC_CONTRACT_ADDRESS` | Arc testnet: 0x3600...0000 |
+| `NEXT_PUBLIC_USDC_CONTRACT_ADDRESS` | Arc testnet: `0x3600000000000000000000000000000000000000` |
+| `NEXT_PUBLIC_EURC_CONTRACT_ADDRESS` | Arc testnet: `0x89B50855Aa3bE2F677cD6303Cec089B5F319D72a` |
+| `NEXT_PUBLIC_CIRCLE_KIT_KEY` | console.circle.com → Kit Keys (for swap) |
 | `OPENAI_API_KEY` | platform.openai.com |
 | `NEXT_PUBLIC_AGENT_WALLET_ID` | Auto-generated by `npm run generate-wallet` |
 | `NEXT_PUBLIC_AGENT_WALLET_ADDRESS` | Auto-generated by `npm run generate-wallet` |
@@ -339,9 +413,20 @@ npm run generate-wallet
 # Generate entity secret (if not done)
 npm run generate-entity-secret
 
-# Start dev
-npm run dev
+# Install editor dependencies
+cd editor && pnpm install && pnpm build:wasm && cd ..
+
+# Start dev (both apps)
+npm run dev:all
+
+# Or separately:
+npm run dev        # Our app (localhost:3000)
+npm run dev:editor # Editor (localhost:5173)
 ```
+
+## Nav Structure
+
+Dashboard / Clipper / Products / Create / Bridge / Profile / Verify / Agents
 
 ---
 
@@ -364,10 +449,13 @@ Branch: master
 
 ## Future Roadmap
 
+- Real USDC payment execution on purchase (not just DB record)
+- Product delivery system (send download URL after payment)
 - Live OAuth integration for YouTube, TikTok, Instagram, Twitch, X
-- Real-time earnings charts and analytics
+- Real-time earnings charts and analytics on dashboard
 - Revenue split contracts on-chain (auto-split per product)
 - Agent marketplace (browse and hire AI agents directly)
 - Subscription products with recurring USDC payments
+- In-app video clipping via OpenReel (load YT/Twitch video directly in editor)
 - Kick.com verification (when API becomes available)
 - Arc mainnet deployment (when available)
