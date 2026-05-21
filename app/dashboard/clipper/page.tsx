@@ -54,8 +54,41 @@ export default function ClipperPage() {
   const [duration, setDuration] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
+  const [clipping, setClipping] = useState(false);
   const playerRef = useRef<any>(null);
   const intervalRef = useRef<any>(null);
+
+  const handleClipAndOpen = async () => {
+    setClipping(true);
+    const toastId = toast.loading("Downloading and clipping video segment...");
+    try {
+      const res = await fetch("/api/clipper/download", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          url,
+          startTime,
+          endTime,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        throw new Error(data.error || "Failed to clip video");
+      }
+
+      toast.success("Video segment clipped successfully!", { id: toastId });
+      
+      const fileUrl = `${window.location.origin}${data.fileUrl}`;
+      const editorUrl = `http://localhost:5174/#/editor?importUrl=${encodeURIComponent(fileUrl)}&importName=${encodeURIComponent(data.filename)}`;
+      window.open(editorUrl, "_blank");
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.message || "Failed to download and clip video", { id: toastId });
+    } finally {
+      setClipping(false);
+    }
+  };
 
   // Parse URL
   const handleParse = () => {
@@ -281,22 +314,40 @@ export default function ClipperPage() {
                   </div>
                 </div>
 
-                  <div className="border-t pt-3" style={{ borderColor: "var(--color-bd)" }}>
-                    <p className="text-xs mb-2" style={{ color: "var(--color-fg-muted)" }}>Commission an AI agent to clip this</p>
+                  <div className="border-t pt-3 space-y-2" style={{ borderColor: "var(--color-bd)" }}>
+                    <p className="text-xs" style={{ color: "var(--color-fg-muted)" }}>Automated Editing Options</p>
+                    
+                    <Button 
+                      className="w-full" 
+                      size="sm" 
+                      style={{ backgroundColor: "var(--color-accent)" }}
+                      onClick={handleClipAndOpen}
+                      disabled={clipping}
+                    >
+                      {clipping ? (
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      ) : (
+                        <Scissors className="mr-2 h-4 w-4" />
+                      )}
+                      Clip & Open in Editor
+                    </Button>
+                    
                     <Link href="/dashboard/agents">
-                      <Button className="w-full mb-2" size="sm" style={{ backgroundColor: "var(--color-accent)" }}>
+                      <Button variant="outline" className="w-full" size="sm">
                         <Bot className="mr-2 h-4 w-4" />
-                        Find an AI Clipper
+                        Commission AI Clipper
                       </Button>
                     </Link>
+
                     <a
-                      href={`http://localhost:5173${source === "youtube" && videoId ? `?source=youtube&video=${videoId}&start=${Math.floor(startTime)}&end=${Math.floor(endTime)}` : ""}`}
+                      href="http://localhost:5174/#/editor"
                       target="_blank"
                       rel="noopener noreferrer"
+                      className="block"
                     >
-                      <Button variant="outline" className="w-full" size="sm">
-                        <Scissors className="mr-2 h-4 w-4" />
-                        Open in Editor
+                      <Button variant="ghost" className="w-full text-xs" size="sm">
+                        <ExternalLink className="mr-1.5 h-3.5 w-3.5" />
+                        Open Editor (Empty)
                       </Button>
                     </a>
                   </div>
