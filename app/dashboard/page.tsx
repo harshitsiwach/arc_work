@@ -19,7 +19,8 @@ import Link from "next/link";
 import {
   Bot, Package, Coins, DollarSign, ExternalLink, Plus,
   ArrowUpRight, TrendingUp, Shield, Zap, Clock,
-  Wallet, AlertCircle,
+  Wallet, AlertCircle, Briefcase, GraduationCap, Wrench,
+  Scissors, PlusCircle,
 } from "lucide-react";
 
 const Transactions = dynamic(() => import('@/components/transactions').then(mod => mod.Transactions), { ssr: false });
@@ -71,263 +72,285 @@ export default async function DashboardPage() {
   const agentCount = myAgents?.length || 0;
 
   return (
-    <div className="space-y-6">
-      {/* Page header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight" style={{ color: "var(--color-fg)" }}>
-            Dashboard
-          </h1>
-          <p className="text-sm mt-1" style={{ color: "var(--color-fg-secondary)" }}>
-            Welcome back, {profile?.name || user.email?.split("@")[0]}
-          </p>
+    <div className="space-y-8">
+      {/* Page header + inline stats */}
+      <div>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold tracking-tight" style={{ color: "var(--color-fg)" }}>
+              Dashboard
+            </h1>
+            <p className="text-sm mt-1" style={{ color: "var(--color-fg-secondary)" }}>
+              Welcome back, {profile?.name || user.email?.split("@")[0]}
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Link href="/dashboard/products">
+              <Button size="sm" variant="outline">
+                Browse Products
+              </Button>
+            </Link>
+            <Link href="/dashboard/products/create">
+              <Button size="sm" style={{ backgroundColor: "var(--color-accent)" }}>
+                <Plus className="mr-1.5 h-3.5 w-3.5" />
+                Sell Something
+              </Button>
+            </Link>
+          </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Link href="/dashboard/products">
-            <Button size="sm" variant="outline">
-              Browse Products
-            </Button>
-          </Link>
-          <Link href="/dashboard/products/create">
-            <Button size="sm" style={{ backgroundColor: "var(--color-accent)" }}>
-              <Plus className="mr-1.5 h-3.5 w-3.5" />
-              Sell Something
-            </Button>
-          </Link>
-        </div>
-      </div>
 
-      {/* Stats cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <StatCard
-          icon={Package}
-          label="Active Products"
-          value={activeProducts.toString()}
-        />
-        <StatCard
-          icon={Bot}
-          label="AI Agents"
-          value={agentCount.toString()}
-        />
-        <StatCard
-          icon={DollarSign}
-          label="Total Listed"
-          value={`${totalListed.toFixed(0)} USDC`}
-        />
-        <StatCard
-          icon={Coins}
-          label="Wallet Balance"
-          value={wallet?.circle_wallet_id ? <WalletBalance walletId={wallet.circle_wallet_id} /> : "—"}
-          isBalance
-        />
+        {/* Compact inline summary strip */}
+        <div
+          className="mt-4 flex items-center gap-4 px-4 py-2.5 rounded-lg"
+          style={{ backgroundColor: "var(--color-bg-elevated)", border: "1px solid var(--color-bd)" }}
+        >
+          <div className="stat-inline">
+            <Package size={13} style={{ color: "var(--color-accent)" }} />
+            <span className="stat-value">{activeProducts}</span> products
+          </div>
+          <span style={{ color: "var(--color-bd)" }}>·</span>
+          <div className="stat-inline">
+            <Bot size={13} style={{ color: "var(--color-accent)" }} />
+            <span className="stat-value">{agentCount}</span> agents
+          </div>
+          <span style={{ color: "var(--color-bd)" }}>·</span>
+          <div className="stat-inline">
+            <DollarSign size={13} style={{ color: "var(--color-accent)" }} />
+            <span className="stat-value">{totalListed.toFixed(0)} USDC</span> listed
+          </div>
+          <span style={{ color: "var(--color-bd)" }}>·</span>
+          <div className="stat-inline">
+            <Coins size={13} style={{ color: "var(--color-accent)" }} />
+            {wallet?.circle_wallet_id ? (
+              <span className="stat-value"><WalletBalance walletId={wallet.circle_wallet_id} /></span>
+            ) : (
+              <span className="stat-value">—</span>
+            )}
+            {" "}balance
+          </div>
+        </div>
       </div>
 
       {/* Wallet + Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Wallet Card */}
-        <Card style={{ backgroundColor: "var(--color-bg-elevated)", borderColor: "var(--color-bd)" }}>
-          <CardHeader className="flex-row items-center justify-between pb-2">
+        {/* Wallet section */}
+        <div
+          className="p-5 rounded-xl"
+          style={{ backgroundColor: "var(--color-bg-elevated)", border: "1px solid var(--color-bd)" }}
+        >
+          <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <Wallet className="h-4 w-4" style={{ color: "var(--color-accent)" }} />
-              <CardTitle className="text-base" style={{ color: "var(--color-fg)" }}>Account balance</CardTitle>
+              <h2 className="text-sm font-semibold" style={{ color: "var(--color-fg)" }}>Account balance</h2>
             </div>
             {wallet && <WalletInformationDialog wallet={wallet} />}
-          </CardHeader>
-          <CardContent>
-            {wallet ? (
-              <div className="space-y-4">
-                <div>
-                  <h2 className="text-3xl font-bold tracking-tight" style={{ color: "var(--color-fg)" }}>
-                    <WalletBalance walletId={wallet.circle_wallet_id} />
-                  </h2>
-                  <p className="text-xs mt-1 font-mono" style={{ color: "var(--color-fg-muted)" }}>
-                    {wallet.wallet_address?.slice(0, 10)}...{wallet.wallet_address?.slice(-6)}
-                  </p>
-                </div>
-                <div className="flex gap-2">
-                  <USDCButton className="flex-1" mode="BUY" walletAddress={wallet.wallet_address} />
-                  <USDCButton className="flex-1" mode="SELL" walletAddress={wallet.wallet_address} />
-                  {process.env.NODE_ENV === "development" && (
-                    <RequestUsdcButton walletAddress={wallet.wallet_address} />
-                  )}
-                </div>
-              </div>
-            ) : (
-              <div className="py-6 text-center">
-                <AlertCircle className="h-8 w-8 mx-auto mb-2" style={{ color: "var(--color-warning)" }} />
-                <p className="text-sm font-medium" style={{ color: "var(--color-fg)" }}>No wallet found</p>
-                <p className="text-xs mt-1" style={{ color: "var(--color-fg-muted)" }}>
-                  Sign up to automatically get a Circle wallet
+          </div>
+          {wallet ? (
+            <div className="space-y-4">
+              <div>
+                <h2 className="text-2xl font-bold tracking-tight" style={{ color: "var(--color-fg)" }}>
+                  <WalletBalance walletId={wallet.circle_wallet_id} />
+                </h2>
+                <p className="text-xs mt-1 font-mono" style={{ color: "var(--color-fg-muted)" }}>
+                  {wallet.wallet_address?.slice(0, 10)}...{wallet.wallet_address?.slice(-6)}
                 </p>
               </div>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Buyer Quick Start */}
-        <Card style={{ backgroundColor: "var(--color-bg-elevated)", borderColor: "var(--color-bd)" }}>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base" style={{ color: "var(--color-fg)" }}>Browse & Buy</CardTitle>
-            <CardDescription>Discover what creators have built</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 gap-2">
-              {[
-                { href: "/dashboard/products", label: "Product Catalog", icon: TrendingUp },
-                { href: "/dashboard/marketplace", label: "Freelance Gigs", icon: ExternalLink },
-                { href: "/dashboard/courses", label: "Courses", icon: Shield },
-                { href: "/dashboard/tools", label: "Tools & APIs", icon: Zap },
-              ].map((action) => (
-                <Link key={action.href} href={action.href}>
-                  <div
-                    className="flex items-center gap-2 p-3 rounded-lg border transition-all duration-150 hover-lift cursor-pointer"
-                    style={{ borderColor: "var(--color-bd)" }}
-                  >
-                    <action.icon className="h-4 w-4" style={{ color: "var(--color-accent)" }} />
-                    <span className="text-xs font-medium" style={{ color: "var(--color-fg-secondary)" }}>{action.label}</span>
-                  </div>
-                </Link>
-              ))}
+              <div className="flex gap-2">
+                <USDCButton className="flex-1" mode="BUY" walletAddress={wallet.wallet_address} />
+                <USDCButton className="flex-1" mode="SELL" walletAddress={wallet.wallet_address} />
+                {process.env.NODE_ENV === "development" && (
+                  <RequestUsdcButton walletAddress={wallet.wallet_address} />
+                )}
+              </div>
             </div>
-          </CardContent>
-        </Card>
+          ) : (
+            <div className="py-6 text-center">
+              <AlertCircle className="h-8 w-8 mx-auto mb-2" style={{ color: "var(--color-warning)" }} />
+              <p className="text-sm font-medium" style={{ color: "var(--color-fg)" }}>No wallet found</p>
+              <p className="text-xs mt-1" style={{ color: "var(--color-fg-muted)" }}>
+                Sign up to automatically get a Circle wallet
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Browse & Buy quick links */}
+        <div
+          className="p-5 rounded-xl"
+          style={{ backgroundColor: "var(--color-bg-elevated)", border: "1px solid var(--color-bd)" }}
+        >
+          <h2 className="text-sm font-semibold mb-3" style={{ color: "var(--color-fg)" }}>Browse & Buy</h2>
+          <p className="text-xs mb-4" style={{ color: "var(--color-fg-muted)" }}>Discover what creators have built</p>
+          <div className="grid grid-cols-2 gap-2">
+            {[
+              { href: "/dashboard/products", label: "Product Catalog", icon: TrendingUp, accent: "oklch(0.55 0.15 260)" },
+              { href: "/dashboard/marketplace", label: "Freelance Gigs", icon: Briefcase, accent: "oklch(0.55 0.15 200)" },
+              { href: "/dashboard/courses", label: "Courses", icon: GraduationCap, accent: "oklch(0.55 0.18 150)" },
+              { href: "/dashboard/tools", label: "Tools & APIs", icon: Zap, accent: "oklch(0.60 0.16 80)" },
+            ].map((action) => (
+              <Link key={action.href} href={action.href}>
+                <div
+                  className="flex items-center gap-2.5 p-3 rounded-lg border hover-bg cursor-pointer"
+                  style={{ borderColor: "var(--color-bd)" }}
+                >
+                  <action.icon className="h-4 w-4 shrink-0" style={{ color: action.accent }} />
+                  <span className="text-xs font-medium" style={{ color: "var(--color-fg-secondary)" }}>{action.label}</span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* Recent Products */}
       {myProducts && myProducts.length > 0 && (
-        <Card style={{ backgroundColor: "var(--color-bg-elevated)", borderColor: "var(--color-bd)" }}>
-          <CardHeader className="flex-row items-center justify-between">
-            <div>
-              <CardTitle className="text-base" style={{ color: "var(--color-fg)" }}>Recent Products</CardTitle>
-              <CardDescription>Your latest listings</CardDescription>
-            </div>
+        <section>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-sm font-semibold" style={{ color: "var(--color-fg)" }}>Recent Products</h2>
             <Link href="/dashboard/my-products">
-              <Button variant="ghost" size="sm" className="gap-1">
+              <Button variant="ghost" size="sm" className="gap-1 text-xs">
                 Manage
                 <ArrowUpRight className="h-3 w-3" />
               </Button>
             </Link>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2">
-              {myProducts.map((product: any) => (
-                <div
-                  key={product.id}
-                  className="flex items-center justify-between p-3 rounded-lg"
-                  style={{ backgroundColor: "var(--color-bg-inset)" }}
-                >
-                  <div className="flex items-center gap-3">
-                    <Package className="h-4 w-4" style={{ color: "var(--color-fg-muted)" }} />
-                    <div>
-                      <p className="text-sm font-medium" style={{ color: "var(--color-fg)" }}>{product.title}</p>
-                      <p className="text-xs" style={{ color: "var(--color-fg-muted)" }}>
-                        {product.product_type?.replace("_", " ")}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Badge
-                      variant="secondary"
-                      className="text-[10px]"
-                      style={{
-                        backgroundColor: product.status === "active" ? "oklch(0.60 0.15 150 / 0.12)" : "var(--color-bg-hover)",
-                        color: product.status === "active" ? "oklch(0.60 0.15 150)" : "var(--color-fg-muted)",
-                      }}
-                    >
-                      {product.status}
-                    </Badge>
-                    <span className="text-sm font-mono font-medium" style={{ color: "var(--color-fg)" }}>
-                      {product.price_amount} USDC
-                    </span>
+          </div>
+          <div className="space-y-1.5">
+            {myProducts.map((product: any) => (
+              <div
+                key={product.id}
+                className="flex items-center justify-between p-3 rounded-lg hover-bg"
+                style={{ backgroundColor: "var(--color-bg-elevated)" }}
+              >
+                <div className="flex items-center gap-3">
+                  <Package className="h-4 w-4" style={{ color: "var(--color-fg-muted)" }} />
+                  <div>
+                    <p className="text-sm font-medium" style={{ color: "var(--color-fg)" }}>{product.title}</p>
+                    <p className="text-xs" style={{ color: "var(--color-fg-muted)" }}>
+                      {product.product_type?.replace("_", " ")}
+                    </p>
                   </div>
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+                <div className="flex items-center gap-3">
+                  <Badge
+                    variant="secondary"
+                    className="text-[10px]"
+                    style={{
+                      backgroundColor: product.status === "active" ? "oklch(0.60 0.15 150 / 0.12)" : "var(--color-bg-hover)",
+                      color: product.status === "active" ? "oklch(0.60 0.15 150)" : "var(--color-fg-muted)",
+                    }}
+                  >
+                    {product.status}
+                  </Badge>
+                  <span className="text-sm font-mono font-medium" style={{ color: "var(--color-fg)" }}>
+                    {product.price_amount} USDC
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
       )}
 
-      {/* Empty state for products */}
+      {/* Empty state for products — onboarding prompt */}
       {(!myProducts || myProducts.length === 0) && (
-        <Card style={{ backgroundColor: "var(--color-bg-elevated)", borderColor: "var(--color-bd)" }}>
-          <CardContent className="py-8 text-center">
-            <Package className="h-8 w-8 mx-auto mb-3" style={{ color: "var(--color-fg-muted)" }} />
-            <p className="text-sm font-medium" style={{ color: "var(--color-fg)" }}>
-              Start selling on Arc Work
-            </p>
-            <p className="text-xs mt-1 mb-4" style={{ color: "var(--color-fg-muted)" }}>
-              Create your first product to earn USDC from buyers worldwide
-            </p>
-            <Link href="/dashboard/products/create">
-              <Button size="sm" style={{ backgroundColor: "var(--color-accent)" }}>
-                <Plus className="mr-1.5 h-3.5 w-3.5" />
-                Create Your First Product
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
+        <section>
+          <h2 className="text-sm font-semibold mb-3" style={{ color: "var(--color-fg)" }}>Get started selling</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {[
+              {
+                icon: Scissors,
+                title: "Create a Clip Pack",
+                desc: "Bundle your best clips and sell them instantly",
+                href: "/dashboard/products/create",
+              },
+              {
+                icon: Package,
+                title: "Launch a Template",
+                desc: "Sell editable presets and workflows to creators",
+                href: "/dashboard/products/create",
+              },
+              {
+                icon: PlusCircle,
+                title: "Post a Gig",
+                desc: "Offer your skills as a freelance service",
+                href: "/dashboard/marketplace/post",
+              },
+            ].map((item) => (
+              <Link key={item.title} href={item.href}>
+                <div
+                  className="p-4 rounded-xl hover-lift cursor-pointer"
+                  style={{ backgroundColor: "var(--color-bg-elevated)", border: "1px solid var(--color-bd)" }}
+                >
+                  <div
+                    className="w-9 h-9 rounded-lg flex items-center justify-center mb-3"
+                    style={{ backgroundColor: "var(--color-accent-soft)" }}
+                  >
+                    <item.icon className="h-4 w-4" style={{ color: "var(--color-accent)" }} />
+                  </div>
+                  <p className="text-sm font-medium mb-0.5" style={{ color: "var(--color-fg)" }}>{item.title}</p>
+                  <p className="text-xs leading-relaxed" style={{ color: "var(--color-fg-muted)" }}>{item.desc}</p>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
       )}
 
       {/* AI Agents */}
       {myAgents && myAgents.length > 0 && (
-        <Card style={{ backgroundColor: "var(--color-bg-elevated)", borderColor: "var(--color-bd)" }}>
-          <CardHeader className="flex-row items-center justify-between">
-            <div>
-              <CardTitle className="text-base flex items-center gap-2" style={{ color: "var(--color-fg)" }}>
-                <Bot className="h-4 w-4" style={{ color: "oklch(0.55 0.15 200)" }} />
-                Your AI Agents
-              </CardTitle>
-              <CardDescription>Autonomous workers earning for you</CardDescription>
+        <section>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Bot className="h-4 w-4" style={{ color: "oklch(0.55 0.15 200)" }} />
+              <h2 className="text-sm font-semibold" style={{ color: "var(--color-fg)" }}>Your AI Agents</h2>
             </div>
             <Link href="/dashboard/agents">
-              <Button variant="ghost" size="sm" className="gap-1">
+              <Button variant="ghost" size="sm" className="gap-1 text-xs">
                 Manage
                 <ArrowUpRight className="h-3 w-3" />
               </Button>
             </Link>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              {myAgents.map((agent: any) => (
-                <div
-                  key={agent.id}
-                  className="p-4 rounded-lg border"
-                  style={{ borderColor: "var(--color-bd)" }}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <div
-                        className="w-8 h-8 rounded-full flex items-center justify-center"
-                        style={{ backgroundColor: "oklch(0.55 0.15 200 / 0.12)" }}
-                      >
-                        <Bot className="h-4 w-4" style={{ color: "oklch(0.55 0.15 200)" }} />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium" style={{ color: "var(--color-fg)" }}>{agent.agent_name}</p>
-                        <p className="text-[10px]" style={{ color: "var(--color-fg-muted)" }}>{agent.agent_type}</p>
-                      </div>
-                    </div>
-                    <span
-                      className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-medium"
-                      style={{
-                        backgroundColor: agent.availability_status === "online" ? "oklch(0.60 0.15 150 / 0.12)" : "var(--color-bg-hover)",
-                        color: agent.availability_status === "online" ? "oklch(0.60 0.15 150)" : "var(--color-fg-muted)",
-                      }}
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            {myAgents.map((agent: any) => (
+              <div
+                key={agent.id}
+                className="p-4 rounded-xl hover-bg"
+                style={{ backgroundColor: "var(--color-bg-elevated)", border: "1px solid var(--color-bd)" }}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <div
+                      className="w-8 h-8 rounded-full flex items-center justify-center"
+                      style={{ backgroundColor: "oklch(0.55 0.15 200 / 0.12)" }}
                     >
-                      <span className={`w-1.5 h-1.5 rounded-full ${agent.availability_status === "online" ? "bg-green-500 animate-pulse-soft" : "bg-muted-foreground"}`} />
-                      {agent.availability_status || "offline"}
-                    </span>
+                      <Bot className="h-4 w-4" style={{ color: "oklch(0.55 0.15 200)" }} />
+                    </div>
+                    <div>
+                      <p className="text-sm font-medium" style={{ color: "var(--color-fg)" }}>{agent.agent_name}</p>
+                      <p className="text-[10px]" style={{ color: "var(--color-fg-muted)" }}>{agent.agent_type}</p>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-3 text-xs" style={{ color: "var(--color-fg-muted)" }}>
-                    <span>{agent.total_jobs_completed || 0} jobs</span>
-                    <span>✦ {agent.reputation_score || 0}</span>
-                    {agent.total_earnings > 0 && <span>{agent.total_earnings} USDC</span>}
-                  </div>
+                  <span
+                    className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-medium"
+                    style={{
+                      backgroundColor: agent.availability_status === "online" ? "oklch(0.60 0.15 150 / 0.12)" : "var(--color-bg-hover)",
+                      color: agent.availability_status === "online" ? "oklch(0.60 0.15 150)" : "var(--color-fg-muted)",
+                    }}
+                  >
+                    <span className={`w-1.5 h-1.5 rounded-full ${agent.availability_status === "online" ? "bg-green-500 animate-pulse-soft" : "bg-muted-foreground"}`} />
+                    {agent.availability_status || "offline"}
+                  </span>
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+                <div className="flex items-center gap-3 text-xs" style={{ color: "var(--color-fg-muted)" }}>
+                  <span>{agent.total_jobs_completed || 0} jobs</span>
+                  <span>✦ {agent.reputation_score || 0}</span>
+                  {agent.total_earnings > 0 && <span>{agent.total_earnings} USDC</span>}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
       )}
 
       {/* Escrow Agreements */}
@@ -341,35 +364,19 @@ export default async function DashboardPage() {
 
       {/* Transactions */}
       {wallet && (
-        <Card style={{ backgroundColor: "var(--color-bg-elevated)", borderColor: "var(--color-bd)" }}>
-          <CardHeader>
-            <CardTitle className="text-base flex items-center gap-2" style={{ color: "var(--color-fg)" }}>
-              <Clock className="h-4 w-4" />
-              Recent transactions
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
+        <section>
+          <div className="flex items-center gap-2 mb-3">
+            <Clock className="h-4 w-4" style={{ color: "var(--color-fg-muted)" }} />
+            <h2 className="text-sm font-semibold" style={{ color: "var(--color-fg)" }}>Recent transactions</h2>
+          </div>
+          <div
+            className="rounded-xl p-4"
+            style={{ backgroundColor: "var(--color-bg-elevated)", border: "1px solid var(--color-bd)" }}
+          >
             <Transactions wallet={wallet} profile={profile} />
-          </CardContent>
-        </Card>
+          </div>
+        </section>
       )}
-    </div>
-  );
-}
-
-function StatCard({ icon: Icon, label, value, isBalance }: { icon: any; label: string; value: string | React.ReactNode; isBalance?: boolean }) {
-  return (
-    <div
-      className="p-4 rounded-xl"
-      style={{ backgroundColor: "var(--color-bg-elevated)", border: "1px solid var(--color-bd)" }}
-    >
-      <div className="flex items-center gap-2 mb-2">
-        <Icon className="h-4 w-4" style={{ color: "var(--color-accent)" }} />
-        <span className="text-xs" style={{ color: "var(--color-fg-muted)" }}>{label}</span>
-      </div>
-      <p className="text-2xl font-bold tracking-tight" style={{ color: "var(--color-fg)" }}>
-        {value}
-      </p>
     </div>
   );
 }

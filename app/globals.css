@@ -309,6 +309,99 @@ body {
     animation: none;
   }
 }
-.avatar-ring:hover {
-  box-shadow: 0 0 0 2px var(--ring-offset), 0 0 0 4px var(--ring-color);
+
+/* ── Dashboard Utilities ─────────────────────────────────── */
+
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.4375rem 0.625rem;
+  border-radius: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  transition: background-color 0.15s ease-out, color 0.15s ease-out;
+  color: var(--color-fg-secondary);
+}
+.sidebar-item:hover {
+  background-color: var(--color-bg-hover);
+  color: var(--color-fg);
+}
+.sidebar-item[data-active="true"] {
+  background-color: var(--color-accent-soft);
+  color: var(--color-fg);
+}
+.sidebar-item[data-active="true"] svg {
+  color: var(--color-accent);
+}
+
+.search-bar {
+  width: 100%;
+  padding: 0.5rem 0.75rem 0.5rem 2.5rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  background-color: var(--color-bg-inset);
+  border: 1px solid var(--color-bd);
+  color: var(--color-fg);
+  outline: none;
+  transition: border-color 0.15s ease-out;
+}
+.search-bar:focus {
+  border-color: var(--color-accent);
+}
+.search-bar::placeholder {
+  color: var(--color-fg-muted);
+}
+
+.empty-state {
+  text-align: center;
+  padding: 3rem 1.5rem;
+  border-radius: 0.75rem;
+  background-color: var(--color-bg-elevated);
+  border: 1px solid var(--color-bd);
+}
+
+.stat-inline {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  color: var(--color-fg-muted);
+}
+.stat-inline .stat-value {
+  font-weight: 600;
+  color: var(--color-fg-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.category-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.3125rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  border: 1px solid var(--color-bd);
+  background: transparent;
+  color: var(--color-fg-secondary);
+  cursor: pointer;
+  transition: all 0.15s ease-out;
+  white-space: nowrap;
+}
+.category-pill:hover {
+  border-color: var(--color-bd-hover);
+  color: var(--color-fg);
+}
+.category-pill[data-active="true"] {
+  background-color: var(--color-accent);
+  border-color: var(--color-accent);
+  color: white;
+}
+
+.hover-glow {
+  transition: box-shadow 0.2s ease-out;
+}
+.hover-glow:hover {
+  box-shadow: 0 0 12px var(--color-accent-faded);
 }

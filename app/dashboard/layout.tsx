@@ -4,8 +4,7 @@
  */
 "use client";
 
-import { useState } from "react";
-import { DashboardSidebar, MobileSidebar } from "@/components/dashboard-sidebar";
+import { DashboardSidebar } from "@/components/dashboard-sidebar";
 
 export default function DashboardLayout({
   children,
@@ -19,7 +18,7 @@ export default function DashboardLayout({
 
       {/* Main content area */}
       <main className="flex-1 min-w-0">
-        <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 py-6">
+        <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-16">
           {children}
         </div>
       </main>

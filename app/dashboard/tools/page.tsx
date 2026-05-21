@@ -18,11 +18,11 @@ const CATEGORY_ICONS: Record<string, any> = {
 };
 
 const CATEGORY_COLORS: Record<string, string> = {
-  Search: "rgba(59,130,246,0.15)", Inference: "rgba(168,85,247,0.15)",
-  Data: "rgba(34,197,94,0.15)", Media: "rgba(239,68,68,0.15)",
-  Social: "rgba(59,130,246,0.15)", Infra: "rgba(107,114,128,0.15)",
-  Travel: "rgba(251,191,36,0.15)", Storage: "rgba(59,130,246,0.15)",
-  Trading: "rgba(16,185,129,0.15)",
+  Search: "oklch(0.55 0.15 260 / 0.12)", Inference: "oklch(0.55 0.15 300 / 0.12)",
+  Data: "oklch(0.55 0.18 150 / 0.12)", Media: "oklch(0.55 0.20 30 / 0.12)",
+  Social: "oklch(0.55 0.15 260 / 0.12)", Infra: "oklch(0.45 0.01 260 / 0.12)",
+  Travel: "oklch(0.60 0.16 80 / 0.12)", Storage: "oklch(0.55 0.15 260 / 0.12)",
+  Trading: "oklch(0.55 0.18 150 / 0.12)",
 };
 
 interface ToolService {
@@ -79,27 +79,36 @@ export default function ToolsPage() {
         </p>
       </div>
 
-      {/* Search + filter */}
-      <div className="flex gap-3">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: "var(--color-fg-muted)" }} />
-          <input
-            placeholder="Search tools..."
-            className="w-full pl-10 pr-4 py-2 rounded-lg text-sm"
-            style={{ backgroundColor: "var(--color-bg-inset)", border: "1px solid", borderColor: "var(--color-bd)", color: "var(--color-fg)" }}
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-          />
-        </div>
-        <select
-          className="rounded-lg px-3 py-2 text-sm"
-          style={{ backgroundColor: "var(--color-bg-inset)", border: "1px solid", borderColor: "var(--color-bd)", color: "var(--color-fg)" }}
-          value={categoryFilter}
-          onChange={e => setCategoryFilter(e.target.value)}
+      {/* Search */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: "var(--color-fg-muted)" }} />
+        <input
+          placeholder="Search tools..."
+          className="search-bar"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+        />
+      </div>
+
+      {/* Category pills */}
+      <div className="flex gap-1.5 flex-wrap">
+        <button
+          className="category-pill"
+          data-active={!categoryFilter}
+          onClick={() => setCategoryFilter("")}
         >
-          <option value="">All Categories</option>
-          {categories.map(c => <option key={c} value={c}>{c}</option>)}
-        </select>
+          All
+        </button>
+        {categories.map(c => (
+          <button
+            key={c}
+            className="category-pill"
+            data-active={categoryFilter === c}
+            onClick={() => setCategoryFilter(c)}
+          >
+            {c}
+          </button>
+        ))}
       </div>
 
       {/* Stats bar */}
