@@ -73,6 +73,15 @@ export default function BridgePage() {
   const [swapStatus, setSwapStatus] = useState<"idle" | "pending" | "confirming" | "completed" | "failed">("idle");
   const [swapQuote, setSwapQuote] = useState<number | null>(null);
 
+  /* Ramp state */
+  const [rampMode, setRampMode] = useState<"buy" | "sell">("buy");
+  const [rampAmount, setRampAmount] = useState("");
+  const [rampLoading, setRampLoading] = useState(false);
+  const [rampTxHash, setRampTxHash] = useState<string | null>(null);
+  const [rampStatus, setRampStatus] = useState<"idle" | "pending" | "completed" | "failed">("idle");
+  const [rampCardInfo, setRampCardInfo] = useState({ number: "", expiry: "", cvc: "" });
+  const [rampBankInfo, setRampBankInfo] = useState({ account: "", routing: "" });
+
   /* Fetch swap quote */
   useEffect(() => {
     const numAmount = parseFloat(swapAmount);
@@ -252,6 +261,68 @@ export default function BridgePage() {
     }
   };
 
+  /* Ramp handler */
+  const handleRamp = async () => {
+    if (!isConnected || !address) {
+      toast.error("Connect your wallet first");
+      return;
+    }
+
+    const numAmount = parseFloat(rampAmount);
+    if (!numAmount || numAmount <= 0) {
+      toast.error("Enter a valid amount");
+      return;
+    }
+
+    setRampLoading(true);
+    setRampStatus("pending");
+    setRampTxHash(null);
+
+    try {
+      if (rampMode === "buy") {
+        // Mock Buy: Simulate credit card processing
+        if (!rampCardInfo.number || !rampCardInfo.expiry || !rampCardInfo.cvc) {
+          throw new Error("Please fill out all card details");
+        }
+        // Simulate network delay
+        await new Promise(resolve => setTimeout(resolve, 3000));
+        setRampStatus("completed");
+        toast.success(`Successfully bought ${numAmount} USDC. Testnet tokens will arrive shortly.`);
+      } else {
+        // Mock Sell: Send USDC to dummy platform address via MetaMask
+        if (!rampBankInfo.account || !rampBankInfo.routing) {
+          throw new Error("Please fill out bank account details");
+        }
+        if (chainId !== 5042002) {
+          throw new Error("Switch to Arc Testnet to sell");
+        }
+
+        const USDC_CONTRACT = "0x3600000000000000000000000000000000000000";
+        const MOCK_PLATFORM_ADDRESS = "0x000000000000000000000000000000000000dEaD";
+        
+        // encode transfer(address, uint256)
+        const methodId = "0xa9059cbb";
+        const targetHex = MOCK_PLATFORM_ADDRESS.replace("0x", "").padStart(64, "0");
+        const amountHex = BigInt(Math.floor(numAmount * 1_000_000)).toString(16).padStart(64, "0");
+        const data = `${methodId}${targetHex}${amountHex}`;
+
+        const txHash = await (walletProvider as any).request({
+          method: "eth_sendTransaction",
+          params: [{ from: address, to: USDC_CONTRACT, data }],
+        });
+
+        setRampTxHash(txHash);
+        setRampStatus("completed");
+        toast.success(`USDC sent! Fiat withdrawal to bank initiated.`);
+      }
+    } catch (err: any) {
+      setRampStatus("failed");
+      toast.error(err.message || "Ramp transaction failed");
+    } finally {
+      setRampLoading(false);
+    }
+  };
+
   const isOnArc = chainId === 5042002;
   const isOnSourceChain = SUPPORTED_SOURCE_CHAINS.some(c => c.id === chainId);
   const estimate = BRIDGE_ESTIMATES[String(selectedChain.id)] || { time: "< 1 sec", fee: "~0.00 USDC" };
@@ -275,6 +346,10 @@ export default function BridgePage() {
             className="w-full mb-4 p-1"
             style={{ backgroundColor: "var(--color-bg-elevated)", border: "1px solid var(--color-bd)" }}
           >
+            <TabsTrigger value="ramp" className="flex-1 data-[state=active]:bg-[var(--color-accent)] data-[state=active]:text-white">
+              <DollarSign className="mr-2 h-4 w-4" />
+              Buy Crypto
+            </TabsTrigger>
             <TabsTrigger value="bridge" className="flex-1 data-[state=active]:bg-[var(--color-accent)] data-[state=active]:text-white">
               <ArrowDown className="mr-2 h-4 w-4" />
               Bridge
@@ -621,6 +696,170 @@ export default function BridgePage() {
                     />
                   </div>
                 </>
+              )}
+            </div>
+          </TabsContent>
+
+          {/* ── Ramp Tab ────────────────────────────────── */}
+          <TabsContent value="ramp" className="mt-0">
+            <div
+              className="rounded-xl overflow-hidden"
+              style={{ backgroundColor: "var(--color-bg-elevated)", border: "1px solid var(--color-bd)" }}
+            >
+              {!isConnected ? (
+                <div className="p-12 text-center">
+                  <div
+                    className="w-14 h-14 rounded-2xl mx-auto mb-4 flex items-center justify-center"
+                    style={{ backgroundColor: "var(--color-accent-soft)" }}
+                  >
+                    <Wallet className="h-6 w-6" style={{ color: "var(--color-accent)" }} />
+                  </div>
+                  <h3 className="text-lg font-semibold mb-2" style={{ color: "var(--color-fg)" }}>
+                    Connect Wallet
+                  </h3>
+                  <p className="text-sm mb-6" style={{ color: "var(--color-fg-secondary)" }}>
+                    Connect your wallet to buy crypto directly.
+                  </p>
+                </div>
+              ) : (
+                <div className="p-5 space-y-4">
+                  {/* Mode Toggle */}
+                  <div className="flex bg-zinc-900/50 p-1 rounded-lg border border-white/10 w-full mb-6">
+                    <button
+                      onClick={() => setRampMode("buy")}
+                      className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${
+                        rampMode === "buy" ? "bg-[var(--color-accent)] text-white shadow-sm" : "text-white/60 hover:text-white"
+                      }`}
+                    >
+                      Buy USDC
+                    </button>
+                    <button
+                      onClick={() => setRampMode("sell")}
+                      className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${
+                        rampMode === "sell" ? "bg-[var(--color-accent)] text-white shadow-sm" : "text-white/60 hover:text-white"
+                      }`}
+                    >
+                      Sell USDC
+                    </button>
+                  </div>
+
+                  {rampMode === "buy" ? (
+                    <>
+                      {/* BUY UI */}
+                      <div>
+                        <label className="text-xs font-medium mb-2 block text-white/60">Amount to Buy (USD)</label>
+                        <div className="bg-zinc-900/50 rounded-lg p-3 border border-white/10 flex items-center justify-between">
+                          <Input
+                            type="number"
+                            placeholder="100.00"
+                            value={rampAmount}
+                            onChange={(e) => setRampAmount(e.target.value)}
+                            className="text-2xl font-semibold bg-transparent border-0 px-0 h-auto focus-visible:ring-0 text-white w-full"
+                          />
+                          <Badge variant="outline" className="bg-zinc-800 border-white/10 text-white ml-2 shrink-0 h-8">
+                            🇺🇸 USD
+                          </Badge>
+                        </div>
+                        {rampAmount && parseFloat(rampAmount) > 0 && (
+                          <p className="text-xs text-white/60 mt-2 text-right">
+                            ≈ {parseFloat(rampAmount).toFixed(2)} USDC
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="space-y-3 pt-2">
+                        <label className="text-xs font-medium block text-white/60">Simulated Payment Details</label>
+                        <Input
+                          placeholder="Card Number (e.g. 4242 4242 4242 4242)"
+                          value={rampCardInfo.number}
+                          onChange={(e) => setRampCardInfo({ ...rampCardInfo, number: e.target.value })}
+                          className="bg-zinc-900/50 border-white/10 text-white placeholder:text-white/30"
+                        />
+                        <div className="flex gap-3">
+                          <Input
+                            placeholder="MM/YY"
+                            value={rampCardInfo.expiry}
+                            onChange={(e) => setRampCardInfo({ ...rampCardInfo, expiry: e.target.value })}
+                            className="bg-zinc-900/50 border-white/10 text-white placeholder:text-white/30"
+                          />
+                          <Input
+                            placeholder="CVC"
+                            value={rampCardInfo.cvc}
+                            onChange={(e) => setRampCardInfo({ ...rampCardInfo, cvc: e.target.value })}
+                            className="bg-zinc-900/50 border-white/10 text-white placeholder:text-white/30"
+                          />
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      {/* SELL UI */}
+                      <div>
+                        <label className="text-xs font-medium mb-2 block text-white/60">Amount to Sell (USDC)</label>
+                        <div className="bg-zinc-900/50 rounded-lg p-3 border border-white/10 flex items-center justify-between">
+                          <Input
+                            type="number"
+                            placeholder="100.00"
+                            value={rampAmount}
+                            onChange={(e) => setRampAmount(e.target.value)}
+                            className="text-2xl font-semibold bg-transparent border-0 px-0 h-auto focus-visible:ring-0 text-white w-full"
+                          />
+                          <Badge variant="outline" className="bg-zinc-800 border-white/10 text-white ml-2 shrink-0 h-8 flex items-center">
+                            <span className="mr-1">💵</span> USDC
+                          </Badge>
+                        </div>
+                        {rampAmount && parseFloat(rampAmount) > 0 && (
+                          <p className="text-xs text-white/60 mt-2 text-right">
+                            ≈ ${parseFloat(rampAmount).toFixed(2)} USD to Bank
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="space-y-3 pt-2">
+                        <label className="text-xs font-medium block text-white/60">Destination Bank Account</label>
+                        <Input
+                          placeholder="Account Number"
+                          value={rampBankInfo.account}
+                          onChange={(e) => setRampBankInfo({ ...rampBankInfo, account: e.target.value })}
+                          className="bg-zinc-900/50 border-white/10 text-white placeholder:text-white/30"
+                        />
+                        <Input
+                          placeholder="Routing Number / Sort Code"
+                          value={rampBankInfo.routing}
+                          onChange={(e) => setRampBankInfo({ ...rampBankInfo, routing: e.target.value })}
+                          className="bg-zinc-900/50 border-white/10 text-white placeholder:text-white/30"
+                        />
+                      </div>
+                    </>
+                  )}
+
+                  <Button
+                    onClick={handleRamp}
+                    disabled={rampLoading || !rampAmount}
+                    className="w-full mt-4"
+                    style={{ backgroundColor: "var(--color-accent)", minHeight: "44px" }}
+                  >
+                    {rampLoading ? (
+                      <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Processing...</>
+                    ) : rampMode === "buy" ? (
+                      <><Shield className="mr-2 h-4 w-4" /> Pay Securely</>
+                    ) : (
+                      <><ArrowUpRight className="mr-2 h-4 w-4" /> Withdraw to Bank</>
+                    )}
+                  </Button>
+
+                  <TransactionStatus
+                    status={rampStatus}
+                    txHash={rampTxHash}
+                    explorerUrl={rampTxHash ? `https://testnet.arcscan.app/tx/${rampTxHash}` : undefined}
+                  />
+
+                  <p className="text-xs text-center mt-2 text-white/40">
+                    {rampMode === "buy" 
+                      ? "This is a Testnet integration. Dummy card details will simulate a fiat purchase." 
+                      : "Selling USDC requires a real MetaMask transaction. Tokens will be sent to a mock address."}
+                  </p>
+                </div>
               )}
             </div>
           </TabsContent>
