@@ -74,33 +74,35 @@ export default function PostGigPage() {
           </Button>
         </Link>
         <div>
-          <h1 className="text-3xl font-bold">Post a Gig</h1>
-          <p className="text-muted-foreground">Create a new freelance opportunity</p>
+          <h1 className="text-3xl font-bold" style={{ color: "var(--color-fg)" }}>Post a Gig</h1>
+          <p className="text-sm mt-1" style={{ color: "var(--color-fg-secondary)" }}>Create a new freelance opportunity</p>
         </div>
       </div>
 
-      <Card>
+      <Card style={{ backgroundColor: "var(--color-bg-elevated)", borderColor: "var(--color-bd)" }}>
         <CardHeader>
-          <CardTitle>Gig Details</CardTitle>
-          <CardDescription>Describe what you need done</CardDescription>
+          <CardTitle style={{ color: "var(--color-fg)" }}>Gig Details</CardTitle>
+          <CardDescription style={{ color: "var(--color-fg-muted)" }}>Describe what you need done</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <Label>Title</Label>
+              <Label style={{ color: "var(--color-fg-secondary)" }}>Title</Label>
               <Input
                 required
                 placeholder="e.g., Build a Solidity smart contract"
                 value={form.title}
                 onChange={e => setForm({ ...form, title: e.target.value })}
+                style={{ backgroundColor: "var(--color-bg-inset)", borderColor: "var(--color-bd)", color: "var(--color-fg)" }}
               />
             </div>
 
             <div>
-              <Label>Description</Label>
+              <Label style={{ color: "var(--color-fg-secondary)" }}>Description</Label>
               <textarea
                 required
-                className="w-full min-h-[120px] rounded-lg border bg-background px-3 py-2 text-sm"
+                className="w-full min-h-[120px] rounded-lg border px-3 py-2 text-sm focus:outline-none"
+                style={{ backgroundColor: "var(--color-bg-inset)", borderColor: "var(--color-bd)", color: "var(--color-fg)" }}
                 placeholder="Describe the work, requirements, and deliverables..."
                 value={form.description}
                 onChange={e => setForm({ ...form, description: e.target.value })}
@@ -109,9 +111,10 @@ export default function PostGigPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>Category</Label>
+                <Label style={{ color: "var(--color-fg-secondary)" }}>Category</Label>
                 <select
-                  className="w-full rounded-lg border bg-background px-3 py-2 text-sm"
+                  className="w-full rounded-lg border px-3 py-2 text-sm focus:outline-none"
+                  style={{ backgroundColor: "var(--color-bg-inset)", borderColor: "var(--color-bd)", color: "var(--color-fg)" }}
                   value={form.category}
                   onChange={e => setForm({ ...form, category: e.target.value })}
                 >
@@ -121,7 +124,7 @@ export default function PostGigPage() {
                 </select>
               </div>
               <div>
-                <Label>Price (USDC)</Label>
+                <Label style={{ color: "var(--color-fg-secondary)" }}>Price (USDC)</Label>
                 <Input
                   required
                   type="number"
@@ -130,27 +133,30 @@ export default function PostGigPage() {
                   placeholder="100"
                   value={form.price_amount}
                   onChange={e => setForm({ ...form, price_amount: e.target.value })}
+                  style={{ backgroundColor: "var(--color-bg-inset)", borderColor: "var(--color-bd)", color: "var(--color-fg)" }}
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>Delivery (days)</Label>
+                <Label style={{ color: "var(--color-fg-secondary)" }}>Delivery (days)</Label>
                 <Input
                   type="number"
                   min="1"
                   placeholder="7"
                   value={form.delivery_days}
                   onChange={e => setForm({ ...form, delivery_days: e.target.value })}
+                  style={{ backgroundColor: "var(--color-bg-inset)", borderColor: "var(--color-bd)", color: "var(--color-fg)" }}
                 />
               </div>
               <div>
-                <Label>Skills (comma separated)</Label>
+                <Label style={{ color: "var(--color-fg-secondary)" }}>Skills (comma separated)</Label>
                 <Input
                   placeholder="Solidity, React, TypeScript"
                   value={form.skills_required}
                   onChange={e => setForm({ ...form, skills_required: e.target.value })}
+                  style={{ backgroundColor: "var(--color-bg-inset)", borderColor: "var(--color-bd)", color: "var(--color-fg)" }}
                 />
               </div>
             </div>
@@ -161,12 +167,13 @@ export default function PostGigPage() {
                 id="agent_only"
                 checked={form.agent_only}
                 onChange={e => setForm({ ...form, agent_only: e.target.checked })}
-                className="rounded border-gray-300"
+                className="rounded border"
+                style={{ borderColor: "var(--color-bd)", backgroundColor: "var(--color-bg-inset)" }}
               />
-              <Label htmlFor="agent_only">AI agents only (no human freelancers)</Label>
+              <Label htmlFor="agent_only" style={{ color: "var(--color-fg-secondary)" }}>AI agents only (no human freelancers)</Label>
             </div>
 
-            <Button type="submit" disabled={loading} className="w-full">
+            <Button type="submit" disabled={loading} className="w-full" style={{ backgroundColor: "var(--color-accent)" }}>
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

@@ -359,7 +359,55 @@ A full CapCut-level video editor running as a separate Vite app at `editor/`.
 **Dev URL:** `http://localhost:5173/`
 **Integration:** Clipper page passes timestamps via URL params
 
-### 12. Design System
+### 12. Tools & APIs Marketplace
+
+50+ pay-per-call API services from **Agentic Market**, powered by **x402 protocol**.
+AI agents and humans can browse and call paid APIs with USDC micropayments.
+
+**Categories (9):**
+| Category | Count | Examples |
+|----------|-------|---------|
+| Data | 24 | CoinMarketCap, The Graph, Messari, WolframAlpha |
+| Inference | 7 | ChatGPT, Claude, DeepSeek, Perplexity |
+| Search | 6 | Exa, Firecrawl, Browserbase |
+| Media | 3 | Deepgram (audio/video processing) |
+| Social | 3 | LinkedIn, AgentMail |
+| Travel | 2 | Amadeus, FlightAware |
+| Infra, Storage, Trading | 5 | QuickNode, Alchemy, etc. |
+
+**Features:**
+- Search by name/description
+- Filter by category
+- Pricing from $0.001/call in USDC
+- Links to Agentic Wallet for payment
+- Server-side API proxy at `GET /api/tools`
+
+**Routes:**
+- `GET /dashboard/tools` — Browse all 50+ services
+- `GET /api/tools` — API proxy fetching Agentic Market service list
+
+### 13. Landing Page
+
+Premium animated landing page using **framer-motion**:
+- Hero section with 3D visual (`components/hero-visual.tsx`)
+- Activity ticker showing live onchain transactions (`components/activity-ticker.tsx`)
+- Tagline: "The operating system for internet creators and AI workers"
+- Fade-up staggered animations
+- Reduced motion respected
+
+### 14. Nav Structure
+
+```
+Dashboard / Marketplace / Tools / Agents / Create / Bridge / Profile / Verify
+```
+
+Extracted to `components/nav-bar.tsx` — Linear/Vercel-inspired with:
+- Active route detection
+- Mobile hamburger menu
+- Scroll-based styling
+- User menu dropdown
+
+### 15. Design System
 
 Complete design tokens in `PRODUCT.md` and `DESIGN.md`:
 

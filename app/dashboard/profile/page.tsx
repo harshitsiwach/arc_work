@@ -49,7 +49,7 @@ export default async function CreatorProfilePage() {
   const { data: myProducts } = await supabase
     .from("products")
     .select("*")
-    .eq("creator_profile_id", cp?.id)
+    .eq("creator_profile_id", profile.id)
     .order("created_at", { ascending: false });
 
   // Get agents
@@ -67,7 +67,14 @@ export default async function CreatorProfilePage() {
     .order("created_at", { ascending: false })
     .limit(10);
 
-  const totalSales = myProducts?.reduce((sum: number, p: any) => sum + Number(p.price_amount || 0), 0) || 0;
+  // Get actual sales of creator's products to calculate earnings
+  const { data: creatorSales } = await supabase
+    .from("product_purchases")
+    .select("amount, status, products!inner(creator_profile_id)")
+    .eq("products.creator_profile_id", profile.id)
+    .eq("status", "completed");
+
+  const totalSales = creatorSales?.reduce((sum: number, sale: any) => sum + Number(sale.amount || 0), 0) || 0;
   const totalProducts = myProducts?.length || 0;
   const totalAgents = myAgents?.length || 0;
 

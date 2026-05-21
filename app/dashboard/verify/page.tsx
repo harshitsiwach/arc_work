@@ -212,7 +212,8 @@ export default function VerifyPage() {
         </div>
       )}
 
-      {/* API keys info */}
+      {/* API keys info — dev only */}
+      {process.env.NODE_ENV === "development" && (
       <Card style={{ backgroundColor: "var(--color-bg-elevated)", borderColor: "var(--color-bd)" }}>
         <CardHeader>
           <CardTitle className="text-sm" style={{ color: "var(--color-fg)" }}>API Keys Needed</CardTitle>
@@ -229,6 +230,7 @@ export default function VerifyPage() {
           </div>
         </CardContent>
       </Card>
+      )}
     </div>
   );
 }

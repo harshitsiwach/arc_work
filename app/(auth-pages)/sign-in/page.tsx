@@ -28,13 +28,14 @@ export default function Login({ searchParams }: { searchParams: Message }) {
   return (
     <div className="flex flex-col gap-6">
       <form className="flex-1 flex flex-col min-w-64">
-        <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-600 to-amber-600">
+        <h1 className="text-2xl font-bold bg-clip-text text-transparent" style={{ backgroundImage: "linear-gradient(to right, var(--color-accent), oklch(0.65 0.16 80))" }}>
           Sign in
         </h1>
-        <p className="text-sm text-muted-foreground mt-1">
+        <p className="text-sm mt-1" style={{ color: "var(--color-fg-secondary)" }}>
           Don't have an account?{" "}
           <Link
-            className="text-blue-600 hover:text-blue-500 transition-colors font-medium" 
+            className="transition-colors font-medium hover:opacity-80" 
+            style={{ color: "var(--color-accent)" }}
             href="/sign-up"
           >
             Sign up
@@ -56,7 +57,8 @@ export default function Login({ searchParams }: { searchParams: Message }) {
             <div className="flex justify-between items-center">
               <Label htmlFor="password">Password</Label>
               <Link
-                className="text-xs text-blue-600 hover:text-blue-500 transition-colors"
+                className="text-xs transition-colors hover:opacity-80"
+                style={{ color: "var(--color-accent)" }}
                 href="/forgot-password"
               >
                 Forgot Password?
@@ -75,6 +77,7 @@ export default function Login({ searchParams }: { searchParams: Message }) {
 
           <SubmitButton
             className="w-full"
+            style={{ backgroundColor: "var(--color-accent)" }}
             pendingText="Signing In..."
             formAction={signInAction}
           >
@@ -85,10 +88,10 @@ export default function Login({ searchParams }: { searchParams: Message }) {
 
       <div className="relative">
         <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-border" />
+          <div className="w-full border-t" style={{ borderColor: "var(--color-bd)" }} />
         </div>
         <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-background px-2 text-muted-foreground">
+          <span className="px-2" style={{ backgroundColor: "var(--color-bg)", color: "var(--color-fg-muted)" }}>
             Or continue with
           </span>
         </div>

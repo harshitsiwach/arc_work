@@ -88,6 +88,24 @@ export default async function ProductDetailPage({
 
   const isCreator = profile?.id === product.creator_profile_id;
 
+  // Check if current user has already purchased the product
+  const { data: purchase } = await supabase
+    .from("product_purchases")
+    .select("id")
+    .eq("product_id", params.id)
+    .eq("buyer_profile_id", profile?.id)
+    .eq("status", "completed")
+    .maybeSingle();
+
+  const hasPurchased = !!purchase;
+
+  // Fetch the creator's wallet address
+  const { data: creatorWallet } = await supabase
+    .from("wallets")
+    .select("wallet_address")
+    .eq("profile_id", product.creator_profile_id)
+    .single();
+
   const typeBadge =
     PRODUCT_TYPE_BADGES[product.product_type] ?? {
       label: product.product_type,
@@ -171,7 +189,7 @@ export default async function ProductDetailPage({
                       year: "numeric",
                       month: "short",
                       day: "numeric",
-                    })}
+                     })}
                   </span>
                 </div>
               </div>
@@ -333,9 +351,11 @@ export default async function ProductDetailPage({
                     productId={product.id}
                     priceAmount={product.price_amount}
                     priceCurrency={product.price_currency}
-                    accessUrl={product.access_url}
-                    fileUrl={product.file_url}
+                    accessUrl={hasPurchased ? product.access_url : null}
+                    fileUrl={hasPurchased ? product.file_url : null}
                     productTitle={product.title}
+                    initialPurchased={hasPurchased}
+                    creatorWalletAddress={creatorWallet?.wallet_address || null}
                   />
                 )}
               </CardContent>
@@ -346,3 +366,4 @@ export default async function ProductDetailPage({
     </div>
   );
 }
+

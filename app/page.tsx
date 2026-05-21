@@ -5,5 +5,9 @@
 import { LandingPage } from "@/components/landing-page";
 
 export default async function Index() {
-  return <LandingPage />;
+  return (
+    <div className="px-4 sm:px-6">
+      <LandingPage />
+    </div>
+  );
 }

@@ -95,7 +95,7 @@ export async function GET(request: Request) {
           wallet_set_id: createdWalletSet.id,
           wallet_address: createdWallet.address,
           account_type: createdWallet.accountType,
-          blockchain: createdwallet?.blockchain,
+          blockchain: createdWallet?.blockchain,
           currency: "USDC"
         });
 

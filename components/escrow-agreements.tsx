@@ -386,12 +386,12 @@ export const EscrowAgreements = (props: EscrowListProps) => {
 
   if (error) {
     return (
-      <Card className="break-inside-avoid mb-4 w-full">
+      <Card className="break-inside-avoid mb-4 w-full" style={{ backgroundColor: "var(--color-bg-elevated)", borderColor: "var(--color-bd)" }}>
         <CardHeader>
-          <CardTitle>Escrow Agreements</CardTitle>
+          <CardTitle style={{ color: "var(--color-fg)" }}>Escrow Agreements</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="text-center text-destructive py-4">
+          <div className="text-center py-4" style={{ color: "var(--color-error)" }}>
             <p>{error}</p>
             <Button variant="outline" onClick={refresh} className="mt-2">
               Try Again
@@ -400,15 +400,15 @@ export const EscrowAgreements = (props: EscrowListProps) => {
         </CardContent>
       </Card>
     );
-  };
+  }
 
   return (
-    <Card className="break-inside-avoid mb-4 w-full">
+    <Card className="break-inside-avoid mb-4 w-full" style={{ backgroundColor: "var(--color-bg-elevated)", borderColor: "var(--color-bd)" }}>
       <CardHeader className="flex flex-row items-center justify-between">
         {loading ? (
           <Skeleton className="w-[250px] h-[24px] rounded-full" />
         ) : (
-          <CardTitle>Escrow Agreements</CardTitle>
+          <CardTitle style={{ color: "var(--color-fg)" }}>Escrow Agreements</CardTitle>
         )}
         {loading ? (
           <Skeleton className="w-[32px] h-[32px] rounded-full" />
@@ -420,7 +420,7 @@ export const EscrowAgreements = (props: EscrowListProps) => {
       </CardHeader>
       <CardContent>
         {agreements.length === 0 ? (
-          <div className="text-center text-muted-foreground py-4">
+          <div className="text-center py-4" style={{ color: "var(--color-fg-muted)" }}>
             {loading ? (
               <Skeleton className="w-[160px] h-[24px] rounded-full" />
             ) : (
