@@ -80,7 +80,8 @@ export default function ClipperPage() {
       toast.success("Video segment clipped successfully!", { id: toastId });
       
       const fileUrl = `${window.location.origin}${data.fileUrl}`;
-      const editorUrl = `http://localhost:5174/#/editor?importUrl=${encodeURIComponent(fileUrl)}&importName=${encodeURIComponent(data.filename)}`;
+      const editorBase = process.env.NEXT_PUBLIC_EDITOR_URL || 'http://localhost:5174';
+      const editorUrl = `${editorBase}/#/editor?importUrl=${encodeURIComponent(fileUrl)}&importName=${encodeURIComponent(data.filename)}`;
       window.open(editorUrl, "_blank");
     } catch (err: any) {
       console.error(err);
@@ -340,7 +341,7 @@ export default function ClipperPage() {
                     </Link>
 
                     <a
-                      href="http://localhost:5174/#/editor"
+                      href={`${process.env.NEXT_PUBLIC_EDITOR_URL || 'http://localhost:5174'}/#/editor`}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="block"

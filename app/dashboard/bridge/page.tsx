@@ -199,8 +199,8 @@ export default function BridgePage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Bridge</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-3xl font-bold" style={{ color: "var(--color-fg)" }}>Bridge</h1>
+        <p className="text-sm mt-1" style={{ color: "var(--color-fg-secondary)" }}>
           Move USDC from other chains to Arc in under 1 second
         </p>
       </div>
@@ -209,20 +209,20 @@ export default function BridgePage() {
         {/* Main bridge & swap cards */}
         <div className="md:col-span-2 space-y-6">
           {/* Bridge card */}
-          <Card>
+          <Card style={{ backgroundColor: "var(--color-bg-elevated)", borderColor: "var(--color-bd)" }}>
             <CardHeader>
-              <CardTitle>Bridge USDC to Arc</CardTitle>
-              <CardDescription>
+              <CardTitle style={{ color: "var(--color-fg)" }}>Bridge USDC to Arc</CardTitle>
+              <CardDescription style={{ color: "var(--color-fg-muted)" }}>
                 Powered by Circle CCTP — deposit from any supported chain
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Wallet connection status */}
               {!isConnected ? (
-                <div className="p-6 text-center border-2 border-dashed rounded-lg">
-                  <Wallet className="h-8 w-8 mx-auto text-muted-foreground mb-3" />
-                  <p className="text-muted-foreground mb-3">Connect your wallet to bridge USDC</p>
-                  <Button onClick={connect}>
+                <div className="p-6 text-center border border-dashed rounded-lg" style={{ borderColor: "var(--color-bd)", backgroundColor: "var(--color-bg-inset)" }}>
+                  <Wallet className="h-8 w-8 mx-auto mb-3" style={{ color: "var(--color-fg-muted)" }} />
+                  <p className="text-sm mb-3" style={{ color: "var(--color-fg-secondary)" }}>Connect your wallet to bridge USDC</p>
+                  <Button onClick={connect} style={{ backgroundColor: "var(--color-accent)" }}>
                     <Wallet className="mr-2 h-4 w-4" />
                     Connect Wallet
                   </Button>
@@ -230,11 +230,11 @@ export default function BridgePage() {
               ) : (
                 <>
                   {/* Connected status */}
-                  <div className="flex items-center gap-2 p-3 bg-green-500/10 text-green-600 rounded-lg text-sm">
+                  <div className="flex items-center gap-2 p-3 rounded-lg text-sm" style={{ backgroundColor: "var(--color-success-soft)", color: "var(--color-success)" }}>
                     <CheckCircle2 className="h-4 w-4" />
                     Connected: {address?.slice(0, 6)}...{address?.slice(-4)}
                     {chainId && (
-                      <span className="ml-auto text-xs text-muted-foreground">
+                      <span className="ml-auto text-xs" style={{ color: "var(--color-fg-muted)" }}>
                         Chain: {SUPPORTED_SOURCE_CHAINS.find(c => c.id === chainId)?.name || chainId}
                       </span>
                     )}
@@ -242,9 +242,10 @@ export default function BridgePage() {
 
                   {/* Source chain */}
                   <div>
-                    <Label>Source Chain</Label>
+                    <Label style={{ color: "var(--color-fg)" }}>Source Chain</Label>
                     <select
-                      className="w-full rounded-lg border bg-background px-3 py-2 text-sm mt-1"
+                      className="w-full rounded-lg border px-3 py-2 text-sm mt-1 focus:outline-none"
+                      style={{ backgroundColor: "var(--color-bg-inset)", borderColor: "var(--color-bd)", color: "var(--color-fg)" }}
                       value={selectedChain.id}
                       onChange={e => {
                         const chain = SUPPORTED_SOURCE_CHAINS.find(c => c.id === parseInt(e.target.value));
@@ -261,7 +262,7 @@ export default function BridgePage() {
 
                   {/* Amount */}
                   <div>
-                    <Label>Amount (USDC)</Label>
+                    <Label style={{ color: "var(--color-fg)" }}>Amount (USDC)</Label>
                     <Input
                       type="number"
                       step="0.01"
@@ -269,6 +270,7 @@ export default function BridgePage() {
                       placeholder="100"
                       value={amount}
                       onChange={e => setAmount(e.target.value)}
+                      style={{ backgroundColor: "var(--color-bg-inset)", borderColor: "var(--color-bd)", color: "var(--color-fg)" }}
                     />
                   </div>
 
@@ -277,6 +279,7 @@ export default function BridgePage() {
                     onClick={handleBridge}
                     disabled={loading || !amount}
                     className="w-full"
+                    style={{ backgroundColor: "var(--color-accent)" }}
                   >
                     {loading ? (
                       <>
@@ -298,23 +301,24 @@ export default function BridgePage() {
 
                   {/* Success */}
                   {txHash && (
-                    <div className="p-3 bg-green-500/10 rounded-lg text-sm">
-                      <p className="text-green-600 font-medium">Bridge transaction sent!</p>
-                      <p className="text-muted-foreground text-xs mt-1 font-mono break-all">
+                    <div className="p-3 rounded-lg text-sm" style={{ backgroundColor: "var(--color-success-soft)" }}>
+                      <p className="font-medium" style={{ color: "var(--color-success)" }}>Bridge transaction sent!</p>
+                      <p className="text-xs mt-1 font-mono break-all" style={{ color: "var(--color-fg-muted)" }}>
                         Tx: {txHash}
                       </p>
                       <a
                         href={`https://testnet.arcscan.app`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-blue-500 hover:underline text-xs mt-1 inline-block"
+                        className="text-xs mt-1 inline-block hover:underline"
+                        style={{ color: "var(--color-accent)" }}
                       >
                         View on Arc Explorer →
                       </a>
                     </div>
                   )}
 
-                  <p className="text-xs text-muted-foreground text-center">
+                  <p className="text-xs text-center" style={{ color: "var(--color-fg-muted)" }}>
                     USDC lands on Arc in under 1 second with deterministic finality
                   </p>
                 </>
@@ -323,19 +327,19 @@ export default function BridgePage() {
           </Card>
 
           {/* Swap card */}
-          <Card>
+          <Card style={{ backgroundColor: "var(--color-bg-elevated)", borderColor: "var(--color-bd)" }}>
             <CardHeader>
-              <CardTitle>Swap on Arc</CardTitle>
-              <CardDescription>
+              <CardTitle style={{ color: "var(--color-fg)" }}>Swap on Arc</CardTitle>
+              <CardDescription style={{ color: "var(--color-fg-muted)" }}>
                 Swap tokens natively on Arc Testnet
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {!isConnected ? (
-                <div className="p-6 text-center border-2 border-dashed rounded-lg">
-                  <Wallet className="h-8 w-8 mx-auto text-muted-foreground mb-3" />
-                  <p className="text-muted-foreground mb-3">Connect your wallet to swap</p>
-                  <Button onClick={connect}>
+                <div className="p-6 text-center border border-dashed rounded-lg" style={{ borderColor: "var(--color-bd)", backgroundColor: "var(--color-bg-inset)" }}>
+                  <Wallet className="h-8 w-8 mx-auto mb-3" style={{ color: "var(--color-fg-muted)" }} />
+                  <p className="text-sm mb-3" style={{ color: "var(--color-fg-secondary)" }}>Connect your wallet to swap</p>
+                  <Button onClick={connect} style={{ backgroundColor: "var(--color-accent)" }}>
                     <Wallet className="mr-2 h-4 w-4" />
                     Connect Wallet
                   </Button>
@@ -344,9 +348,10 @@ export default function BridgePage() {
                 <>
                   <div className="flex items-center gap-4">
                     <div className="flex-1">
-                      <Label>From Token</Label>
+                      <Label style={{ color: "var(--color-fg)" }}>From Token</Label>
                       <select
-                        className="w-full rounded-lg border bg-background px-3 py-2 text-sm mt-1"
+                        className="w-full rounded-lg border px-3 py-2 text-sm mt-1 focus:outline-none"
+                        style={{ backgroundColor: "var(--color-bg-inset)", borderColor: "var(--color-bd)", color: "var(--color-fg)" }}
                         value={swapTokenIn}
                         onChange={e => setSwapTokenIn(e.target.value)}
                       >
@@ -368,9 +373,10 @@ export default function BridgePage() {
                       </Button>
                     </div>
                     <div className="flex-1">
-                      <Label>To Token</Label>
+                      <Label style={{ color: "var(--color-fg)" }}>To Token</Label>
                       <select
-                        className="w-full rounded-lg border bg-background px-3 py-2 text-sm mt-1"
+                        className="w-full rounded-lg border px-3 py-2 text-sm mt-1 focus:outline-none"
+                        style={{ backgroundColor: "var(--color-bg-inset)", borderColor: "var(--color-bd)", color: "var(--color-fg)" }}
                         value={swapTokenOut}
                         onChange={e => setSwapTokenOut(e.target.value)}
                       >
@@ -381,7 +387,7 @@ export default function BridgePage() {
                   </div>
 
                   <div>
-                    <Label>Amount ({swapTokenIn})</Label>
+                    <Label style={{ color: "var(--color-fg)" }}>Amount ({swapTokenIn})</Label>
                     <Input
                       type="number"
                       step="0.01"
@@ -389,6 +395,7 @@ export default function BridgePage() {
                       placeholder="100"
                       value={swapAmount}
                       onChange={e => setSwapAmount(e.target.value)}
+                      style={{ backgroundColor: "var(--color-bg-inset)", borderColor: "var(--color-bd)", color: "var(--color-fg)" }}
                     />
                   </div>
 
@@ -396,6 +403,7 @@ export default function BridgePage() {
                     onClick={handleSwap}
                     disabled={swapLoading || !swapAmount || swapTokenIn === swapTokenOut}
                     className="w-full"
+                    style={{ backgroundColor: "var(--color-accent)" }}
                   >
                     {swapLoading ? (
                       <>
@@ -416,16 +424,17 @@ export default function BridgePage() {
                   </Button>
 
                   {swapTxHash && (
-                    <div className="p-3 bg-green-500/10 rounded-lg text-sm">
-                      <p className="text-green-600 font-medium">Swap successful!</p>
-                      <p className="text-muted-foreground text-xs mt-1 font-mono break-all">
+                    <div className="p-3 rounded-lg text-sm" style={{ backgroundColor: "var(--color-success-soft)" }}>
+                      <p className="font-medium" style={{ color: "var(--color-success)" }}>Swap successful!</p>
+                      <p className="text-xs mt-1 font-mono break-all" style={{ color: "var(--color-fg-muted)" }}>
                         Tx: {swapTxHash}
                       </p>
                       <a
                         href={`https://testnet.arcscan.app/tx/${swapTxHash}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-blue-500 hover:underline text-xs mt-1 inline-block"
+                        className="text-xs mt-1 inline-block hover:underline"
+                        style={{ color: "var(--color-accent)" }}
                       >
                         View on Arc Explorer →
                       </a>
@@ -439,35 +448,35 @@ export default function BridgePage() {
 
         {/* Info sidebar */}
         <div className="space-y-4">
-          <Card>
+          <Card style={{ backgroundColor: "var(--color-bg-elevated)", borderColor: "var(--color-bd)" }}>
             <CardHeader>
-              <CardTitle>How it works</CardTitle>
+              <CardTitle style={{ color: "var(--color-fg)" }}>How it works</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3 text-sm text-muted-foreground">
+            <CardContent className="space-y-3 text-sm">
               <div className="flex items-start gap-3">
-                <span className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold shrink-0">1</span>
-                <span>Connect your wallet with USDC on Sepolia, Base, or Arbitrum</span>
+                <span className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0" style={{ backgroundColor: "var(--color-accent-soft)", color: "var(--color-accent)" }}>1</span>
+                <span style={{ color: "var(--color-fg-secondary)" }}>Connect your wallet with USDC on Sepolia, Base, or Arbitrum</span>
               </div>
               <div className="flex items-start gap-3">
-                <span className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold shrink-0">2</span>
-                <span>Enter the amount and bridge via Circle CCTP</span>
+                <span className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0" style={{ backgroundColor: "var(--color-accent-soft)", color: "var(--color-accent)" }}>2</span>
+                <span style={{ color: "var(--color-fg-secondary)" }}>Enter the amount and bridge via Circle CCTP</span>
               </div>
               <div className="flex items-start gap-3">
-                <span className="w-6 h-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold shrink-0">3</span>
-                <span>USDC arrives on Arc in &lt;1 second — instant finality</span>
+                <span className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0" style={{ backgroundColor: "var(--color-accent-soft)", color: "var(--color-accent)" }}>3</span>
+                <span style={{ color: "var(--color-fg-secondary)" }}>USDC arrives on Arc in &lt;1 second — instant finality</span>
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card style={{ backgroundColor: "var(--color-bg-elevated)", borderColor: "var(--color-bd)" }}>
             <CardHeader>
-              <CardTitle>Supported Chains</CardTitle>
+              <CardTitle style={{ color: "var(--color-fg)" }}>Supported Chains</CardTitle>
             </CardHeader>
             <CardContent>
               <ul className="space-y-2 text-sm">
                 {SUPPORTED_SOURCE_CHAINS.map(chain => (
-                  <li key={chain.id} className="flex items-center gap-2 text-muted-foreground">
-                    <span className="w-2 h-2 rounded-full bg-green-500" />
+                  <li key={chain.id} className="flex items-center gap-2" style={{ color: "var(--color-fg-secondary)" }}>
+                    <span className="w-2 h-2 rounded-full" style={{ backgroundColor: "var(--color-success)" }} />
                     {chain.name}
                   </li>
                 ))}

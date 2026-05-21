@@ -1,6 +1,6 @@
 /**
  * Arc Work - User Menu Dropdown
- * Premium avatar-based user menu
+ * Premium avatar-based user menu with quick links
  */
 "use client";
 
@@ -15,7 +15,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LayoutDashboard, User, LogOut, Settings } from "lucide-react";
+import { LayoutDashboard, User, LogOut, ShoppingBag, CreditCard, Settings } from "lucide-react";
 import { signOutAction } from "@/app/actions";
 
 function getInitials(email?: string): string {
@@ -67,7 +67,19 @@ export function UserMenu({ email }: { email?: string }) {
           <DropdownMenuItem asChild>
             <Link href="/dashboard/profile" className="cursor-pointer flex items-center gap-2">
               <User size={14} />
-              Profile
+              Creator Profile
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link href="/dashboard/products" className="cursor-pointer flex items-center gap-2">
+              <ShoppingBag size={14} />
+              Browse Products
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuItem asChild>
+            <Link href="/dashboard/subscriptions" className="cursor-pointer flex items-center gap-2">
+              <CreditCard size={14} />
+              My Subscriptions
             </Link>
           </DropdownMenuItem>
         </DropdownMenuGroup>

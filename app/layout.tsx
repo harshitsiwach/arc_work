@@ -76,10 +76,8 @@ export default async function RootLayout({
             )}
 
             {/* Main Content */}
-            <main className="flex-1 flex flex-col items-center pt-20 px-6">
-              <div className="w-full max-w-7xl animate-fade-in-up">
-                {children}
-              </div>
+            <main className="flex-1 pt-14 animate-fade-in-up">
+              {children}
             </main>
           </div>
           </WalletProvider>

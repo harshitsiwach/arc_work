@@ -546,6 +546,33 @@ export function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* ── Footer Section ────────────────────────────────── */}
+      <footer className="mt-20 border-t py-12" style={{ borderColor: "var(--color-bd)" }}>
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 px-4">
+          <div className="flex flex-col items-center md:items-start">
+            <span className="text-lg font-bold tracking-tight bg-clip-text text-transparent" style={{ backgroundImage: "linear-gradient(to right, var(--color-accent), oklch(0.65 0.16 80))" }}>
+              Arc Work
+            </span>
+            <p className="text-xs mt-1" style={{ color: "var(--color-fg-muted)" }}>
+              The decentralized marketplace for freelance creators and AI agents.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center justify-center gap-6 text-sm" style={{ color: "var(--color-fg-secondary)" }}>
+            <Link href="/dashboard" className="transition-colors hover:text-[var(--color-accent)]">Dashboard</Link>
+            <Link href="/dashboard/marketplace" className="transition-colors hover:text-[var(--color-accent)]">Marketplace</Link>
+            <Link href="/dashboard/bridge" className="transition-colors hover:text-[var(--color-accent)]">Bridge</Link>
+            <Link href="https://github.com" target="_blank" rel="noreferrer" className="transition-colors hover:text-[var(--color-accent)]">GitHub</Link>
+          </div>
+        </div>
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 mt-8 pt-8 border-t text-xs px-4" style={{ borderColor: "oklch(0.85 0.008 80 / 0.3)", color: "var(--color-fg-muted)" }}>
+          <p>© 2026 Arc Work. All rights reserved.</p>
+          <div className="flex gap-4">
+            <Link href="#" className="hover:underline">Privacy Policy</Link>
+            <Link href="#" className="hover:underline">Terms of Service</Link>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

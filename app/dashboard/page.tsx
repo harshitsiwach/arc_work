@@ -83,16 +83,15 @@ export default async function DashboardPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <Link href="/dashboard/products">
+            <Button size="sm" variant="outline">
+              Browse Products
+            </Button>
+          </Link>
           <Link href="/dashboard/products/create">
             <Button size="sm" style={{ backgroundColor: "var(--color-accent)" }}>
               <Plus className="mr-1.5 h-3.5 w-3.5" />
-              New Product
-            </Button>
-          </Link>
-          <Link href="/dashboard/agents/create">
-            <Button size="sm" variant="outline">
-              <Bot className="mr-1.5 h-3.5 w-3.5" />
-              New Agent
+              Sell Something
             </Button>
           </Link>
         </div>
@@ -165,21 +164,19 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
 
-        {/* Quick Actions */}
+        {/* Buyer Quick Start */}
         <Card style={{ backgroundColor: "var(--color-bg-elevated)", borderColor: "var(--color-bd)" }}>
           <CardHeader className="pb-2">
-            <CardTitle className="text-base" style={{ color: "var(--color-fg)" }}>Quick actions</CardTitle>
-            <CardDescription>Jump to what you need</CardDescription>
+            <CardTitle className="text-base" style={{ color: "var(--color-fg)" }}>Browse & Buy</CardTitle>
+            <CardDescription>Discover what creators have built</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-2 gap-2">
               {[
-                { href: "/dashboard/marketplace", label: "Browse Marketplace", icon: TrendingUp },
-                { href: "/dashboard/bridge", label: "Bridge Funds", icon: Zap },
-                { href: "/dashboard/products", label: "My Products", icon: Package },
-                { href: "/dashboard/agents", label: "My Agents", icon: Bot },
-                { href: "/dashboard/profile", label: "Profile", icon: ExternalLink },
-                { href: "/dashboard/verify", label: "Verify", icon: Shield },
+                { href: "/dashboard/products", label: "Product Catalog", icon: TrendingUp },
+                { href: "/dashboard/marketplace", label: "Freelance Gigs", icon: ExternalLink },
+                { href: "/dashboard/courses", label: "Courses", icon: Shield },
+                { href: "/dashboard/tools", label: "Tools & APIs", icon: Zap },
               ].map((action) => (
                 <Link key={action.href} href={action.href}>
                   <div
@@ -204,9 +201,9 @@ export default async function DashboardPage() {
               <CardTitle className="text-base" style={{ color: "var(--color-fg)" }}>Recent Products</CardTitle>
               <CardDescription>Your latest listings</CardDescription>
             </div>
-            <Link href="/dashboard/products">
+            <Link href="/dashboard/my-products">
               <Button variant="ghost" size="sm" className="gap-1">
-                View all
+                Manage
                 <ArrowUpRight className="h-3 w-3" />
               </Button>
             </Link>
@@ -246,6 +243,27 @@ export default async function DashboardPage() {
                 </div>
               ))}
             </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Empty state for products */}
+      {(!myProducts || myProducts.length === 0) && (
+        <Card style={{ backgroundColor: "var(--color-bg-elevated)", borderColor: "var(--color-bd)" }}>
+          <CardContent className="py-8 text-center">
+            <Package className="h-8 w-8 mx-auto mb-3" style={{ color: "var(--color-fg-muted)" }} />
+            <p className="text-sm font-medium" style={{ color: "var(--color-fg)" }}>
+              Start selling on Arc Work
+            </p>
+            <p className="text-xs mt-1 mb-4" style={{ color: "var(--color-fg-muted)" }}>
+              Create your first product to earn USDC from buyers worldwide
+            </p>
+            <Link href="/dashboard/products/create">
+              <Button size="sm" style={{ backgroundColor: "var(--color-accent)" }}>
+                <Plus className="mr-1.5 h-3.5 w-3.5" />
+                Create Your First Product
+              </Button>
+            </Link>
           </CardContent>
         </Card>
       )}

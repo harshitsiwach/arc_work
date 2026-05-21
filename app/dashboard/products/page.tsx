@@ -130,15 +130,9 @@ export default function ProductsPage() {
             Product Catalog
           </h1>
           <p className="text-sm mt-1" style={{ color: "var(--color-fg-secondary)" }}>
-            Browse clip packs, templates, AI automations, and more
+            Browse clip packs, templates, AI automations, and more from creators
           </p>
         </div>
-        <Link href="/dashboard/products/create">
-          <Button style={{ backgroundColor: "var(--color-accent)" }}>
-            <Plus className="mr-1.5 h-4 w-4" />
-            Create Product
-          </Button>
-        </Link>
       </div>
 
       {/* Search / Filter bar */}
@@ -213,8 +207,8 @@ export default function ProductsPage() {
             };
 
             return (
+              <Link key={product.id} href={`/dashboard/products/${product.id}`} className="block">
               <Card
-                key={product.id}
                 className="hover-lift"
                 style={{
                   backgroundColor: "var(--color-bg-elevated)",
@@ -324,6 +318,7 @@ export default function ProductsPage() {
                   </div>
                 </CardContent>
               </Card>
+              </Link>
             );
           })}
         </div>
