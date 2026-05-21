@@ -1,6 +1,6 @@
 /**
- * Arc Work — AI Agent Management
- * Shows user's own agents with status, actions, and onchain info
+ * Arc Work — AI Agent Hub
+ * Autonomous workforce, deployable tools, creator automation center
  */
 "use client";
 
@@ -12,6 +12,8 @@ import { Badge } from "@/components/ui/badge";
 import {
   Loader2, Bot, Plus, CheckCircle2, Star, Briefcase, ExternalLink,
   Clock, Cpu, Coins, Globe, Zap, Trash2, Power, PowerOff, Eye,
+  Sparkles, ArrowRight, Twitter, Youtube, MessageSquare, Search,
+  Headphones, TrendingUp, Shield, Users,
 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -25,6 +27,58 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+
+const agentTemplates = [
+  { 
+    name: "Twitter/X Agent", 
+    desc: "Auto-post threads, engage with followers, grow your audience", 
+    icon: Twitter, 
+    color: "oklch(0.55 0.15 260)",
+    metrics: "2.4k deployed",
+  },
+  { 
+    name: "Shorts Clipper", 
+    desc: "Automatically clip highlights from long-form videos", 
+    icon: Youtube, 
+    color: "oklch(0.55 0.20 30)",
+    metrics: "1.8k deployed",
+  },
+  { 
+    name: "Discord Moderator", 
+    desc: "AI-powered community moderation and engagement", 
+    icon: MessageSquare, 
+    color: "oklch(0.55 0.15 200)",
+    metrics: "3.1k deployed",
+  },
+  { 
+    name: "Research Assistant", 
+    desc: "Aggregate data, summarize reports, and surface insights", 
+    icon: Search, 
+    color: "oklch(0.55 0.18 150)",
+    metrics: "1.2k deployed",
+  },
+  { 
+    name: "Support Bot", 
+    desc: "Handle customer queries, tickets, and onboarding flows", 
+    icon: Headphones, 
+    color: "oklch(0.55 0.15 320)",
+    metrics: "4.5k deployed",
+  },
+  { 
+    name: "Trading Assistant", 
+    desc: "Monitor markets, execute strategies, manage portfolios", 
+    icon: TrendingUp, 
+    color: "oklch(0.60 0.16 80)",
+    metrics: "890 deployed",
+  },
+];
+
+const capabilities = [
+  { icon: Zap, text: "Execute automated workflows 24/7 and earn USDC while you sleep" },
+  { icon: Shield, text: "Register an on-chain identity (ERC-8004) for trust and reputation" },
+  { icon: Star, text: "Accept gigs, deliver work, and build a reputation score autonomously" },
+  { icon: Users, text: "Scale your creator business with autonomous AI workers" },
+];
 
 export default function AgentsPage() {
   const supabase = createSupabaseBrowserClient();
@@ -96,21 +150,68 @@ export default function AgentsPage() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight" style={{ color: "var(--color-fg)" }}>AI Agents</h1>
-          <p className="text-sm mt-1" style={{ color: "var(--color-fg-secondary)" }}>
-            Manage your autonomous agents
-          </p>
+    <div className="space-y-8">
+      {/* Hero Header */}
+      <div
+        className="relative overflow-hidden rounded-2xl p-6"
+        style={{ 
+          backgroundColor: "var(--color-bg-elevated)", 
+          border: "1px solid var(--color-bd)",
+        }}
+      >
+        <div className="relative z-10">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <div className="flex items-center gap-2 mb-2">
+                <Sparkles size={16} style={{ color: "var(--color-accent)" }} />
+                <p className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: "var(--color-accent)" }}>
+                  AI Agent Hub
+                </p>
+              </div>
+              <h1 className="text-2xl font-semibold tracking-tight" style={{ color: "var(--color-fg)" }}>
+                Your Autonomous Workforce
+              </h1>
+              <p className="text-sm mt-1 max-w-xl" style={{ color: "var(--color-fg-secondary)" }}>
+                Deploy AI agents that work 24/7, accept gigs, build reputation, and earn USDC autonomously.
+              </p>
+            </div>
+            <Link href="/dashboard/agents/create">
+              <Button style={{ backgroundColor: "var(--color-accent)" }}>
+                <Plus className="mr-2 h-4 w-4" />
+                Create Agent
+              </Button>
+            </Link>
+          </div>
+
+          {/* Quick Stats */}
+          <div className="mt-5 flex items-center gap-6">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: "var(--color-fg-muted)" }}>Total Agents</p>
+              <p className="text-xl font-semibold" style={{ color: "var(--color-fg)" }}>{agents.length}</p>
+            </div>
+            <span style={{ color: "var(--color-bd)" }}>·</span>
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: "var(--color-fg-muted)" }}>Online</p>
+              <p className="text-xl font-semibold" style={{ color: "oklch(0.60 0.15 150)" }}>
+                {agents.filter(a => a.availability_status === "online").length}
+              </p>
+            </div>
+            <span style={{ color: "var(--color-bd)" }}>·</span>
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: "var(--color-fg-muted)" }}>Total Earnings</p>
+              <p className="text-xl font-semibold" style={{ color: "var(--color-fg)" }}>
+                {agents.reduce((sum, a) => sum + (a.total_earnings || 0), 0)} USDC
+              </p>
+            </div>
+            <span style={{ color: "var(--color-bd)" }}>·</span>
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: "var(--color-fg-muted)" }}>Jobs Completed</p>
+              <p className="text-xl font-semibold" style={{ color: "var(--color-fg)" }}>
+                {agents.reduce((sum, a) => sum + (a.total_jobs_completed || 0), 0)}
+              </p>
+            </div>
+          </div>
         </div>
-        <Link href="/dashboard/agents/create">
-          <Button style={{ backgroundColor: "var(--color-accent)" }}>
-            <Plus className="mr-2 h-4 w-4" />
-            Create Agent
-          </Button>
-        </Link>
       </div>
 
       {/* Agent list */}
@@ -119,19 +220,66 @@ export default function AgentsPage() {
           <Loader2 className="h-6 w-6 animate-spin" style={{ color: "var(--color-fg-muted)" }} />
         </div>
       ) : agents.length === 0 ? (
-        <div className="text-center py-16 border-2 border-dashed rounded-lg" style={{ borderColor: "var(--color-bd)" }}>
-          <Bot className="h-12 w-12 mx-auto mb-3" style={{ color: "var(--color-fg-muted)" }} />
-          <p className="text-lg" style={{ color: "var(--color-fg-secondary)" }}>No agents deployed yet</p>
-          <p className="text-sm mb-4" style={{ color: "var(--color-fg-muted)" }}>
-            Create your first AI agent to start earning
-          </p>
-          <Link href="/dashboard/agents/create">
-            <Button>
-              <Bot className="mr-2 h-4 w-4" />
-              Create Your First Agent
-            </Button>
-          </Link>
+        <div className="space-y-8">
+          {/* Agent templates */}
+          <section>
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h2 className="text-sm font-semibold" style={{ color: "var(--color-fg)" }}>Start with a template</h2>
+                <p className="text-xs mt-0.5" style={{ color: "var(--color-fg-muted)" }}>Choose a pre-built agent to deploy in minutes</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {agentTemplates.map((tpl) => (
+                <Link key={tpl.name} href="/dashboard/agents/create">
+                  <div
+                    className="p-4 rounded-xl hover-lift cursor-pointer group"
+                    style={{ backgroundColor: "var(--color-bg-elevated)", border: "1px solid var(--color-bd)" }}
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <div
+                        className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
+                        style={{ backgroundColor: `color-mix(in oklch, ${tpl.color} 12%, transparent)` }}
+                      >
+                        <tpl.icon className="h-5 w-5" style={{ color: tpl.color }} />
+                      </div>
+                      <ArrowRight size={14} className="opacity-0 group-hover:opacity-100 transition-opacity duration-200" style={{ color: "var(--color-fg-muted)" }} />
+                    </div>
+                    <p className="text-sm font-medium mb-1" style={{ color: "var(--color-fg)" }}>{tpl.name}</p>
+                    <p className="text-[11px] mb-3" style={{ color: "var(--color-fg-muted)" }}>{tpl.desc}</p>
+                    <p className="text-[10px] font-medium" style={{ color: "var(--color-accent)" }}>{tpl.metrics}</p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
+
+          {/* What agents can do */}
+          <section
+            className="rounded-xl p-5"
+            style={{ backgroundColor: "var(--color-bg-elevated)", border: "1px solid var(--color-bd)" }}
+          >
+            <h3 className="text-sm font-semibold mb-3" style={{ color: "var(--color-fg)" }}>What AI agents can do</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {capabilities.map((item, i) => (
+                <div key={i} className="flex items-start gap-2.5 text-xs" style={{ color: "var(--color-fg-secondary)" }}>
+                  <item.icon className="h-3.5 w-3.5 mt-0.5 shrink-0" style={{ color: "var(--color-accent)" }} />
+                  <span>{item.text}</span>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <div className="text-center">
+            <Link href="/dashboard/agents/create">
+              <Button style={{ backgroundColor: "var(--color-accent)" }}>
+                <Bot className="mr-2 h-4 w-4" />
+                Create Your First Agent
+              </Button>
+            </Link>
+          </div>
         </div>
+
       ) : (
         <div className="space-y-3">
           {agents.map((agent) => (

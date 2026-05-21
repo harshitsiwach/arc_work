@@ -13,6 +13,7 @@ import { useProjectRecovery } from "./hooks/useProjectRecovery";
 import { useKieAIPoller } from "./hooks/useKieAIPoller";
 import { SOCIAL_MEDIA_PRESETS, type SocialMediaCategory } from "@openreel/core";
 import { TooltipProvider } from "@openreel/ui";
+import { toast } from "./stores/notification-store";
 
 const EditorInterface = lazy(() =>
   import("./components/editor/EditorInterface").then((m) => ({
@@ -39,12 +40,48 @@ function App() {
   const { activeModal, closeModal, skipWelcomeScreen } = useUIStore();
   const { openModal: openSearchModal } = useUIStore();
   const createNewProject = useProjectStore((state) => state.createNewProject);
+  const importMedia = useProjectStore((state) => state.importMedia);
   const { showDialog, availableSaves, recover, dismiss, clearAll } = useProjectRecovery();
 
-  const { route, params, navigate, parsedDimensions, fps } = useRouter();
+  const { route, params, navigate, updateParams, parsedDimensions, fps } = useRouter();
   const hasHandledInitialRoute = useRef(false);
 
   useKieAIPoller();
+
+  // Auto-import remote URL media segment if specified in search query params
+  useEffect(() => {
+    if (route === "editor" && params.importUrl) {
+      const url = params.importUrl;
+      const name = params.importName || "imported_video.mp4";
+      
+      // Clear the query params from the hash immediately to avoid re-triggering on reload
+      updateParams({ importUrl: undefined, importName: undefined });
+
+      const doImport = async () => {
+        toast.info("Importing video segment...", "Downloading and decoding media...");
+        try {
+          const res = await fetch(url);
+          if (!res.ok) {
+            throw new Error(`Failed to fetch media file: HTTP ${res.status}`);
+          }
+          const blob = await res.blob();
+          const file = new File([blob], name, { type: blob.type || "video/mp4" });
+          
+          const result = await importMedia(file);
+          if (result.success) {
+            toast.success("Import successful", `Loaded ${name} into project library.`);
+          } else {
+            throw new Error(result.error?.message || "Failed to decode/import media");
+          }
+        } catch (err: any) {
+          console.error("[URLImport] Error importing:", err);
+          toast.error("Import failed", err.message || "Could not load video segment.");
+        }
+      };
+
+      doImport();
+    }
+  }, [route, params.importUrl, params.importName, importMedia, updateParams]);
 
   useEffect(() => {
     if (hasHandledInitialRoute.current) return;

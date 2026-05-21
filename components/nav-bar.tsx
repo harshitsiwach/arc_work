@@ -1,27 +1,36 @@
 /**
- * Arc Work - Premium Minimal Navbar
- * Linear/Vercel-inspired navigation system
+ * Arc Work - Premium Navigation Bar
+ * Explore | Agents | Dashboard + Global Create CTA
  */
 "use client";
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Plus, Sparkles, Bot, Package, Briefcase, GraduationCap, Wrench } from "lucide-react";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { WalletConnectButton } from "@/components/wallet-connect-button";
 import { UserMenu } from "@/components/user-menu";
 import { cn } from "@/lib/utils";
 
-const primaryNav = [
-  { href: "/dashboard/marketplace", label: "Marketplace" },
+const navLinks = [
+  { href: "/dashboard/products", label: "Explore" },
   { href: "/dashboard/agents", label: "Agents" },
-  { href: "/dashboard/products/create", label: "Create" },
   { href: "/dashboard", label: "Dashboard" },
 ];
 
+const createOptions = [
+  { href: "/dashboard/marketplace/post", label: "Create Gig", desc: "Post a freelance job", icon: Briefcase },
+  { href: "/dashboard/agents/create", label: "Launch AI Agent", desc: "Deploy an autonomous worker", icon: Bot },
+  { href: "/dashboard/products/create", label: "Upload Product", desc: "List a digital product", icon: Package },
+  { href: "/dashboard/courses", label: "Create Course", desc: "Teach your expertise", icon: GraduationCap },
+  { href: "/dashboard/tools", label: "Add Tool/API", desc: "Share a developer tool", icon: Wrench },
+];
+
 function isActive(pathname: string, href: string): boolean {
-  if (href === "/dashboard") return pathname === "/dashboard";
+  if (href === "/dashboard") return pathname === "/dashboard" || pathname === "/dashboard/";
+  if (href === "/dashboard/products") return pathname.startsWith("/dashboard/products") || pathname.startsWith("/dashboard/marketplace");
+  if (href === "/dashboard/agents") return pathname.startsWith("/dashboard/agents");
   return pathname.startsWith(href);
 }
 
@@ -35,6 +44,7 @@ export function NavBar({
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [createOpen, setCreateOpen] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -43,23 +53,23 @@ export function NavBar({
   }, []);
 
   useEffect(() => {
-    if (mobileOpen) {
+    if (mobileOpen || createOpen) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "";
     }
     return () => { document.body.style.overflow = ""; };
-  }, [mobileOpen]);
+  }, [mobileOpen, createOpen]);
+
+  // Close create menu on route change
+  useEffect(() => {
+    setCreateOpen(false);
+  }, [pathname]);
 
   return (
     <>
       <nav
-        className={cn(
-          "fixed top-0 left-0 right-0 z-50 transition-all duration-200",
-          scrolled
-            ? "border-b"
-            : "border-b"
-        )}
+        className="fixed top-0 left-0 right-0 z-50 transition-all duration-200 border-b"
         style={{
           height: "56px",
           borderColor: "color-mix(in srgb, var(--color-bd) 50%, transparent)",
@@ -72,7 +82,7 @@ export function NavBar({
       >
         <div className="h-full max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-6">
           {/* Left: Logo + Nav */}
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4">
             <Link
               href="/"
               className="text-[15px] font-semibold tracking-[-0.02em] transition-opacity duration-150 hover:opacity-70"
@@ -83,22 +93,18 @@ export function NavBar({
 
             {/* Desktop nav links */}
             <div className="hidden md:flex items-center gap-0.5">
-              {primaryNav.map((item) => {
+              {navLinks.map((item) => {
                 const active = isActive(pathname, item.href);
                 return (
                   <Link
                     key={item.href}
                     href={item.href}
                     className={cn(
-                      "relative px-3 py-1.5 rounded-md text-[13px] font-medium transition-colors duration-150",
-                      active
-                        ? ""
-                        : "hover:text-[var(--color-fg)]"
+                      "relative px-3 py-1.5 rounded-md text-[13px] font-medium transition-all duration-150",
+                      active ? "" : "hover:text-[var(--color-fg)]"
                     )}
                     style={{
-                      color: active
-                        ? "var(--color-fg)"
-                        : "var(--color-fg-secondary)",
+                      color: active ? "var(--color-fg)" : "var(--color-fg-secondary)",
                     }}
                   >
                     {item.label}
@@ -120,6 +126,69 @@ export function NavBar({
 
           {/* Right: Actions */}
           <div className="flex items-center gap-1.5">
+            {/* Global Create Button */}
+            {isAuthenticated && (
+              <div className="relative hidden sm:block">
+                <button
+                  onClick={() => setCreateOpen(!createOpen)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[13px] font-medium transition-all duration-150"
+                  style={{
+                    backgroundColor: "var(--color-accent)",
+                    color: "white",
+                  }}
+                >
+                  <Plus size={14} />
+                  Create
+                </button>
+
+                {/* Create Dropdown */}
+                {createOpen && (
+                  <>
+                    <div className="fixed inset-0 z-40" onClick={() => setCreateOpen(false)} />
+                    <div
+                      className="absolute right-0 top-full mt-2 z-50 w-64 rounded-xl overflow-hidden shadow-lg animate-scale-in"
+                      style={{
+                        backgroundColor: "var(--color-bg-elevated)",
+                        border: "1px solid var(--color-bd)",
+                        boxShadow: "0 8px 32px oklch(0 0 0 / 0.3)",
+                      }}
+                    >
+                      <div className="p-2">
+                        <p className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider" style={{ color: "var(--color-fg-muted)" }}>
+                          Quick Create
+                        </p>
+                        {createOptions.map((option) => {
+                          const Icon = option.icon;
+                          return (
+                            <Link
+                              key={option.href}
+                              href={option.href}
+                              onClick={() => setCreateOpen(false)}
+                              className="flex items-center gap-3 p-2.5 rounded-lg transition-colors duration-150 group"
+                              style={{ color: "var(--color-fg-secondary)" }}
+                            >
+                              <div
+                                className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors duration-150"
+                                style={{ backgroundColor: "var(--color-accent-soft)" }}
+                              >
+                                <Icon size={14} style={{ color: "var(--color-accent)" }} />
+                              </div>
+                              <div className="text-left">
+                                <p className="text-[13px] font-medium group-hover:text-[var(--color-fg)] transition-colors duration-150" style={{ color: "var(--color-fg)" }}>
+                                  {option.label}
+                                </p>
+                                <p className="text-[11px]" style={{ color: "var(--color-fg-muted)" }}>{option.desc}</p>
+                              </div>
+                            </Link>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+
             <div className="hidden sm:block">
               <ThemeSwitcher />
             </div>
@@ -172,7 +241,36 @@ export function NavBar({
         }}
       >
         <div className="flex flex-col p-4 gap-1">
-          {primaryNav.map((item) => {
+          {/* Mobile Create Button */}
+          {isAuthenticated && (
+            <div className="mb-3 pb-3" style={{ borderBottom: "1px solid var(--color-bd)" }}>
+              <p className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider" style={{ color: "var(--color-fg-muted)" }}>
+                Quick Create
+              </p>
+              {createOptions.map((option) => {
+                const Icon = option.icon;
+                return (
+                  <Link
+                    key={option.href}
+                    href={option.href}
+                    onClick={() => setMobileOpen(false)}
+                    className="flex items-center gap-3 p-2.5 rounded-lg"
+                    style={{ color: "var(--color-fg-secondary)" }}
+                  >
+                    <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: "var(--color-accent-soft)" }}>
+                      <Icon size={14} style={{ color: "var(--color-accent)" }} />
+                    </div>
+                    <div className="text-left">
+                      <p className="text-[13px] font-medium" style={{ color: "var(--color-fg)" }}>{option.label}</p>
+                      <p className="text-[11px]" style={{ color: "var(--color-fg-muted)" }}>{option.desc}</p>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+
+          {navLinks.map((item) => {
             const active = isActive(pathname, item.href);
             return (
               <Link
