@@ -119,13 +119,13 @@ export async function POST(req: NextRequest) {
     const contractAmount = Number(convertUSDCToContractAmount(contractTransaction.transactions.amount));
 
     const circleDepositResponse = await circleDeveloperSdk.createContractExecutionTransaction({
-      walletId: depositorwallet?.circle_wallet_id,
+      walletId: depositorWallet?.circle_wallet_id,
       contractAddress,
       abiFunctionSignature: "pay(address,uint256,address)",
       abiParameters: [
         contractTransaction.beneficiary_wallet?.wallet_address,
         contractAmount,
-        depositorwallet?.wallet_address
+        depositorWallet?.wallet_address
       ],
       fee: {
         type: "level",
