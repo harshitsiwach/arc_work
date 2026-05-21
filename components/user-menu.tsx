@@ -71,7 +71,7 @@ export function UserMenu({ email }: { email?: string }) {
             </Link>
           </DropdownMenuItem>
           <DropdownMenuItem asChild>
-            <Link href="/dashboard/products" className="cursor-pointer flex items-center gap-2">
+            <Link href="/explore" className="cursor-pointer flex items-center gap-2">
               <ShoppingBag size={14} />
               Browse Products
             </Link>

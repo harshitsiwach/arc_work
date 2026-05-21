@@ -333,7 +333,7 @@ export default function ClipperPage() {
                       Clip & Open in Editor
                     </Button>
                     
-                    <Link href="/dashboard/agents">
+                    <Link href="/agents">
                       <Button variant="outline" className="w-full" size="sm">
                         <Bot className="mr-2 h-4 w-4" />
                         Commission AI Clipper

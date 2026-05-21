@@ -386,7 +386,7 @@ export function LandingPage() {
               </p>
             </div>
             <Link
-              href="/dashboard/agents"
+              href="/agents"
               className="hidden sm:inline-flex items-center gap-1 text-sm font-medium transition-colors duration-150"
               style={{ color: "var(--color-accent)" }}
             >

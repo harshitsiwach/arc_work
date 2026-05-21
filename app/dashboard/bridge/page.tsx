@@ -29,12 +29,12 @@ import { TransactionStatus } from "./transaction-status";
 /* ── Token definitions ─────────────────────────────────────── */
 
 const BRIDGE_TOKENS = [
-  { symbol: "USDC", name: "USD Coin", icon: "💵", color: "oklch(0.55 0.15 260)", decimals: 6 },
+  { symbol: "USDC", name: "USD Coin", icon: "", color: "oklch(0.55 0.15 260)", decimals: 6 },
 ];
 
 const SWAP_TOKENS = [
-  { symbol: "USDC", name: "USD Coin", icon: "💵", color: "oklch(0.55 0.15 260)", decimals: 6, contract: "0x3600000000000000000000000000000000000000" as const },
-  { symbol: "EURC", name: "Euro Coin", icon: "💶", color: "oklch(0.50 0.18 260)", decimals: 6, contract: "0x89B50855Aa3bE2F677cD6303Cec089B5F319D72a" as const },
+  { symbol: "USDC", name: "USD Coin", icon: "", color: "oklch(0.55 0.15 260)", decimals: 6, contract: "0x3600000000000000000000000000000000000000" as const },
+  { symbol: "EURC", name: "Euro Coin", icon: "", color: "oklch(0.50 0.18 260)", decimals: 6, contract: "0x89B50855Aa3bE2F677cD6303Cec089B5F319D72a" as const },
 ];
 
 const CREATOR_ACTIONS = [
@@ -299,7 +299,7 @@ export default function BridgePage() {
 
         const USDC_CONTRACT = "0x3600000000000000000000000000000000000000";
         const MOCK_PLATFORM_ADDRESS = "0x000000000000000000000000000000000000dEaD";
-        
+
         // encode transfer(address, uint256)
         const methodId = "0xa9059cbb";
         const targetHex = MOCK_PLATFORM_ADDRESS.replace("0x", "").padStart(64, "0");
@@ -423,7 +423,7 @@ export default function BridgePage() {
                       >
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-2">
-                            <span className="text-lg">💵</span>
+                            <span className="text-lg"></span>
                             <div>
                               <p className="text-sm font-medium" style={{ color: "var(--color-fg)" }}>USDC</p>
                               <p className="text-[10px]" style={{ color: "var(--color-fg-muted)" }}>USD Coin</p>
@@ -481,7 +481,7 @@ export default function BridgePage() {
                       >
                         <div className="flex items-center justify-between mb-2">
                           <div className="flex items-center gap-2">
-                            <span className="text-lg">💵</span>
+                            <span className="text-lg"></span>
                             <div>
                               <p className="text-sm font-medium" style={{ color: "var(--color-fg)" }}>USDC</p>
                               <p className="text-[10px]" style={{ color: "var(--color-fg-muted)" }}>Arc Testnet</p>
@@ -727,17 +727,15 @@ export default function BridgePage() {
                   <div className="flex bg-zinc-900/50 p-1 rounded-lg border border-white/10 w-full mb-6">
                     <button
                       onClick={() => setRampMode("buy")}
-                      className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${
-                        rampMode === "buy" ? "bg-[var(--color-accent)] text-white shadow-sm" : "text-white/60 hover:text-white"
-                      }`}
+                      className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${rampMode === "buy" ? "bg-[var(--color-accent)] text-white shadow-sm" : "text-white/60 hover:text-white"
+                        }`}
                     >
                       Buy USDC
                     </button>
                     <button
                       onClick={() => setRampMode("sell")}
-                      className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${
-                        rampMode === "sell" ? "bg-[var(--color-accent)] text-white shadow-sm" : "text-white/60 hover:text-white"
-                      }`}
+                      className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${rampMode === "sell" ? "bg-[var(--color-accent)] text-white shadow-sm" : "text-white/60 hover:text-white"
+                        }`}
                     >
                       Sell USDC
                     </button>
@@ -805,7 +803,7 @@ export default function BridgePage() {
                             className="text-2xl font-semibold bg-transparent border-0 px-0 h-auto focus-visible:ring-0 text-white w-full"
                           />
                           <Badge variant="outline" className="bg-zinc-800 border-white/10 text-white ml-2 shrink-0 h-8 flex items-center">
-                            <span className="mr-1">💵</span> USDC
+                            <span className="mr-1"></span> USDC
                           </Badge>
                         </div>
                         {rampAmount && parseFloat(rampAmount) > 0 && (
@@ -855,8 +853,8 @@ export default function BridgePage() {
                   />
 
                   <p className="text-xs text-center mt-2 text-white/40">
-                    {rampMode === "buy" 
-                      ? "This is a Testnet integration. Dummy card details will simulate a fiat purchase." 
+                    {rampMode === "buy"
+                      ? "This is a Testnet integration. Dummy card details will simulate a fiat purchase."
                       : "Selling USDC requires a real MetaMask transaction. Tokens will be sent to a mock address."}
                   </p>
                 </div>

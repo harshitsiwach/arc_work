@@ -14,23 +14,23 @@ import { UserMenu } from "@/components/user-menu";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
-  { href: "/dashboard/products", label: "Explore" },
-  { href: "/dashboard/agents", label: "Agents" },
+  { href: "/explore", label: "Explore" },
+  { href: "/agents", label: "Agents" },
   { href: "/dashboard", label: "Dashboard" },
 ];
 
 const createOptions = [
   { href: "/dashboard/marketplace/post", label: "Create Gig", desc: "Post a freelance job", icon: Briefcase },
-  { href: "/dashboard/agents/create", label: "Launch AI Agent", desc: "Deploy an autonomous worker", icon: Bot },
+  { href: "/agents/create", label: "Launch AI Agent", desc: "Deploy an autonomous worker", icon: Bot },
   { href: "/dashboard/products/create", label: "Upload Product", desc: "List a digital product", icon: Package },
   { href: "/dashboard/courses", label: "Create Course", desc: "Teach your expertise", icon: GraduationCap },
-  { href: "/dashboard/tools", label: "Add Tool/API", desc: "Share a developer tool", icon: Wrench },
+  { href: "/agents/marketplace", label: "Browse AI Marketplace", desc: "Discover AI tools & APIs", icon: Wrench },
 ];
 
 function isActive(pathname: string, href: string): boolean {
   if (href === "/dashboard") return pathname === "/dashboard" || pathname === "/dashboard/";
-  if (href === "/dashboard/products") return pathname.startsWith("/dashboard/products") || pathname.startsWith("/dashboard/marketplace");
-  if (href === "/dashboard/agents") return pathname.startsWith("/dashboard/agents");
+  if (href === "/explore") return pathname.startsWith("/explore");
+  if (href === "/agents") return pathname.startsWith("/agents");
   return pathname.startsWith(href);
 }
 

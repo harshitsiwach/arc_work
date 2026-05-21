@@ -33,6 +33,10 @@ import {
   Layers,
   Zap,
   Rocket,
+  Search,
+  Database,
+  Image,
+  Cpu,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -45,11 +49,11 @@ interface SidebarLink {
 type SidebarContext = "explore" | "agents" | "dashboard";
 
 function detectContext(pathname: string): SidebarContext {
-  if (pathname.startsWith("/dashboard/agents")) return "agents";
-  if (pathname.startsWith("/dashboard/products") || 
+  if (pathname.startsWith("/agents")) return "agents";
+  if (pathname.startsWith("/explore") ||
+      pathname.startsWith("/dashboard/products") ||
       pathname.startsWith("/dashboard/marketplace") ||
       pathname.startsWith("/dashboard/courses") ||
-      pathname.startsWith("/dashboard/tools") ||
       pathname.startsWith("/dashboard/subscriptions") ||
       pathname.startsWith("/dashboard/clipper")) return "explore";
   return "dashboard";
@@ -59,12 +63,23 @@ const exploreLinks: { title: string; links: SidebarLink[] }[] = [
   {
     title: "Marketplace",
     links: [
-      { href: "/dashboard/products", label: "Trending", icon: TrendingUp },
+      { href: "/explore", label: "Trending", icon: TrendingUp },
+      { href: "/agents/marketplace", label: "AI Marketplace", icon: Bot },
       { href: "/dashboard/marketplace", label: "Gigs", icon: Briefcase },
-      { href: "/dashboard/products", label: "Products", icon: ShoppingBag },
+      { href: "/explore", label: "Products", icon: ShoppingBag },
       { href: "/dashboard/courses", label: "Courses", icon: GraduationCap },
-      { href: "/dashboard/tools", label: "Tools & APIs", icon: Wrench },
       { href: "/dashboard/subscriptions", label: "Subscriptions", icon: CreditCard },
+    ],
+  },
+  {
+    title: "Categories",
+    links: [
+      { href: "/agents/marketplace?cat=inference", label: "Inference", icon: Cpu },
+      { href: "/agents/marketplace?cat=automation", label: "Automation", icon: Zap },
+      { href: "/agents/marketplace?cat=search", label: "Search", icon: Search },
+      { href: "/agents/marketplace?cat=data", label: "Data", icon: Database },
+      { href: "/agents/marketplace?cat=media", label: "Media", icon: Image },
+      { href: "/agents/marketplace?cat=trading", label: "Trading", icon: DollarSign },
     ],
   },
 ];
@@ -73,17 +88,18 @@ const agentsLinks: { title: string; links: SidebarLink[] }[] = [
   {
     title: "Agents",
     links: [
-      { href: "/dashboard/agents", label: "Featured", icon: Layers },
-      { href: "/dashboard/agents/create", label: "Templates", icon: Rocket },
-      { href: "/dashboard/agents", label: "My Agents", icon: Bot },
+      { href: "/agents", label: "Featured", icon: Layers },
+      { href: "/agents/create", label: "Templates", icon: Rocket },
+      { href: "/agents", label: "My Agents", icon: Bot },
+      { href: "/agents/marketplace", label: "AI Marketplace", icon: Bot },
     ],
   },
   {
     title: "Operations",
     links: [
-      { href: "/dashboard/agents", label: "Deployments", icon: Zap },
-      { href: "/dashboard/agents", label: "Analytics", icon: BarChart3 },
-      { href: "/dashboard/agents", label: "Earnings", icon: DollarSign },
+      { href: "/agents", label: "Deployments", icon: Zap },
+      { href: "/agents", label: "Analytics", icon: BarChart3 },
+      { href: "/agents", label: "Earnings", icon: DollarSign },
     ],
   },
 ];
@@ -101,7 +117,7 @@ const dashboardLinks: { title: string; links: SidebarLink[] }[] = [
     title: "Creator",
     links: [
       { href: "/dashboard/my-products", label: "My Products", icon: Package },
-      { href: "/dashboard/agents", label: "My Agents", icon: Bot },
+      { href: "/agents", label: "My Agents", icon: Bot },
       { href: "/dashboard/marketplace/post", label: "Post a Gig", icon: PlusCircle },
       { href: "/dashboard/products/create", label: "Create Product", icon: Plus },
     ],
@@ -119,6 +135,9 @@ const dashboardLinks: { title: string; links: SidebarLink[] }[] = [
 
 function isActive(pathname: string, href: string): boolean {
   if (href === "/dashboard") return pathname === "/dashboard" || pathname === "/dashboard/";
+  if (href === "/explore") return pathname === "/explore" || pathname === "/explore/";
+  if (href === "/agents") return pathname === "/agents" || pathname === "/agents/";
+  if (href === "/agents/marketplace") return pathname.startsWith("/agents/marketplace");
   return pathname.startsWith(href);
 }
 

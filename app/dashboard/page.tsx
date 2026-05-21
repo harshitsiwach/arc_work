@@ -85,7 +85,7 @@ export default async function DashboardPage() {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            <Link href="/dashboard/products">
+            <Link href="/explore">
               <Button size="sm" variant="outline">
                 Browse Products
               </Button>
@@ -183,10 +183,10 @@ export default async function DashboardPage() {
           <p className="text-xs mb-4" style={{ color: "var(--color-fg-muted)" }}>Discover what creators have built</p>
           <div className="grid grid-cols-2 gap-2">
             {[
-              { href: "/dashboard/products", label: "Product Catalog", icon: TrendingUp, accent: "oklch(0.55 0.15 260)" },
+              { href: "/explore", label: "Product Catalog", icon: TrendingUp, accent: "oklch(0.55 0.15 260)" },
               { href: "/dashboard/marketplace", label: "Freelance Gigs", icon: Briefcase, accent: "oklch(0.55 0.15 200)" },
               { href: "/dashboard/courses", label: "Courses", icon: GraduationCap, accent: "oklch(0.55 0.18 150)" },
-              { href: "/dashboard/tools", label: "Tools & APIs", icon: Zap, accent: "oklch(0.60 0.16 80)" },
+              { href: "/agents/marketplace", label: "AI Marketplace", icon: Zap, accent: "oklch(0.60 0.16 80)" },
             ].map((action) => (
               <Link key={action.href} href={action.href}>
                 <div
@@ -304,7 +304,7 @@ export default async function DashboardPage() {
               <Bot className="h-4 w-4" style={{ color: "oklch(0.55 0.15 200)" }} />
               <h2 className="text-sm font-semibold" style={{ color: "var(--color-fg)" }}>Your AI Agents</h2>
             </div>
-            <Link href="/dashboard/agents">
+            <Link href="/agents">
               <Button variant="ghost" size="sm" className="gap-1 text-xs">
                 Manage
                 <ArrowUpRight className="h-3 w-3" />

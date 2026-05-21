@@ -195,7 +195,7 @@ export default async function CreatorProfilePage() {
               <Bot className="h-4 w-4" />
               Your AI Agents
             </CardTitle>
-            <Link href="/dashboard/agents/create">
+            <Link href="/agents/create">
               <Button size="sm" variant="outline">+ New</Button>
             </Link>
           </CardHeader>
