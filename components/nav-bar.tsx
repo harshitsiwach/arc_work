@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 
 const primaryNav = [
   { href: "/dashboard/marketplace", label: "Marketplace" },
+  { href: "/dashboard/tools", label: "Tools" },
   { href: "/dashboard/agents", label: "Agents" },
   { href: "/dashboard/products/create", label: "Create" },
   { href: "/dashboard", label: "Dashboard" },
