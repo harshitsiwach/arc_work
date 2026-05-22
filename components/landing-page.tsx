@@ -562,6 +562,7 @@ export function LandingPage() {
             <Link href="/dashboard" className="transition-colors hover:text-[var(--color-accent)]">Dashboard</Link>
             <Link href="/dashboard/marketplace" className="transition-colors hover:text-[var(--color-accent)]">Marketplace</Link>
             <Link href="/dashboard/bridge" className="transition-colors hover:text-[var(--color-accent)]">Bridge</Link>
+            <Link href="/pitch" className="transition-colors hover:text-[var(--color-accent)]">Pitch Deck</Link>
             <Link href="https://github.com" target="_blank" rel="noreferrer" className="transition-colors hover:text-[var(--color-accent)]">GitHub</Link>
           </div>
         </div>

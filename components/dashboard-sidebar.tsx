@@ -111,6 +111,7 @@ const dashboardLinks: { title: string; links: SidebarLink[] }[] = [
       { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
       { href: "/dashboard/bridge", label: "Wallet & Bridge", icon: Wallet },
       { href: "/dashboard/analytics", label: "Analytics", icon: BarChart3 },
+      { href: "/pitch", label: "Pitch Deck", icon: Rocket },
     ],
   },
   {
