@@ -55,3 +55,8 @@ editor/.git/
 *.tsbuildinfo
 next-env.d.ts
 .env.example
+
+# python virtual environment
+venv/
+scratch/venv/
+
