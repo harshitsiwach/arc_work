@@ -17,22 +17,54 @@
  */
 
 import { NextResponse, type NextRequest } from "next/server";
-import { createSupabaseReqResClient } from "@/lib/supabase/server-client";
+import { createServerClient } from "@supabase/ssr";
 
 export async function middleware(request: NextRequest) {
-  const response = NextResponse.next({
+  let response = NextResponse.next({
     request: {
       headers: request.headers,
     },
   });
 
-  const supabase = createSupabaseReqResClient(request, response);
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          // Mirror refreshed cookies onto the request so downstream
+          // server components see the latest session tokens
+          cookiesToSet.forEach(({ name, value }) =>
+            request.cookies.set(name, value)
+          );
+          // Recreate the response with the updated request
+          response = NextResponse.next({
+            request,
+          });
+          // Set the cookies on the response so the browser stores them
+          cookiesToSet.forEach(({ name, value, options }) =>
+            response.cookies.set(name, value, options)
+          );
+        },
+      },
+    }
+  );
 
+  // Refresh the session — this is required for Server Components
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user && (request.nextUrl.pathname.startsWith("/dashboard") || request.nextUrl.pathname.startsWith("/agents") || request.nextUrl.pathname.startsWith("/explore"))) {
+  // Protect authenticated routes
+  if (
+    !user &&
+    (request.nextUrl.pathname.startsWith("/dashboard") ||
+      request.nextUrl.pathname.startsWith("/agents") ||
+      request.nextUrl.pathname.startsWith("/explore"))
+  ) {
     return NextResponse.redirect(new URL("/", request.url));
   }
 
@@ -40,5 +72,14 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/agents/:path*", "/explore/:path*"]
-}
+  matcher: [
+    /*
+     * Match all request paths except:
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon)
+     * - public folder assets (images, svg, etc.)
+     */
+    "/((?!_next/static|_next/image|favicon\\.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+  ],
+};

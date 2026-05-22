@@ -6,6 +6,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,8 +16,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LayoutDashboard, User, LogOut, ShoppingBag, CreditCard, Settings } from "lucide-react";
-import { signOutAction } from "@/app/actions";
+import { LayoutDashboard, User, LogOut, ShoppingBag, CreditCard, Loader2 } from "lucide-react";
+import { createSupabaseBrowserClient } from "@/lib/supabase/browser-client";
 
 function getInitials(email?: string): string {
   if (!email) return "?";
@@ -28,8 +29,20 @@ function getInitials(email?: string): string {
 }
 
 export function UserMenu({ email }: { email?: string }) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
   const initials = getInitials(email);
+
+  const handleSignOut = async () => {
+    setSigningOut(true);
+    const supabase = createSupabaseBrowserClient();
+    await supabase.auth.signOut();
+    setOpen(false);
+    setSigningOut(false);
+    router.push("/sign-in");
+    router.refresh();
+  };
 
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
@@ -42,7 +55,11 @@ export function UserMenu({ email }: { email?: string }) {
           }}
           aria-label="User menu"
         >
-          {initials}
+          {signingOut ? (
+            <Loader2 size={14} className="animate-spin" />
+          ) : (
+            initials
+          )}
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
@@ -84,13 +101,16 @@ export function UserMenu({ email }: { email?: string }) {
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem asChild>
-          <form action={signOutAction} className="w-full">
-            <button type="submit" className="flex items-center gap-2 w-full cursor-pointer" style={{ color: "var(--color-error)" }}>
-              <LogOut size={14} />
-              Sign out
-            </button>
-          </form>
+        <DropdownMenuItem asChild onSelect={(e) => e.preventDefault()}>
+          <button
+            onClick={handleSignOut}
+            disabled={signingOut}
+            className="flex items-center gap-2 w-full px-2 py-1.5 text-[13px] cursor-pointer rounded-sm outline-none transition-colors"
+            style={{ color: "var(--color-error)" }}
+          >
+            <LogOut size={14} />
+            {signingOut ? "Signing out..." : "Sign out"}
+          </button>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

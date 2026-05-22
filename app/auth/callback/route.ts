@@ -38,19 +38,41 @@ export async function GET(request: Request) {
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error) {
-      const { data: user, error: userIdError } = await supabase
+      // Try to update the existing profile first
+      let { data: user, error: userIdError } = await supabase
         .from("profiles")
         .update({ email: data.user.email })
         .eq("auth_user_id", data.user.id)
         .select("id")
         .single();
 
+      // If no profile row exists yet (new user), create one
       if (userIdError) {
-        console.error("Could not find an user with such auth_user_id", userIdError);
-        return NextResponse.json(
-          { message: "Could not find an user with such auth_user_id" },
-          { status: 500 }
-        );
+        const displayName =
+          data.user.user_metadata?.full_name ||
+          data.user.email?.split("@")[0] ||
+          data.user.email ||
+          "User";
+
+        const { data: newUser, error: insertError } = await supabase
+          .from("profiles")
+          .insert({
+            auth_user_id: data.user.id,
+            name: displayName,
+            email: data.user.email,
+          })
+          .select("id")
+          .single();
+
+        if (insertError) {
+          console.error("Could not create profile for user", insertError);
+          return NextResponse.json(
+            { message: "Could not create profile for user" },
+            { status: 500 }
+          );
+        }
+
+        user = newUser;
       }
 
       const { data: walletAlreadyExists } = await supabase
