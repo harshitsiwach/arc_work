@@ -12,6 +12,7 @@ import { ThemeSwitcher } from "@/components/theme-switcher";
 import { WalletConnectButton } from "@/components/wallet-connect-button";
 import { UserMenu } from "@/components/user-menu";
 import { cn } from "@/lib/utils";
+import { createSupabaseBrowserClient } from "@/lib/supabase/browser-client";
 
 const navLinks = [
   { href: "/explore", label: "Explore" },
@@ -36,16 +37,48 @@ function isActive(pathname: string, href: string): boolean {
 }
 
 export function NavBar({
-  isAuthenticated,
-  userEmail,
+  isAuthenticated: initialIsAuthenticated,
+  userEmail: initialUserEmail,
 }: {
-  isAuthenticated: boolean;
+  isAuthenticated?: boolean;
   userEmail?: string;
 }) {
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
+
+  // Client-side auth state
+  const [user, setUser] = useState<{ email?: string } | null>(null);
+
+  useEffect(() => {
+    if (initialIsAuthenticated) {
+      setUser({ email: initialUserEmail });
+    }
+  }, [initialIsAuthenticated, initialUserEmail]);
+
+  useEffect(() => {
+    const supabase = createSupabaseBrowserClient();
+    
+    // Fetch current user details on client mount
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) {
+        setUser(user);
+      }
+    });
+
+    // Subscribe to session state updates
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  const isAuthenticated = !!user;
+  const userEmail = user?.email;
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -86,6 +119,7 @@ export function NavBar({
           <div className="flex items-center gap-4">
             <Link
               href="/"
+              prefetch={false}
               className="text-[15px] font-semibold tracking-[-0.02em] transition-opacity duration-150 hover:opacity-70"
               style={{ color: "var(--color-fg)" }}
             >
@@ -100,6 +134,7 @@ export function NavBar({
                   <Link
                     key={item.href}
                     href={item.href}
+                    prefetch={false}
                     className={cn(
                       "relative px-3 py-1.5 rounded-md text-[13px] font-medium transition-all duration-150",
                       active ? "" : "hover:text-[var(--color-fg)]"
@@ -164,6 +199,7 @@ export function NavBar({
                             <Link
                               key={option.href}
                               href={option.href}
+                              prefetch={false}
                               onClick={() => setCreateOpen(false)}
                               className="flex items-center gap-3 p-2.5 rounded-lg transition-colors duration-150 group"
                               style={{ color: "var(--color-fg-secondary)" }}
@@ -199,6 +235,7 @@ export function NavBar({
             ) : (
               <Link
                 href="/sign-in"
+                prefetch={false}
                 className="hidden sm:inline-flex items-center px-3 py-1.5 rounded-md text-[13px] font-medium transition-colors duration-150"
                 style={{
                   backgroundColor: "var(--color-accent)",
@@ -254,6 +291,7 @@ export function NavBar({
                   <Link
                     key={option.href}
                     href={option.href}
+                    prefetch={false}
                     onClick={() => setMobileOpen(false)}
                     className="flex items-center gap-3 p-2.5 rounded-lg"
                     style={{ color: "var(--color-fg-secondary)" }}
@@ -277,6 +315,7 @@ export function NavBar({
               <Link
                 key={item.href}
                 href={item.href}
+                prefetch={false}
                 onClick={() => setMobileOpen(false)}
                 className="px-3 py-2.5 rounded-lg text-[14px] font-medium transition-colors duration-150"
                 style={{
@@ -299,6 +338,7 @@ export function NavBar({
           {!isAuthenticated && (
             <Link
               href="/sign-in"
+              prefetch={false}
               onClick={() => setMobileOpen(false)}
               className="mt-2 flex items-center justify-center px-3 py-2.5 rounded-lg text-[14px] font-medium"
               style={{

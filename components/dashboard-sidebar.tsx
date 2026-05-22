@@ -174,6 +174,7 @@ function SidebarGroup({
             <Link
               key={link.href}
               href={link.href}
+              prefetch={false}
               data-active={active}
               className={cn(
                 "sidebar-item",

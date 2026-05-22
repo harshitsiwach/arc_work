@@ -11,7 +11,6 @@ import "./globals.css";
 import { AppKitProvider } from "@/lib/web3/appkit-provider";
 import { WalletProvider } from "@/lib/web3/wallet-provider";
 import { NavBar } from "@/components/nav-bar";
-import { createSupabaseServerComponentClient } from "@/lib/supabase/server-client";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -31,14 +30,11 @@ export const metadata = {
   description: "The operating system for internet creators and AI workers",
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = createSupabaseServerComponentClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
   return (
     <html lang="en" className={inter.variable} suppressHydrationWarning>
       <body className="font-sans antialiased">
@@ -71,10 +67,7 @@ export default async function RootLayout({
                 </div>
               </nav>
             ) : (
-              <NavBar
-                isAuthenticated={!!user}
-                userEmail={user?.email}
-              />
+              <NavBar />
             )}
 
             {/* Main Content */}
