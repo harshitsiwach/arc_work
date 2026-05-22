@@ -14,6 +14,7 @@ import { USDCButton } from "@/components/usdc-button";
 import { WalletInformationDialog } from "@/components/wallet-information-dialog";
 import { EscrowAgreements } from "@/components/escrow-agreements";
 import { CreateAgreementPage } from "@/components/ui/createAgreementPage";
+import { DashboardWalletSection } from "@/components/dashboard-wallet-section";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import {
@@ -121,11 +122,7 @@ export default async function DashboardPage() {
           <span style={{ color: "var(--color-bd)" }}>·</span>
           <div className="stat-inline">
             <Coins size={13} style={{ color: "var(--color-accent)" }} />
-            {wallet?.circle_wallet_id ? (
-              <span className="stat-value"><WalletBalance walletId={wallet.circle_wallet_id} /></span>
-            ) : (
-              <span className="stat-value">—</span>
-            )}
+            <span className="stat-value"><WalletBalance walletId={wallet?.circle_wallet_id} /></span>
             {" "}balance
           </div>
         </div>
@@ -134,45 +131,7 @@ export default async function DashboardPage() {
       {/* Wallet + Quick Actions */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Wallet section */}
-        <div
-          className="p-5 rounded-xl"
-          style={{ backgroundColor: "var(--color-bg-elevated)", border: "1px solid var(--color-bd)" }}
-        >
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-2">
-              <Wallet className="h-4 w-4" style={{ color: "var(--color-accent)" }} />
-              <h2 className="text-sm font-semibold" style={{ color: "var(--color-fg)" }}>Account balance</h2>
-            </div>
-            {wallet && <WalletInformationDialog wallet={wallet} />}
-          </div>
-          {wallet ? (
-            <div className="space-y-4">
-              <div>
-                <h2 className="text-2xl font-bold tracking-tight" style={{ color: "var(--color-fg)" }}>
-                  <WalletBalance walletId={wallet.circle_wallet_id} />
-                </h2>
-                <p className="text-xs mt-1 font-mono" style={{ color: "var(--color-fg-muted)" }}>
-                  {wallet.wallet_address?.slice(0, 10)}...{wallet.wallet_address?.slice(-6)}
-                </p>
-              </div>
-              <div className="flex gap-2">
-                <USDCButton className="flex-1" mode="BUY" walletAddress={wallet.wallet_address} />
-                <USDCButton className="flex-1" mode="SELL" walletAddress={wallet.wallet_address} />
-                {process.env.NODE_ENV === "development" && (
-                  <RequestUsdcButton walletAddress={wallet.wallet_address} />
-                )}
-              </div>
-            </div>
-          ) : (
-            <div className="py-6 text-center">
-              <AlertCircle className="h-8 w-8 mx-auto mb-2" style={{ color: "var(--color-warning)" }} />
-              <p className="text-sm font-medium" style={{ color: "var(--color-fg)" }}>No wallet found</p>
-              <p className="text-xs mt-1" style={{ color: "var(--color-fg-muted)" }}>
-                Sign up to automatically get a Circle wallet
-              </p>
-            </div>
-          )}
-        </div>
+        <DashboardWalletSection serverWallet={wallet} />
 
         {/* Browse & Buy quick links */}
         <div

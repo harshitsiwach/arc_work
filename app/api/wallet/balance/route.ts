@@ -52,11 +52,16 @@ export async function POST(
       includeAll: true,
     });
 
-    const balance = response.data?.tokenBalances?.find(
-      ({ token }) => token.symbol === "USDC",
-    )?.amount;
+    let totalUsdcBalance = 0;
+    if (response.data?.tokenBalances) {
+      response.data.tokenBalances.forEach(({ token, amount }) => {
+        if (token.symbol === "USDC" && amount) {
+          totalUsdcBalance += parseFloat(amount);
+        }
+      });
+    }
 
-    return NextResponse.json({ balance: balance || "0" });
+    return NextResponse.json({ balance: totalUsdcBalance.toString() });
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(

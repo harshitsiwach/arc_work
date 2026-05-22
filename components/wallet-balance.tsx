@@ -14,10 +14,6 @@ interface WalletBalanceProps {
 export function WalletBalance({ walletId }: WalletBalanceProps) {
   const { balance, loading } = useWalletBalance(walletId || "");
 
-  if (!walletId) {
-    return <span style={{ color: "var(--color-fg-muted)" }}>—</span>;
-  }
-
   if (loading) {
     return <Skeleton className="w-[103px] h-[28px]" />;
   }
