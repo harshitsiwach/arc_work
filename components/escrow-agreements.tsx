@@ -31,7 +31,9 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/browser-client";
 import EscrowAgreementsTable from "@/components/agreements-table";
 
 const baseUrl = process.env.NEXT_PUBLIC_VERCEL_URL
-  ? process.env.NEXT_PUBLIC_VERCEL_URL
+  ? (process.env.NEXT_PUBLIC_VERCEL_URL.startsWith("http")
+      ? process.env.NEXT_PUBLIC_VERCEL_URL
+      : `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`)
   : "http://localhost:3000";
 
 const supabase = createSupabaseBrowserClient();

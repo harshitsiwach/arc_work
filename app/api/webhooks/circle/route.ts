@@ -21,7 +21,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server-client";
 
 const baseUrl = process.env.VERCEL_URL
-  ? process.env.VERCEL_URL
+  ? (process.env.VERCEL_URL.startsWith("http")
+      ? process.env.VERCEL_URL
+      : `https://${process.env.VERCEL_URL}`)
   : "http://localhost:3000";
 
 async function updateAgreementTransaction(transactionId: string, notification: Record<string, any>) {
