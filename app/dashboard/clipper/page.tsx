@@ -77,6 +77,9 @@ export default function ClipperPage() {
   const [verifications, setVerifications] = useState<any[]>([]);
   const [loadingSocials, setLoadingSocials] = useState(true);
 
+  // Billing / Free Clipper state
+  const [isFree, setIsFree] = useState(false);
+
   // Commissioning Form States
   const [targetLanguage, setTargetLanguage] = useState("English");
   const [instructions, setInstructions] = useState("");
@@ -181,7 +184,11 @@ export default function ClipperPage() {
     
     try {
       // 1. Commission Agent (Deploys Escrow Contract)
-      setCurrentStepMessage("1/3: Deploying new Refund Protocol Escrow contract on Base...");
+      setCurrentStepMessage(
+        isFree
+          ? "1/3: Initializing Free Clipper..."
+          : "1/3: Deploying new Refund Protocol Escrow contract on Base..."
+      );
       const commissionRes = await fetch("/api/clipper/commission", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -192,6 +199,7 @@ export default function ClipperPage() {
           targetLanguage,
           instructions,
           socials: selectedSocials,
+          isFree,
         }),
       });
       
@@ -203,6 +211,34 @@ export default function ClipperPage() {
       const { agreementId: newAgreementId, circleContractId, circleTransactionId } = commissionData;
       setAgreementId(newAgreementId);
       setContractId(circleContractId);
+
+      if (isFree) {
+        // If it's free, skip deployment confirmation and skip deposit step!
+        setExecutingState("processing");
+        setCurrentStepMessage("3/3: Free AI Agent clipping video, transcribing with Whisper, and posting clips...");
+        toast.loading("Free AI Agent processing clip, transcribing & sharing...", { id: toastId });
+
+        const processRes = await fetch("/api/clipper/process", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ agreementId: newAgreementId }),
+        });
+        const processData = await processRes.json();
+        if (!processRes.ok || processData.error) {
+          throw new Error(processData.error || "AI processing failed");
+        }
+
+        // Done!
+        setProcessResult({
+          videoUrl: processData.videoUrl,
+          transcript: processData.transcript,
+          socialPosts: processData.socialPosts || [],
+        });
+        setEditedTranscript(processData.transcript);
+        setExecutingState("completed");
+        toast.success("AI Agent successfully clipped, transcribed, and posted your video!", { id: toastId });
+        return;
+      }
 
       // Poll transaction status for deployment
       let deployed = false;
@@ -697,11 +733,42 @@ export default function ClipperPage() {
                     )}
                   </div>
 
+                  {/* Clipper Billing Mode Selection */}
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-semibold" style={{ color: "var(--color-fg)" }}>Agent Billing Mode</Label>
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setIsFree(false)}
+                        className="p-2 text-left rounded-md border transition-all"
+                        style={{
+                          borderColor: !isFree ? "var(--color-accent)" : "var(--color-bd)",
+                          backgroundColor: !isFree ? "var(--color-accent-soft)" : "var(--color-bg-inset)",
+                        }}
+                      >
+                        <p className="text-xs font-bold" style={{ color: !isFree ? "var(--color-accent)" : "var(--color-fg)" }}>Smart Escrow</p>
+                        <p className="text-[10px]" style={{ color: "var(--color-fg-secondary)" }}>5.00 USDC Budget</p>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setIsFree(true)}
+                        className="p-2 text-left rounded-md border transition-all"
+                        style={{
+                          borderColor: isFree ? "var(--color-accent)" : "var(--color-bd)",
+                          backgroundColor: isFree ? "var(--color-accent-soft)" : "var(--color-bg-inset)",
+                        }}
+                      >
+                        <p className="text-xs font-bold" style={{ color: isFree ? "var(--color-accent)" : "var(--color-fg)" }}>Free Clipper</p>
+                        <p className="text-[10px]" style={{ color: "var(--color-fg-secondary)" }}>0.00 USDC Budget</p>
+                      </button>
+                    </div>
+                  </div>
+
                   {/* Budget details */}
                   <div className="p-3 rounded border space-y-1" style={{ backgroundColor: "var(--color-bg-inset)", borderColor: "var(--color-bd)" }}>
                     <div className="flex justify-between text-xs">
                       <span style={{ color: "var(--color-fg-secondary)" }}>Commission Budget</span>
-                      <span className="font-semibold" style={{ color: "var(--color-accent)" }}>5.00 USDC</span>
+                      <span className="font-semibold" style={{ color: "var(--color-accent)" }}>{isFree ? "0.00 USDC" : "5.00 USDC"}</span>
                     </div>
                     <div className="flex justify-between text-xs">
                       <span style={{ color: "var(--color-fg-secondary)" }}>Protocol Fee</span>
@@ -723,7 +790,7 @@ export default function ClipperPage() {
                       style={{ backgroundColor: "var(--color-accent)", color: "white" }}
                       onClick={handleCommissionAgent}
                     >
-                      Deploy & Hire
+                      {isFree ? "Hire Clipper" : "Deploy & Hire"}
                     </Button>
                   </div>
                 </CardContent>
@@ -748,16 +815,18 @@ export default function ClipperPage() {
                         className="w-4 h-4 rounded-full flex items-center justify-center font-bold text-[9px] mt-0.5 shrink-0 animate-fade-in"
                         style={{
                           backgroundColor:
-                            executingState === "deploying"
-                              ? "var(--color-accent)"
-                              : executingState !== "failed"
+                            isFree
                               ? "var(--color-success)"
-                              : "var(--color-bg-inset)",
+                              : (executingState === "deploying"
+                                  ? "var(--color-accent)"
+                                  : executingState !== "failed"
+                                  ? "var(--color-success)"
+                                  : "var(--color-bg-inset)"),
                           color:
-                            executingState === "deploying" || executingState !== "failed"
+                            isFree || executingState === "deploying" || executingState !== "failed"
                               ? "white"
                               : "var(--color-fg-muted)",
-                          border: executingState === "deploying" ? "none" : "1px solid var(--color-bd)",
+                          border: isFree || executingState === "deploying" ? "none" : "1px solid var(--color-bd)",
                         }}
                       >
                         1
@@ -765,11 +834,13 @@ export default function ClipperPage() {
                       <div className="space-y-0.5">
                         <p className="font-semibold" style={{ color: "var(--color-fg)" }}>Deploy Escrow Contract</p>
                         <p style={{ color: "var(--color-fg-muted)", fontSize: "10px" }}>
-                          {executingState === "deploying"
-                            ? "Deploying RefundProtocol.sol smart contract on Base..."
-                            : executingState === "failed"
-                            ? "Deployment failed"
-                            : "Escrow deployed"}
+                          {isFree ? "Skipped (Free Clipper)" : (
+                            executingState === "deploying"
+                              ? "Deploying RefundProtocol.sol smart contract on Base..."
+                              : executingState === "failed"
+                              ? "Deployment failed"
+                              : "Escrow deployed"
+                          )}
                         </p>
                       </div>
                     </div>
@@ -780,16 +851,18 @@ export default function ClipperPage() {
                         className="w-4 h-4 rounded-full flex items-center justify-center font-bold text-[9px] mt-0.5 shrink-0"
                         style={{
                           backgroundColor:
-                            executingState === "depositing"
-                              ? "var(--color-accent)"
-                              : executingState === "processing" || executingState === "completed"
+                            isFree
                               ? "var(--color-success)"
-                              : "var(--color-bg-inset)",
+                              : (executingState === "depositing"
+                                  ? "var(--color-accent)"
+                                  : executingState === "processing" || executingState === "completed"
+                                  ? "var(--color-success)"
+                                  : "var(--color-bg-inset)"),
                           color:
-                            executingState === "depositing" || executingState === "processing" || executingState === "completed"
+                            isFree || executingState === "depositing" || executingState === "processing" || executingState === "completed"
                               ? "white"
                               : "var(--color-fg-muted)",
-                          border: executingState === "depositing" ? "none" : "1px solid var(--color-bd)",
+                          border: isFree || executingState === "depositing" ? "none" : "1px solid var(--color-bd)",
                         }}
                       >
                         2
@@ -797,11 +870,13 @@ export default function ClipperPage() {
                       <div className="space-y-0.5">
                         <p className="font-semibold" style={{ color: "var(--color-fg)" }}>Deposit 5.00 USDC</p>
                         <p style={{ color: "var(--color-fg-muted)", fontSize: "10px" }}>
-                          {executingState === "depositing"
-                            ? "Depositing 5 USDC from user smart wallet..."
-                            : executingState === "processing" || executingState === "completed"
-                            ? "Deposited successfully"
-                            : "Waiting"}
+                          {isFree ? "Skipped (Free Clipper)" : (
+                            executingState === "depositing"
+                              ? "Depositing 5 USDC from user smart wallet..."
+                              : executingState === "processing" || executingState === "completed"
+                              ? "Deposited successfully"
+                              : "Waiting"
+                          )}
                         </p>
                       </div>
                     </div>
@@ -827,12 +902,18 @@ export default function ClipperPage() {
                         3
                       </div>
                       <div className="space-y-0.5">
-                        <p className="font-semibold" style={{ color: "var(--color-fg)" }}>Process & Release Escrow</p>
+                        <p className="font-semibold" style={{ color: "var(--color-fg)" }}>
+                          {isFree ? "Process Clip" : "Process & Release Escrow"}
+                        </p>
                         <p style={{ color: "var(--color-fg-muted)", fontSize: "10px" }}>
                           {executingState === "processing"
-                            ? "Agent running yt-dlp, Whisper transcription, simulated posting & auto-withdrawing..."
+                            ? (isFree
+                                ? "Agent running yt-dlp, Whisper transcription, and simulated posting..."
+                                : "Agent running yt-dlp, Whisper transcription, simulated posting & auto-withdrawing...")
                             : executingState === "completed"
-                            ? "Done! Escrow released to agent"
+                            ? (isFree
+                                ? "Done! Clip successfully processed"
+                                : "Done! Escrow released to agent")
                             : "Waiting"}
                         </p>
                       </div>
@@ -900,13 +981,17 @@ export default function ClipperPage() {
                   AI Agent Deliverables
                 </CardTitle>
                 <CardDescription className="text-xs">
-                  Escrow Contract: <span className="font-mono text-xs" style={{ color: "var(--color-fg)" }}>{contractId}</span> • 
-                  Agreement ID: <span className="font-mono text-xs" style={{ color: "var(--color-fg)" }}>{agreementId}</span>
+                  {contractId === "free-clipper" ? (
+                    <>Free Clipper Agent • Agreement ID: <span className="font-mono text-xs" style={{ color: "var(--color-fg)" }}>{agreementId}</span></>
+                  ) : (
+                    <>Escrow Contract: <span className="font-mono text-xs" style={{ color: "var(--color-fg)" }}>{contractId}</span> • 
+                    Agreement ID: <span className="font-mono text-xs" style={{ color: "var(--color-fg)" }}>{agreementId}</span></>
+                  )}
                 </CardDescription>
               </div>
               <Badge className="ml-auto" style={{ backgroundColor: "var(--color-success-soft)", color: "var(--color-success)", border: "none" }}>
                 <CheckCircle2 className="h-3 w-3 mr-1" />
-                Agreement Closed (Escrow Released)
+                {contractId === "free-clipper" ? "Agreement Closed (Free Clipper Done)" : "Agreement Closed (Escrow Released)"}
               </Badge>
             </div>
           </CardHeader>

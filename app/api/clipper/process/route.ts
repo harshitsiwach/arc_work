@@ -40,14 +40,14 @@ export async function POST(req: Request) {
     const supabase = createSupabaseServerClient();
     const agreementService = createAgreementService(supabase);
 
-    const { circleContractId } = await req.json();
+    const { circleContractId, agreementId } = await req.json();
 
-    if (!circleContractId) {
-      return NextResponse.json({ error: "Missing circleContractId" }, { status: 400 });
+    if (!circleContractId && !agreementId) {
+      return NextResponse.json({ error: "Missing circleContractId or agreementId" }, { status: 400 });
     }
 
     // 1. Fetch the escrow agreement
-    const { data: agreement, error: agreementError } = await supabase
+    let dbQuery = supabase
       .from("escrow_agreements")
       .select(
         `
@@ -62,9 +62,15 @@ export async function POST(req: Request) {
           )
         )
       `
-      )
-      .eq("circle_contract_id", circleContractId)
-      .single();
+      );
+
+    if (circleContractId) {
+      dbQuery = dbQuery.eq("circle_contract_id", circleContractId);
+    } else {
+      dbQuery = dbQuery.eq("id", agreementId);
+    }
+
+    const { data: agreement, error: agreementError } = await dbQuery.single();
 
     if (agreementError || !agreement) {
       console.error("[Clipper Process] Agreement not found:", agreementError);
@@ -188,52 +194,58 @@ export async function POST(req: Request) {
       .update({ terms: updatedTerms })
       .eq("id", agreement.id);
 
-    // 6. Release funds from escrow to agent wallet via withdraw(uint256[])
-    // Retrieves contract data from Circle's SDK to get contractAddress
-    const contractData = await circleContractSdk.getContract({
-      id: agreement.circle_contract_id,
-    });
+    const isFree = agreement.circle_contract_id === null || agreement.circle_contract_id === "free-clipper";
+    let releaseTransactionId = null;
 
-    if (!contractData.data) {
-      throw new Error("Could not retrieve contract data");
-    }
+    if (!isFree) {
+      // 6. Release funds from escrow to agent wallet via withdraw(uint256[])
+      // Retrieves contract data from Circle's SDK to get contractAddress
+      const contractData = await circleContractSdk.getContract({
+        id: agreement.circle_contract_id,
+      });
 
-    const contractAddress = contractData.data?.contract.contractAddress;
+      if (!contractData.data) {
+        throw new Error("Could not retrieve contract data");
+      }
 
-    if (!contractAddress) {
-      throw new Error("Could not retrieve contract address from Circle SDK");
-    }
+      const contractAddress = contractData.data?.contract.contractAddress;
 
-    console.log(`[Clipper Process] Releasing funds from contract: ${contractAddress}`);
+      if (!contractAddress) {
+        throw new Error("Could not retrieve contract address from Circle SDK");
+      }
 
-    const circleReleaseResponse = await circleDeveloperSdk.createContractExecutionTransaction({
-      walletId: process.env.NEXT_PUBLIC_AGENT_WALLET_ID, // Executed by agent wallet
-      contractAddress,
-      abiFunctionSignature: "withdraw(uint256[])",
-      abiParameters: [
-        [0] // Payment ID 0
-      ],
-      fee: {
-        type: "level",
-        config: {
-          feeLevel: "MEDIUM",
+      console.log(`[Clipper Process] Releasing funds from contract: ${contractAddress}`);
+
+      const circleReleaseResponse = await circleDeveloperSdk.createContractExecutionTransaction({
+        walletId: process.env.NEXT_PUBLIC_AGENT_WALLET_ID, // Executed by agent wallet
+        contractAddress,
+        abiFunctionSignature: "withdraw(uint256[])",
+        abiParameters: [
+          [0] // Payment ID 0
+        ],
+        fee: {
+          type: "level",
+          config: {
+            feeLevel: "MEDIUM",
+          },
         },
-      },
-    });
+      });
 
-    console.log("[Clipper Process] Funds release initiated:", circleReleaseResponse.data);
+      console.log("[Clipper Process] Funds release initiated:", circleReleaseResponse.data);
+      releaseTransactionId = circleReleaseResponse.data?.id;
 
-    // 7. Insert RELEASE_PAYMENT transaction row
-    const amount = parseAmount((agreement.terms.amounts?.[0] as any).amount);
-    await agreementService.createTransaction({
-      walletId: agreement.beneficiary_wallet.id,
-      circleTransactionId: circleReleaseResponse.data?.id,
-      escrowAgreementId: agreement.id,
-      transactionType: "RELEASE_PAYMENT",
-      profileId: agreement.beneficiary_wallet.profiles.id,
-      amount,
-      description: "Escrow funds released to Clipper Agent upon successful video processing & transcription",
-    });
+      // 7. Insert RELEASE_PAYMENT transaction row
+      const amount = parseAmount((agreement.terms.amounts?.[0] as any).amount);
+      await agreementService.createTransaction({
+        walletId: agreement.beneficiary_wallet.id,
+        circleTransactionId: releaseTransactionId,
+        escrowAgreementId: agreement.id,
+        transactionType: "RELEASE_PAYMENT",
+        profileId: agreement.beneficiary_wallet.profiles.id,
+        amount,
+        description: "Escrow funds released to Clipper Agent upon successful video processing & transcription",
+      });
+    }
 
     // 8. Update agreement status to CLOSED
     await supabase
@@ -246,9 +258,11 @@ export async function POST(req: Request) {
       videoUrl,
       transcript: transcriptText,
       socialPosts,
-      releaseTransactionId: circleReleaseResponse.data?.id,
+      releaseTransactionId,
       status: "CLOSED",
-      message: "Video clipped, transcribed, mock posted to socials, and escrow released successfully",
+      message: isFree
+        ? "Video clipped, transcribed, and mock posted successfully (Free Clipper)"
+        : "Video clipped, transcribed, mock posted to socials, and escrow released successfully",
     });
 
   } catch (error: any) {

@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { url, startTime, endTime, targetLanguage, instructions, socials } = await req.json();
+    const { url, startTime, endTime, targetLanguage, instructions, socials, isFree } = await req.json();
 
     if (!url || startTime === undefined || endTime === undefined) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -69,14 +69,14 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Agent wallet not registered in database" }, { status: 500 });
     }
 
-    const amountUSDC = 5.0; // Fixed budget
+    const amountUSDC = isFree ? 0.0 : 5.0; // Fixed budget
 
     // 3. Create the initial transaction and agreement records in Supabase
     const transaction = await agreementService.createTransaction({
       walletId: depositorWallet.id,
       profileId: profile.id,
       amount: amountUSDC,
-      description: "AI Clipper Agent commission deposit",
+      description: isFree ? "Free AI Clipper agent execution" : "AI Clipper Agent commission deposit",
     });
 
     const agreementTerms = {
@@ -113,6 +113,32 @@ export async function POST(req: NextRequest) {
       transactionId: transaction.id,
       terms: agreementTerms,
     });
+
+    if (isFree) {
+      // For free clipper, we skip contract deployment entirely
+      await supabase
+        .from("escrow_agreements")
+        .update({
+          circle_contract_id: "free-clipper",
+          status: "ACTIVE",
+        })
+        .eq("id", agreement.id);
+
+      await supabase
+        .from("transactions")
+        .update({ circle_transaction_id: "free-clipper" })
+        .eq("id", transaction.id);
+
+      return NextResponse.json({
+        success: true,
+        agreementId: agreement.id,
+        circleContractId: "free-clipper",
+        circleTransactionId: "free-clipper",
+        isFree: true,
+        status: "ACTIVE",
+        message: "Free AI Clipper execution initialized",
+      });
+    }
 
     // 4. Deploy the escrow contract
     if (!process.env.CIRCLE_BLOCKCHAIN) {
