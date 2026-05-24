@@ -75,6 +75,11 @@ export async function GET(request: Request) {
         user = newUser;
       }
 
+      if (!user) {
+        console.error("Profile not found and could not be created");
+        return NextResponse.redirect(`${baseUrl}/auth/auth-error`);
+      }
+
       const { data: walletAlreadyExists } = await supabase
         .from("wallets")
         .select()
