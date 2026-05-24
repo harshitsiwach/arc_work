@@ -58,12 +58,10 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Protect authenticated routes
+  // Protect authenticated routes (dashboard only — explore, agents, marketplace are public)
   if (
     !user &&
-    (request.nextUrl.pathname.startsWith("/dashboard") ||
-      request.nextUrl.pathname.startsWith("/agents") ||
-      request.nextUrl.pathname.startsWith("/explore"))
+    request.nextUrl.pathname.startsWith("/dashboard")
   ) {
     return NextResponse.redirect(new URL("/", request.url));
   }

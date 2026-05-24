@@ -30,7 +30,7 @@ export async function GET(request: Request) {
 
   const code = searchParams.get("code");
 
-  const nextUrl = searchParams.get("next") ?? "/";
+  const nextUrl = searchParams.get("next") ?? "/dashboard";
 
   if (code) {
     const supabase = createSupabaseServerClient();
