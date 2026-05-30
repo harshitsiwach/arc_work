@@ -5,7 +5,8 @@
 
 import { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
-import { useAppKitAccount, useDisconnect, useAppKit, useAppKitNetwork } from '@reown/appkit/react';
+import { useAppKitAccount, useDisconnect, useAppKit, useAppKitNetwork, useAppKitProvider } from '@reown/appkit/react';
+import { setWalletProvider } from "@/lib/contracts/instance";
 
 export type SupportedChain = {
   id: number;
@@ -67,6 +68,17 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   const { address: appKitAddress, isConnected: isAppKitConnected } = useAppKitAccount();
   const { chainId: appKitChainId, caipNetwork } = useAppKitNetwork();
   const { disconnect: disconnectAppKit } = useDisconnect();
+  const { walletProvider } = useAppKitProvider("eip155");
+
+  // Sync AppKit provider to global contract client
+  useEffect(() => {
+    if (walletProvider) {
+      console.log("[wallet-provider] Setting AppKit wallet provider");
+      setWalletProvider(walletProvider);
+    } else {
+      console.log("[wallet-provider] AppKit wallet provider not available yet");
+    }
+  }, [walletProvider]);
 
   // Sync AppKit
   useEffect(() => {

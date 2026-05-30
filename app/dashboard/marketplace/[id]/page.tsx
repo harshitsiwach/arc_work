@@ -1,154 +1,243 @@
 /**
- * Arc Work - Gig Detail Page
- * View gig details and apply — migrated to OKLCH design tokens
+ * Arc Work - ERC-8183 Gig Detail — Provider View
  */
 
 import { createSupabaseServerComponentClient } from "@/lib/supabase/server-client";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Bot, Users, Calendar, Clock, ExternalLink } from "lucide-react";
+import {
+  ArrowLeft, Bot, Users, Calendar, Clock, Wallet, Zap, Shield,
+  FileText, DollarSign, Hash, CheckCircle2, AlertTriangle, User, Briefcase,
+} from "lucide-react";
 import { GigApplyButton } from "./apply-button";
 
-export default async function GigDetailPage({
-  params,
-}: {
-  params: { id: string };
-}) {
+function truncateAddress(address: string) {
+  if (!address || address === "0x0000000000000000000000000000000000000000") {
+    return "0x0000000000000000000000000000000000000000";
+  }
+  return `${address.slice(0, 6)}...${address.slice(-4)}`;
+}
+
+export default async function GigDetailPage({ params }: { params: { id: string } }) {
   const supabase = createSupabaseServerComponentClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return redirect("/sign-in");
 
   const { data: gig } = await supabase
     .from("gigs")
-    .select(`
-      *,
-      creator_profile:profiles!gigs_creator_profile_id_fkey(name)
-    `)
+    .select(`*, creator_profile:profiles!gigs_creator_profile_id_fkey(name)`)
     .eq("id", params.id)
     .single();
 
   if (!gig) {
     return (
-      <div className="text-center py-12">
-        <h2 className="text-2xl font-bold" style={{ color: "var(--color-fg)" }}>Gig not found</h2>
-        <Link href="/dashboard/marketplace">
-          <Button variant="outline" className="mt-4">Back to Gigs</Button>
-        </Link>
+      <div className="text-center py-12 animate-fade-in-up">
+        <div className="empty-state inline-block">
+          <AlertTriangle className="h-8 w-8 mx-auto mb-3" style={{ color: "var(--color-warning)" }} />
+          <h3 className="heading-sm mb-2">Gig Not Found</h3>
+          <p className="body-sm mb-4">This gig may have been removed or filled.</p>
+          <Link href="/dashboard/marketplace">
+            <Button className="btn-secondary">Back to Gigs</Button>
+          </Link>
+        </div>
       </div>
     );
   }
 
   const { data: profile } = await supabase
-    .from("profiles")
-    .select("id")
-    .eq("auth_user_id", user.id)
-    .single();
+    .from("profiles").select("id").eq("auth_user_id", user.id).single();
 
   const isCreator = profile?.id === gig.creator_profile_id;
+  const isZeroAddress = !gig.provident_address || gig.provident_address === "0x0000000000000000000000000000000000000000";
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="max-w-3xl mx-auto space-y-5 animate-fade-in-up">
       <Link href="/dashboard/marketplace">
-        <Button variant="ghost" className="gap-2" style={{ color: "var(--color-fg-secondary)" }}>
+        <Button variant="ghost" className="btn-ghost gap-2 text-[13px]">
           <ArrowLeft className="h-4 w-4" />
           Back to Gigs
         </Button>
       </Link>
 
-      <Card style={{ backgroundColor: "var(--color-bg-elevated)", borderColor: "var(--color-bd)" }}>
-        <CardHeader>
-          <div className="flex justify-between items-start">
-            <div className="space-y-1">
-              <div className="flex gap-2">
-                <Badge variant="outline" style={{ borderColor: "var(--color-bd)" }}>{gig.category}</Badge>
-                {gig.agent_only ? (
-                  <Badge className="bg-purple-500/10 text-purple-500 border-purple-500/20">
-                    <Bot className="mr-1 h-3 w-3" />
-                    AI Agents Only
-                  </Badge>
-                ) : (
-                  <Badge className="bg-blue-500/10 text-blue-500 border-blue-500/20">
-                    <Users className="mr-1 h-3 w-3" />
-                    Open to All
-                  </Badge>
-                )}
-                <Badge variant="secondary" style={{
-                  backgroundColor: gig.status === "open" ? "oklch(0.60 0.15 150 / 0.12)" : "var(--color-bg-hover)",
-                  color: gig.status === "open" ? "oklch(0.60 0.15 150)" : "var(--color-fg-muted)",
-                }}>
-                  {gig.status}
-                </Badge>
-              </div>
-              <CardTitle className="text-3xl mt-2" style={{ color: "var(--color-fg)" }}>{gig.title}</CardTitle>
-              <CardDescription>
-                Posted by {gig.creator_profile?.name || "Unknown"}
-              </CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          {/* Description */}
-          <div>
-            <h3 className="font-semibold mb-2" style={{ color: "var(--color-fg)" }}>Description</h3>
-            <p className="whitespace-pre-wrap text-sm leading-relaxed" style={{ color: "var(--color-fg-secondary)" }}>{gig.description}</p>
-          </div>
+      {/* Info Bar */}
+      <div className="erc-provider-info-bar">
+        <div className="flex items-center gap-2">
+          <Briefcase className="h-4 w-4" style={{ color: "var(--color-accent)" }} />
+          <span className="text-sm font-semibold" style={{ color: "var(--color-fg)" }}>Gig Details</span>
+        </div>
+        <div className="flex items-center gap-3">
+          <span className="erc-status-badge">{gig.status}</span>
+          <span className="text-[10px] font-mono" style={{ color: "var(--color-fg-muted)" }}>
+            {gig.id.slice(0, 8)}...
+          </span>
+        </div>
+      </div>
 
-          {/* Details grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="p-4 rounded-lg" style={{ backgroundColor: "var(--color-bg-inset)" }}>
-              <p className="text-sm" style={{ color: "var(--color-fg-muted)" }}>Price</p>
-              <p className="text-2xl font-bold" style={{ color: "var(--color-fg)" }}>
-                {gig.price_amount}{" "}
-                <span className="text-sm font-normal" style={{ color: "var(--color-fg-muted)" }}>
-                  {gig.price_currency}
-                </span>
+      {/* Main Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        {/* Left: Details */}
+        <div className="lg:col-span-2 space-y-5">
+          <div className="erc-detail-card">
+            <div className="erc-detail-header">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="erc-category-badge">{gig.category}</span>
+                {gig.agent_only ? (
+                  <span className="erc-type-badge erc-type-badge--agent">
+                    <Bot className="h-3 w-3" />
+                    AGENT ONLY
+                  </span>
+                ) : (
+                  <span className="erc-type-badge erc-type-badge--open">
+                    <Users className="h-3 w-3" />
+                    OPEN TO ALL
+                  </span>
+                )}
+              </div>
+              <h1 className="text-xl font-bold tracking-tight mb-2" style={{ color: "var(--color-fg)" }}>{gig.title}</h1>
+              <div className="flex items-center gap-2">
+                <User className="h-3.5 w-3.5" style={{ color: "var(--color-fg-muted)" }} />
+                <span className="body-sm">posted by {gig.creator_profile?.name || "unknown"}</span>
+              </div>
+            </div>
+
+            <div className="erc-detail-section">
+              <div className="flex items-center gap-2 mb-3">
+                <FileText className="h-3.5 w-3.5" style={{ color: "var(--color-accent)" }} />
+                <span className="caption font-semibold uppercase tracking-wider">Description</span>
+              </div>
+              <p className="whitespace-pre-wrap text-sm leading-relaxed" style={{ color: "var(--color-fg-secondary)" }}>
+                {gig.description}
               </p>
             </div>
-            {gig.delivery_days && (
-              <div className="p-4 rounded-lg" style={{ backgroundColor: "var(--color-bg-inset)" }}>
-                <p className="text-sm" style={{ color: "var(--color-fg-muted)" }}>Delivery</p>
-                <p className="text-2xl font-bold flex items-center gap-2" style={{ color: "var(--color-fg)" }}>
-                  <Calendar className="h-5 w-5" style={{ color: "var(--color-fg-muted)" }} />
-                  {gig.delivery_days} days
-                </p>
+
+            {gig.skills_required?.length > 0 && (
+              <div className="erc-detail-section">
+                <div className="flex items-center gap-2 mb-3">
+                  <Zap className="h-3.5 w-3.5" style={{ color: "var(--color-accent)" }} />
+                  <span className="caption font-semibold uppercase tracking-wider">Required Skills</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {gig.skills_required.map((skill: string) => (
+                    <span key={skill} className="erc-skill-tag">{skill}</span>
+                  ))}
+                </div>
               </div>
             )}
-            <div className="p-4 rounded-lg" style={{ backgroundColor: "var(--color-bg-inset)" }}>
-              <p className="text-sm" style={{ color: "var(--color-fg-muted)" }}>Created</p>
-              <p className="font-medium flex items-center gap-2" style={{ color: "var(--color-fg)" }}>
-                <Clock className="h-4 w-4" style={{ color: "var(--color-fg-muted)" }} />
-                {new Date(gig.created_at).toLocaleDateString()}
-              </p>
-            </div>
           </div>
 
-          {/* Skills */}
-          {gig.skills_required?.length > 0 && (
-            <div>
-              <h3 className="font-semibold mb-2" style={{ color: "var(--color-fg)" }}>Skills Required</h3>
-              <div className="flex flex-wrap gap-2">
-                {gig.skills_required.map((skill: string) => (
-                  <Badge key={skill} variant="secondary" style={{ backgroundColor: "var(--color-bg-inset)", color: "var(--color-fg-secondary)" }}>
-                    {skill}
-                  </Badge>
+          {/* Checklist */}
+          <div className="erc-detail-card">
+            <div className="erc-detail-section">
+              <div className="flex items-center gap-2 mb-3">
+                <CheckCircle2 className="h-3.5 w-3.5" style={{ color: "var(--color-success)" }} />
+                <span className="caption font-semibold uppercase tracking-wider">Provider Checklist</span>
+              </div>
+              <div className="space-y-2">
+                {[
+                  { label: "Review gig requirements", done: true },
+                  { label: "Verify escrow funding", done: !isZeroAddress },
+                  { label: "Check delivery deadline", done: !!gig.delivery_days },
+                  { label: "Submit application", done: false },
+                ].map((item, i) => (
+                  <div key={i} className="erc-checklist-item">
+                    <div className={`w-4 h-4 rounded border flex items-center justify-center ${item.done ? "border-[var(--color-success)] bg-[var(--color-success-soft)]" : "border-[var(--color-bd)]"}`}>
+                      {item.done && <CheckCircle2 className="h-3 w-3" style={{ color: "var(--color-success)" }} />}
+                    </div>
+                    <span className={`text-xs ${item.done ? "" : ""}`} style={{ color: item.done ? "var(--color-fg)" : "var(--color-fg-muted)" }}>
+                      {item.label}
+                    </span>
+                  </div>
                 ))}
               </div>
             </div>
-          )}
-
-          {/* Actions */}
-          <div className="flex gap-3 pt-4 border-t" style={{ borderColor: "var(--color-bd)" }}>
-            {isCreator ? (
-              <Button variant="outline" disabled style={{ color: "var(--color-fg-muted)" }}>You posted this gig</Button>
-            ) : (
-              <GigApplyButton />
-            )}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+
+        {/* Right: Sidebar */}
+        <div className="space-y-5">
+          {/* Payment */}
+          <div className="erc-detail-card">
+            <div className="erc-detail-section">
+              <div className="flex items-center gap-2 mb-4">
+                <DollarSign className="h-3.5 w-3.5" style={{ color: "var(--color-accent)" }} />
+                <span className="caption font-semibold uppercase tracking-wider">Payment</span>
+              </div>
+              <div className="erc-payment-display mb-4">
+                <span className="text-3xl font-bold tracking-tight" style={{ color: "var(--color-accent)" }}>
+                  {gig.price_amount}
+                </span>
+                <span className="text-sm ml-1" style={{ color: "var(--color-fg-muted)" }}>USDC</span>
+              </div>
+              <div className="space-y-2">
+                {gig.delivery_days && (
+                  <div className="flex items-center justify-between">
+                    <span className="caption">deadline</span>
+                    <span className="text-xs font-semibold flex items-center gap-1" style={{ color: "var(--color-fg)" }}>
+                      <Calendar className="h-3 w-3" />
+                      {gig.delivery_days} days
+                    </span>
+                  </div>
+                )}
+                <div className="flex items-center justify-between">
+                  <span className="caption">currency</span>
+                  <span className="badge-premium text-[10px]">USDC</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="caption">posted</span>
+                  <span className="text-xs flex items-center gap-1" style={{ color: "var(--color-fg)" }}>
+                    <Clock className="h-3 w-3" style={{ color: "var(--color-fg-muted)" }} />
+                    {new Date(gig.created_at).toLocaleDateString()}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Escrow */}
+          <div className="erc-detail-card">
+            <div className="erc-detail-section">
+              <div className="flex items-center gap-2 mb-4">
+                <Shield className="h-3.5 w-3.5" style={{ color: "var(--color-accent)" }} />
+                <span className="caption font-semibold uppercase tracking-wider">Escrow</span>
+              </div>
+              <div className="erc-address-display mb-3">
+                <Wallet className="h-4 w-4 shrink-0" style={{ color: "var(--color-accent)" }} />
+                <div className="min-w-0">
+                  <p className="text-[10px] font-mono mb-0.5" style={{ color: "var(--color-fg-muted)" }}>provident_address</p>
+                  <p className="text-[11px] font-mono font-semibold break-all" style={{ color: "var(--color-fg)" }}>
+                    {gig.provident_address || "0x0000000000000000000000000000000000000000"}
+                  </p>
+                </div>
+              </div>
+              {isZeroAddress ? (
+                <div className="erc-escrow-warning">
+                  <AlertTriangle className="h-3.5 w-3.5 shrink-0" style={{ color: "var(--color-warning)" }} />
+                  <span className="text-[10px]">Escrow not yet funded — verify before applying.</span>
+                </div>
+              ) : (
+                <div className="erc-escrow-ok">
+                  <CheckCircle2 className="h-3.5 w-3.5 shrink-0" style={{ color: "var(--color-success)" }} />
+                  <span className="text-[10px]">Escrow funded — payment secured.</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Apply */}
+          <div className="erc-detail-card">
+            <div className="p-4">
+              {isCreator ? (
+                <p className="text-center text-xs" style={{ color: "var(--color-fg-muted)" }}>
+                  You posted this gig
+                </p>
+              ) : (
+                <GigApplyButton gigId={gig.id} />
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

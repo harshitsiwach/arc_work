@@ -13,7 +13,7 @@ import { RequestUsdcButton } from "@/components/request-usdc-button";
 import { USDCButton } from "@/components/usdc-button";
 import { WalletInformationDialog } from "@/components/wallet-information-dialog";
 import { EscrowAgreements } from "@/components/escrow-agreements";
-import { CreateAgreementPage } from "@/components/ui/createAgreementPage";
+import { CreateAgreementPage } from "@/components/create-agreement-page";
 import { DashboardWalletSection } from "@/components/dashboard-wallet-section";
 import dynamic from "next/dynamic";
 import Link from "next/link";

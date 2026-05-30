@@ -1,13 +1,9 @@
-/**
- * Arc Work - Premium Navigation Bar
- * Explore | Agents | Dashboard + Global Create CTA
- */
 "use client";
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, Plus, Sparkles, Bot, Package, Briefcase, GraduationCap, Wrench } from "lucide-react";
+import { Menu, X, Plus, ShoppingBag, Bot, Briefcase, LayoutDashboard, Search } from "lucide-react";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { WalletConnectButton } from "@/components/wallet-connect-button";
 import { UserMenu } from "@/components/user-menu";
@@ -15,70 +11,38 @@ import { cn } from "@/lib/utils";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser-client";
 
 const navLinks = [
-  { href: "/explore", label: "Explore" },
-  { href: "/agents", label: "Agents" },
-  { href: "/pitch", label: "Pitch Deck" },
-  { href: "/dashboard", label: "Dashboard" },
-];
-
-const createOptions = [
-  { href: "/dashboard/marketplace/post", label: "Create Gig", desc: "Post a freelance job", icon: Briefcase },
-  { href: "/agents/create", label: "Launch AI Agent", desc: "Deploy an autonomous worker", icon: Bot },
-  { href: "/dashboard/products/create", label: "Upload Product", desc: "List a digital product", icon: Package },
-  { href: "/dashboard/courses", label: "Create Course", desc: "Teach your expertise", icon: GraduationCap },
-  { href: "/agents/marketplace", label: "Browse AI Marketplace", desc: "Discover AI tools & APIs", icon: Wrench },
+  { href: "/explore", label: "Marketplace", icon: ShoppingBag },
+  { href: "/agents", label: "Agents", icon: Bot },
+  { href: "/jobs", label: "Work", icon: Briefcase },
+  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
 ];
 
 function isActive(pathname: string, href: string): boolean {
   if (href === "/dashboard") return pathname === "/dashboard" || pathname === "/dashboard/";
   if (href === "/explore") return pathname.startsWith("/explore");
   if (href === "/agents") return pathname.startsWith("/agents");
+  if (href === "/jobs") return pathname.startsWith("/jobs");
   return pathname.startsWith(href);
 }
 
-export function NavBar({
-  isAuthenticated: initialIsAuthenticated,
-  userEmail: initialUserEmail,
-}: {
-  isAuthenticated?: boolean;
-  userEmail?: string;
-}) {
+export function NavBar() {
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [createOpen, setCreateOpen] = useState(false);
-
-  // Client-side auth state
   const [user, setUser] = useState<{ email?: string } | null>(null);
 
   useEffect(() => {
-    if (initialIsAuthenticated) {
-      setUser({ email: initialUserEmail });
-    }
-  }, [initialIsAuthenticated, initialUserEmail]);
-
-  useEffect(() => {
     const supabase = createSupabaseBrowserClient();
-    
-    // Fetch current user details on client mount
     supabase.auth.getUser().then(({ data: { user } }) => {
-      if (user) {
-        setUser(user);
-      }
+      if (user) setUser(user);
     });
-
-    // Subscribe to session state updates
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
     });
-
-    return () => {
-      subscription.unsubscribe();
-    };
+    return () => subscription.unsubscribe();
   }, []);
 
   const isAuthenticated = !!user;
-  const userEmail = user?.email;
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -87,47 +51,41 @@ export function NavBar({
   }, []);
 
   useEffect(() => {
-    if (mobileOpen || createOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
+    document.body.style.overflow = mobileOpen ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
-  }, [mobileOpen, createOpen]);
-
-  // Close create menu on route change
-  useEffect(() => {
-    setCreateOpen(false);
-  }, [pathname]);
+  }, [mobileOpen]);
 
   return (
     <>
       <nav
-        className="fixed top-0 left-0 right-0 z-50 transition-all duration-200 border-b"
+        className="fixed top-0 left-0 right-0 z-50 transition-all duration-300"
         style={{
           height: "56px",
-          borderColor: "color-mix(in srgb, var(--color-bd) 50%, transparent)",
+          borderBottom: scrolled ? "1px solid var(--color-bd)" : "1px solid transparent",
           backgroundColor: scrolled
-            ? "color-mix(in srgb, var(--color-bg) 92%, transparent)"
-            : "color-mix(in srgb, var(--color-bg) 80%, transparent)",
-          backdropFilter: "blur(16px)",
-          WebkitBackdropFilter: "blur(16px)",
+            ? "color-mix(in srgb, var(--color-bg) 85%, transparent)"
+            : "color-mix(in srgb, var(--color-bg) 60%, transparent)",
+          backdropFilter: "blur(20px) saturate(180%)",
+          WebkitBackdropFilter: "blur(20px) saturate(180%)",
         }}
       >
         <div className="h-full max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-6">
           {/* Left: Logo + Nav */}
-          <div className="flex items-center gap-4">
-            <Link
-              href="/"
-              prefetch={false}
-              className="text-[15px] font-semibold tracking-[-0.02em] transition-opacity duration-150 hover:opacity-70"
-              style={{ color: "var(--color-fg)" }}
-            >
-              arc work
+          <div className="flex items-center gap-6">
+            <Link href="/" className="flex items-center gap-2 group" prefetch={false}>
+              <div
+                className="w-7 h-7 rounded-lg flex items-center justify-center transition-transform group-hover:scale-105"
+                style={{ backgroundColor: "var(--color-accent)" }}
+              >
+                <span className="text-white text-xs font-bold">A</span>
+              </div>
+              <span className="text-[15px] font-semibold tracking-[-0.03em] hidden sm:block" style={{ color: "var(--color-fg)" }}>
+                arc work
+              </span>
             </Link>
 
-            {/* Desktop nav links */}
-            <div className="hidden md:flex items-center gap-0.5">
+            {/* Desktop nav */}
+            <div className="hidden md:flex items-center gap-1">
               {navLinks.map((item) => {
                 const active = isActive(pathname, item.href);
                 return (
@@ -136,24 +94,14 @@ export function NavBar({
                     href={item.href}
                     prefetch={false}
                     className={cn(
-                      "relative px-3 py-1.5 rounded-md text-[13px] font-medium transition-all duration-150",
-                      active ? "" : "hover:text-[var(--color-fg)]"
+                      "relative px-3 py-1.5 rounded-lg text-[13px] font-medium transition-all duration-150",
+                      active ? "nav-link-active" : "hover:text-[var(--color-fg)]"
                     )}
                     style={{
-                      color: active ? "var(--color-fg)" : "var(--color-fg-secondary)",
+                      color: active ? "var(--color-fg)" : "var(--color-fg-muted)",
                     }}
                   >
                     {item.label}
-                    {active && (
-                      <span
-                        className="absolute bottom-0 left-1/2 -translate-x-1/2 rounded-full"
-                        style={{
-                          width: "16px",
-                          height: "2px",
-                          backgroundColor: "var(--color-accent)",
-                        }}
-                      />
-                    )}
                   </Link>
                 );
               })}
@@ -161,95 +109,43 @@ export function NavBar({
           </div>
 
           {/* Right: Actions */}
-          <div className="flex items-center gap-1.5">
-            {/* Global Create Button */}
-            {isAuthenticated && (
-              <div className="relative hidden sm:block">
-                <button
-                  onClick={() => setCreateOpen(!createOpen)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[13px] font-medium transition-all duration-150"
-                  style={{
-                    backgroundColor: "var(--color-accent)",
-                    color: "white",
-                  }}
-                >
-                  <Plus size={14} />
-                  Create
-                </button>
-
-                {/* Create Dropdown */}
-                {createOpen && (
-                  <>
-                    <div className="fixed inset-0 z-40" onClick={() => setCreateOpen(false)} />
-                    <div
-                      className="absolute right-0 top-full mt-2 z-50 w-64 rounded-xl overflow-hidden shadow-lg animate-scale-in"
-                      style={{
-                        backgroundColor: "var(--color-bg-elevated)",
-                        border: "1px solid var(--color-bd)",
-                        boxShadow: "0 8px 32px oklch(0 0 0 / 0.3)",
-                      }}
-                    >
-                      <div className="p-2">
-                        <p className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider" style={{ color: "var(--color-fg-muted)" }}>
-                          Quick Create
-                        </p>
-                        {createOptions.map((option) => {
-                          const Icon = option.icon;
-                          return (
-                            <Link
-                              key={option.href}
-                              href={option.href}
-                              prefetch={false}
-                              onClick={() => setCreateOpen(false)}
-                              className="flex items-center gap-3 p-2.5 rounded-lg transition-colors duration-150 group"
-                              style={{ color: "var(--color-fg-secondary)" }}
-                            >
-                              <div
-                                className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors duration-150"
-                                style={{ backgroundColor: "var(--color-accent-soft)" }}
-                              >
-                                <Icon size={14} style={{ color: "var(--color-accent)" }} />
-                              </div>
-                              <div className="text-left">
-                                <p className="text-[13px] font-medium group-hover:text-[var(--color-fg)] transition-colors duration-150" style={{ color: "var(--color-fg)" }}>
-                                  {option.label}
-                                </p>
-                                <p className="text-[11px]" style={{ color: "var(--color-fg-muted)" }}>{option.desc}</p>
-                              </div>
-                            </Link>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  </>
-                )}
-              </div>
-            )}
+          <div className="flex items-center gap-2">
+            {/* Search shortcut */}
+            <button
+              className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium transition-colors"
+              style={{
+                backgroundColor: "var(--color-bg-hover)",
+                color: "var(--color-fg-muted)",
+                border: "1px solid var(--color-bd)",
+              }}
+            >
+              <Search size={13} />
+              <span className="hidden lg:inline">Search</span>
+              <kbd className="hidden lg:inline text-[10px] px-1 py-0.5 rounded" style={{ backgroundColor: "var(--color-bg-inset)", border: "1px solid var(--color-bd)" }}>
+                /
+              </kbd>
+            </button>
 
             <div className="hidden sm:block">
               <ThemeSwitcher />
             </div>
             <WalletConnectButton />
             {isAuthenticated ? (
-              <UserMenu email={userEmail} />
+              <UserMenu email={user?.email} />
             ) : (
               <Link
                 href="/sign-in"
                 prefetch={false}
-                className="hidden sm:inline-flex items-center px-3 py-1.5 rounded-md text-[13px] font-medium transition-colors duration-150"
-                style={{
-                  backgroundColor: "var(--color-accent)",
-                  color: "white",
-                }}
+                className="btn-primary text-[13px] py-1.5 px-3"
               >
                 Sign in
               </Link>
             )}
 
-            {/* Mobile menu button */}
+            {/* Mobile menu */}
             <button
               onClick={() => setMobileOpen(!mobileOpen)}
-              className="md:hidden inline-flex items-center justify-center w-8 h-8 rounded-md transition-colors duration-150"
+              className="md:hidden flex items-center justify-center w-8 h-8 rounded-lg transition-colors"
               style={{ color: "var(--color-fg-secondary)" }}
               aria-label="Toggle menu"
             >
@@ -269,66 +165,37 @@ export function NavBar({
       )}
       <div
         className={cn(
-          "fixed top-[56px] right-0 bottom-0 z-50 w-72 md:hidden transition-transform duration-200 ease-out",
+          "fixed top-[56px] right-0 bottom-0 z-50 w-72 md:hidden transition-transform duration-300 ease-out",
           mobileOpen ? "translate-x-0" : "translate-x-full"
         )}
         style={{
           backgroundColor: "var(--color-bg-elevated)",
-          borderLeft: "1px solid",
-          borderColor: "var(--color-bd)",
+          borderLeft: "1px solid var(--color-bd)",
         }}
       >
         <div className="flex flex-col p-4 gap-1">
-          {/* Mobile Create Button */}
-          {isAuthenticated && (
-            <div className="mb-3 pb-3" style={{ borderBottom: "1px solid var(--color-bd)" }}>
-              <p className="px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider" style={{ color: "var(--color-fg-muted)" }}>
-                Quick Create
-              </p>
-              {createOptions.map((option) => {
-                const Icon = option.icon;
-                return (
-                  <Link
-                    key={option.href}
-                    href={option.href}
-                    prefetch={false}
-                    onClick={() => setMobileOpen(false)}
-                    className="flex items-center gap-3 p-2.5 rounded-lg"
-                    style={{ color: "var(--color-fg-secondary)" }}
-                  >
-                    <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: "var(--color-accent-soft)" }}>
-                      <Icon size={14} style={{ color: "var(--color-accent)" }} />
-                    </div>
-                    <div className="text-left">
-                      <p className="text-[13px] font-medium" style={{ color: "var(--color-fg)" }}>{option.label}</p>
-                      <p className="text-[11px]" style={{ color: "var(--color-fg-muted)" }}>{option.desc}</p>
-                    </div>
-                  </Link>
-                );
-              })}
-            </div>
-          )}
-
           {navLinks.map((item) => {
             const active = isActive(pathname, item.href);
+            const Icon = item.icon;
             return (
               <Link
                 key={item.href}
                 href={item.href}
                 prefetch={false}
                 onClick={() => setMobileOpen(false)}
-                className="px-3 py-2.5 rounded-lg text-[14px] font-medium transition-colors duration-150"
+                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[14px] font-medium transition-colors"
                 style={{
                   color: active ? "var(--color-fg)" : "var(--color-fg-secondary)",
-                  backgroundColor: active ? "var(--color-bg-hover)" : "transparent",
+                  backgroundColor: active ? "var(--color-accent-soft)" : "transparent",
                 }}
               >
+                <Icon size={16} style={{ color: active ? "var(--color-accent)" : "var(--color-fg-muted)" }} />
                 {item.label}
               </Link>
             );
           })}
 
-          <div className="my-2" style={{ borderTop: "1px solid", borderColor: "var(--color-bd)" }} />
+          <div className="my-2" style={{ borderTop: "1px solid var(--color-bd)" }} />
 
           <div className="flex items-center gap-2 px-3 py-2">
             <ThemeSwitcher />
@@ -340,11 +207,7 @@ export function NavBar({
               href="/sign-in"
               prefetch={false}
               onClick={() => setMobileOpen(false)}
-              className="mt-2 flex items-center justify-center px-3 py-2.5 rounded-lg text-[14px] font-medium"
-              style={{
-                backgroundColor: "var(--color-accent)",
-                color: "white",
-              }}
+              className="mt-2 btn-primary text-center"
             >
               Sign in
             </Link>

@@ -14,6 +14,7 @@ const GigSchema = z.object({
   delivery_days: z.number().int().positive().nullable(),
   agent_only: z.boolean().default(false),
   skills_required: z.array(z.string()).default([]),
+  provident_address: z.string().default("0x0000000000000000000000000000000000000000"),
 });
 
 export async function POST(req: NextRequest) {
@@ -50,6 +51,7 @@ export async function POST(req: NextRequest) {
       delivery_days: parsed.data.delivery_days,
       agent_only: parsed.data.agent_only,
       skills_required: parsed.data.skills_required,
+      provident_address: parsed.data.provident_address,
       status: "open",
     }).select().single();
 

@@ -1,7 +1,3 @@
-/**
- * Arc Work - Root Layout
- * Premium minimal design with Inter font and page transitions
- */
 import { EnvVarWarning } from "@/components/env-var-warning";
 import { hasEnvVars } from "@/lib/utils/supabase/check-env-vars";
 import { Inter } from "next/font/google";
@@ -26,8 +22,8 @@ const defaultUrl = process.env.NEXT_PUBLIC_VERCEL_URL
 
 export const metadata = {
   metadataBase: new URL(defaultUrl),
-  title: "Arc Work",
-  description: "The operating system for internet creators and AI workers",
+  title: "Arc Work — The operating system for internet creators and AI workers",
+  description: "Sell digital products, hire AI agents, and get freelance work done with onchain escrow payments.",
 };
 
 export default function RootLayout({
@@ -50,19 +46,18 @@ export default function RootLayout({
           <div className="min-h-screen flex flex-col">
             {!hasEnvVars ? (
               <nav
-                className="fixed top-0 left-0 right-0 z-50 border-b"
-                style={{
-                  height: "56px",
-                  borderColor: "color-mix(in srgb, var(--color-bd) 50%, transparent)",
-                  backgroundColor: "color-mix(in srgb, var(--color-bg) 80%, transparent)",
-                  backdropFilter: "blur(16px)",
-                  WebkitBackdropFilter: "blur(16px)",
-                }}
+                className="fixed top-0 left-0 right-0 z-50 glass"
+                style={{ height: "56px", borderBottom: "1px solid var(--color-bd)" }}
               >
                 <div className="h-full max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-6">
-                  <span className="text-[15px] font-semibold tracking-[-0.02em]" style={{ color: "var(--color-fg)" }}>
-                    arc work
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: "var(--color-accent)" }}>
+                      <span className="text-white text-xs font-bold">A</span>
+                    </div>
+                    <span className="text-[15px] font-semibold tracking-[-0.03em]" style={{ color: "var(--color-fg)" }}>
+                      arc work
+                    </span>
+                  </div>
                   <EnvVarWarning />
                 </div>
               </nav>
@@ -70,7 +65,6 @@ export default function RootLayout({
               <NavBar />
             )}
 
-            {/* Main Content */}
             <main className="flex-1 pt-14">
               <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-6 animate-fade-in-up">
                 {children}

@@ -28,22 +28,3 @@ const STATUS_COLORS: Record<AgreementStatus, string> = {
 export const getStatusColor = (status: AgreementStatus) => {
   return STATUS_COLORS[status] ?? "text-muted-foreground bg-muted";
 };
-
-export const formatAmount = (amount: number, currency: string) => {
-  if (!Number.isFinite(amount)) {
-    throw new Error('Amount must be a valid number');
-  }
-  if (amount < 0) {
-    throw new Error('Amount cannot be negative');
-  }
-  try {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency,
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(amount);
-  } catch (error) {
-    throw new Error(`Invalid currency code: ${currency}`);
-  }
-};
