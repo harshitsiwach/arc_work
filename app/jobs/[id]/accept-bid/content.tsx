@@ -6,6 +6,7 @@ import { reads } from "@/lib/contracts/reads";
 import { useWallet } from "@/lib/web3/wallet-provider";
 import { useAcceptBid } from "@/features/bids/hooks/use-accept-bid";
 import { TransactionModal } from "@/features/shared/components/transaction-modal";
+import { formatUSDC } from "@/lib/contracts/format";
 import type { JobRecord } from "@/features/jobs/types/job";
 import type { Bid } from "@/lib/contracts/types";
 
@@ -52,7 +53,7 @@ export function AcceptBidPageContent({ job, providerParam }: { job: JobRecord; p
         </div>
         <div className="p-4 rounded-lg" style={{ backgroundColor: "var(--color-bg-inset)" }}>
           <p className="text-xs font-mono mb-1" style={{ color: "var(--color-fg-muted)" }}>Bid Amount</p>
-          <p className="text-2xl font-bold" style={{ color: "var(--color-fg)" }}>{selectedBid.amount.toString()} <span className="text-sm font-mono" style={{ color: "var(--color-fg-muted)" }}>USDC</span></p>
+          <p className="text-2xl font-bold" style={{ color: "var(--color-fg)" }}>{formatUSDC(selectedBid.amount)} <span className="text-sm font-mono" style={{ color: "var(--color-fg-muted)" }}>USDC</span></p>
         </div>
         <button onClick={async () => { await execute({ jobId: BigInt(job.onchain_job_id!), provider: selectedBid.provider }); }}
           disabled={isLoading}
@@ -73,7 +74,7 @@ export function AcceptBidPageContent({ job, providerParam }: { job: JobRecord; p
           className="w-full text-left rounded-xl border p-4 transition-colors hover:opacity-80"
           style={{ borderColor: "var(--color-bd)", backgroundColor: "var(--color-bg-elevated)" }}>
           <p className="text-sm font-mono" style={{ color: "var(--color-fg)" }}>{bid.provider?.slice(0, 6) ?? "---"}...{bid.provider?.slice(-4) ?? ""}</p>
-          <p className="text-lg font-bold mt-1" style={{ color: "var(--color-fg)" }}>{bid.amount.toString()} USDC</p>
+          <p className="text-lg font-bold mt-1" style={{ color: "var(--color-fg)" }}>{formatUSDC(bid.amount)} USDC</p>
         </button>
       ))}
       {bids.filter(b => !b.accepted).length === 0 && <p className="text-sm" style={{ color: "var(--color-fg-muted)" }}>No pending bids to accept.</p>}

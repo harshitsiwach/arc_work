@@ -7,6 +7,8 @@ import { JobTimeline } from "./job-timeline";
 import { JobActivity } from "./job-activity";
 import { useWallet } from "@/lib/web3/wallet-provider";
 import { reads } from "@/lib/contracts/reads";
+import { useClaimRefund } from "@/features/jobs/hooks/use-workflow-actions";
+import { TransactionModal } from "@/features/shared/components/transaction-modal";
 import type { JobStatus } from "@/lib/contracts/types";
 import type { JobRecord } from "../types/job";
 import { AGENTIC_COMMERCE_ADDRESS } from "@/lib/contracts/instance";
@@ -21,6 +23,7 @@ export function JobDetail({ job }: JobDetailProps) {
   const [onchainProvider, setOnchainProvider] = useState<string>("");
   const [onchainBudget, setOnchainBudget] = useState<bigint>(BigInt(0));
   const [onchainClientAddress, setOnchainClientAddress] = useState<string | null>(null);
+  const claimRefund = useClaimRefund();
 
   const fetchOnchainStatus = useCallback(async () => {
     if (!job.onchain_job_id) return;
@@ -94,10 +97,15 @@ export function JobDetail({ job }: JobDetailProps) {
                       Review Work
                     </Link>
                   )}
-                  {isCreator && currentStatus === 5 && (
-                    <Link href={`/jobs/${job.id}`} className="rounded-lg px-4 py-2 text-sm font-medium" style={{ backgroundColor: "var(--color-warning)", color: "white" }}>
-                      Claim Refund
-                    </Link>
+                  {(currentStatus === 4 || currentStatus === 5) && (
+                    isCreator ? (
+                      <button onClick={async () => { await claimRefund.execute(BigInt(job.onchain_job_id!)); }}
+                        disabled={claimRefund.isLoading}
+                        className="rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50"
+                        style={{ backgroundColor: "var(--color-warning)", color: "white" }}>
+                        {claimRefund.isLoading ? "Processing..." : "Claim Refund"}
+                      </button>
+                    ) : null
                   )}
 
                   {/* Provider actions */}
@@ -164,6 +172,8 @@ export function JobDetail({ job }: JobDetailProps) {
           <JobActivity job={job} />
         </div>
       </div>
+
+      <TransactionModal state={claimRefund.state} onClose={claimRefund.reset} />
     </div>
   );
 }

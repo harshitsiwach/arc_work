@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import {
   LayoutDashboard, Wallet, BarChart3, Package, Bot, PlusCircle,
   Plus, ShoppingCart, BadgeCheck, User, Settings, Briefcase,
-  TrendingUp, Rocket,
+  TrendingUp, Rocket, HandCoins, UserCheck,
 } from "lucide-react";
 
 interface SidebarLink {
@@ -29,16 +29,18 @@ const sidebarSections: { title: string; links: SidebarLink[] }[] = [
     title: "Create",
     links: [
       { href: "/dashboard/products/create", label: "New Product", icon: Plus, accent: true },
-      { href: "/dashboard/marketplace/post", label: "New Gig", icon: PlusCircle, accent: true },
+      { href: "/jobs/create", label: "New Job", icon: PlusCircle, accent: true },
       { href: "/agents/create", label: "New Agent", icon: Rocket, accent: true },
     ],
   },
   {
     title: "Manage",
     links: [
+      { href: "/dashboard/client", label: "Client Dashboard", icon: HandCoins },
+      { href: "/dashboard/provider", label: "Provider Dashboard", icon: UserCheck },
       { href: "/dashboard/my-products", label: "My Products", icon: Package },
       { href: "/agents", label: "My Agents", icon: Bot },
-      { href: "/jobs", label: "My Gigs", icon: Briefcase },
+      { href: "/jobs", label: "Browse Jobs", icon: Briefcase },
       { href: "/dashboard/orders", label: "Orders", icon: ShoppingCart },
     ],
   },
