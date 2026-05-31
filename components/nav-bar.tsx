@@ -58,15 +58,10 @@ export function NavBar() {
   return (
     <>
       <nav
-        className="fixed top-0 left-0 right-0 z-50 transition-all duration-300"
+        className="fixed top-0 left-0 right-0 z-50 glass-heavy transition-all duration-300"
         style={{
           height: "56px",
-          borderBottom: scrolled ? "1px solid var(--color-bd)" : "1px solid transparent",
-          backgroundColor: scrolled
-            ? "color-mix(in srgb, var(--color-bg) 85%, transparent)"
-            : "color-mix(in srgb, var(--color-bg) 60%, transparent)",
-          backdropFilter: "blur(20px) saturate(180%)",
-          WebkitBackdropFilter: "blur(20px) saturate(180%)",
+          borderBottom: scrolled ? "1px solid color-mix(in srgb, var(--color-bd) 60%, transparent)" : "1px solid transparent",
         }}
       >
         <div className="h-full max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-6">
@@ -165,13 +160,9 @@ export function NavBar() {
       )}
       <div
         className={cn(
-          "fixed top-[56px] right-0 bottom-0 z-50 w-72 md:hidden transition-transform duration-300 ease-out",
+          "fixed top-[56px] right-0 bottom-0 z-50 w-72 md:hidden transition-transform duration-300 ease-out glass-heavy",
           mobileOpen ? "translate-x-0" : "translate-x-full"
         )}
-        style={{
-          backgroundColor: "var(--color-bg-elevated)",
-          borderLeft: "1px solid var(--color-bd)",
-        }}
       >
         <div className="flex flex-col p-4 gap-1">
           {navLinks.map((item) => {

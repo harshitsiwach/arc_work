@@ -47,26 +47,33 @@ export default async function DashboardPage() {
     .eq("profile_id", profile?.id)
     .single();
 
-  const { data: myAgents } = await supabase
-    .from("agent_profiles")
-    .select("*")
-    .eq("profile_id", profile?.id)
-    .order("created_at", { ascending: false })
-    .limit(3);
+  // Parallel queries for data that only depends on profile.id
+  const [agentsResult, productsResult, agreementsResult] = await Promise.all([
+    supabase
+      .from("agent_profiles")
+      .select("*")
+      .eq("profile_id", profile?.id)
+      .order("created_at", { ascending: false })
+      .limit(3),
+    supabase
+      .from("products")
+      .select("id, title, price_amount, status, product_type, created_at")
+      .eq("creator_profile_id", profile?.id)
+      .order("created_at", { ascending: false })
+      .limit(5),
+    wallet
+      ? supabase
+          .from("escrow_agreements")
+          .select("*, beneficiary_wallet:wallets!beneficiary_wallet_id_fkey(*), depositor_wallet:wallets!depositor_wallet_id_fkey(*)")
+          .or(`beneficiary_wallet_id.eq.${wallet.id},depositor_wallet_id.eq.${wallet.id}`)
+          .order("created_at", { ascending: false })
+          .limit(5)
+      : Promise.resolve({ data: null }),
+  ]);
 
-  const { data: myProducts } = await supabase
-    .from("products")
-    .select("id, title, price_amount, status, product_type, created_at")
-    .eq("creator_profile_id", profile?.id)
-    .order("created_at", { ascending: false })
-    .limit(5);
-
-  const { data: recentAgreements } = await supabase
-    .from("escrow_agreements")
-    .select("*, beneficiary_wallet:wallets!beneficiary_wallet_id_fkey(*), depositor_wallet:wallets!depositor_wallet_id_fkey(*)")
-    .or(`beneficiary_wallet_id.eq.${wallet?.id},depositor_wallet_id.eq.${wallet?.id}`)
-    .order("created_at", { ascending: false })
-    .limit(5);
+  const myAgents = agentsResult.data;
+  const myProducts = productsResult.data;
+  const recentAgreements = agreementsResult.data;
 
   const activeProducts = myProducts?.filter(p => p.status === "active")?.length || 0;
   const totalListed = myProducts?.reduce((s: number, p: any) => s + Number(p.price_amount || 0), 0) || 0;

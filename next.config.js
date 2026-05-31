@@ -1,12 +1,18 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
-    serverComponentsExternalPackages: ["pdf-parse"],
+    serverComponentsExternalPackages: ["pdf-parse", "mammoth", "openai"],
+  },
+  images: {
+    formats: ['image/avif', 'image/webp'],
+    remotePatterns: [
+      { protocol: 'https', hostname: '**.supabase.co' },
+      { protocol: 'https', hostname: '**.supabase.in' },
+    ],
   },
   async rewrites() {
     return [
       {
-        // Proxy all Circle API calls through our server to avoid browser CORS restriction
         source: "/api/circle-direct/:path*",
         destination: "https://api.circle.com/:path*",
       },

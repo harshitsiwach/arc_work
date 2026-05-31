@@ -13,6 +13,41 @@ import { AppKit } from "@circle-fin/app-kit";
 import { createViemAdapterFromProvider } from "@circle-fin/adapter-viem-v2";
 import { useAppKitProvider } from "@reown/appkit/react";
 
+// Cached viem imports (loaded once, reused across calls)
+let viemModules: {
+  createPublicClient: any;
+  http: any;
+  parseAbi: any;
+  createWalletClient: any;
+  custom: any;
+  arcTestnet: any;
+} | null = null;
+
+async function getViemModules() {
+  if (viemModules) return viemModules;
+  const [viem, viemWallet, arcModule] = await Promise.all([
+    import('viem'),
+    import('viem'),
+    import('@/lib/web3/appkit-provider'),
+  ]);
+  viemModules = {
+    createPublicClient: viem.createPublicClient,
+    http: viem.http,
+    parseAbi: viem.parseAbi,
+    createWalletClient: viemWallet.createWalletClient,
+    custom: viemWallet.custom,
+    arcTestnet: arcModule.arcTestnet,
+  };
+  return viemModules;
+}
+
+// Cached AppKit instance
+let cachedAppKit: AppKit | null = null;
+function getAppKit() {
+  if (!cachedAppKit) cachedAppKit = new AppKit();
+  return cachedAppKit;
+}
+
 interface UseWalletBalanceResult {
   balance: number;
   loading: boolean;
@@ -57,11 +92,11 @@ export function useWalletBalance(walletId: string): UseWalletBalanceResult {
       // 2. Fetch EOA Unified Balance using Client SDK
       if (walletProvider) {
         try {
-          const kit = new AppKit();
+          const kit = getAppKit();
           const viemAdapter = await createViemAdapterFromProvider({ provider: walletProvider as any });
           const balances = await kit.unifiedBalance.getBalances({
             sources: [{ adapter: viemAdapter }],
-            networkType: "testnet", // Using testnet based on Arc environment
+            networkType: "testnet",
             includePending: true,
           });
           if (balances.totalConfirmedBalance) {
@@ -74,10 +109,7 @@ export function useWalletBalance(walletId: string): UseWalletBalanceResult {
         // FALLBACK: If unified balance is 0 or failed, fetch directly from Arc Testnet
         if (eoaBalance === 0) {
           try {
-            // Use dynamic import so it doesn't break SSR
-            const { createPublicClient, http, parseAbi } = await import('viem');
-            const { arcTestnet } = await import('@/lib/web3/appkit-provider');
-            const { createWalletClient, custom } = await import('viem');
+            const { createPublicClient, http, parseAbi, createWalletClient, custom, arcTestnet } = await getViemModules();
 
             const publicClient = createPublicClient({ chain: arcTestnet, transport: http() });
             const walletClient = createWalletClient({ transport: custom(walletProvider as any) });

@@ -1,11 +1,11 @@
 /**
  * Arc Work — Creator Marketplace Landing Page
  * "The operating system for internet creators and AI workers"
+ * Uses CSS animations only — no framer-motion dependency.
  */
 "use client";
 
 import Link from "next/link";
-import { motion, useReducedMotion } from "framer-motion";
 import {
   ArrowRight, Zap, Bot, Sparkles, CheckCircle2, Star,
   ArrowUpRight, Play, Shield, Clock, Users, TrendingUp,
@@ -13,38 +13,6 @@ import {
 } from "lucide-react";
 import { ActivityTicker } from "./activity-ticker";
 import { HeroVisual } from "./hero-visual";
-
-/* ── Animation config ──────────────────────────────────────── */
-
-const ease = [0.16, 1, 0.3, 1] as const;
-
-const fadeUp = {
-  hidden: { opacity: 0, y: 16 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.5, ease },
-  },
-};
-
-const fadeIn = {
-  hidden: { opacity: 0, scale: 0.98 },
-  visible: {
-    opacity: 1,
-    scale: 1,
-    transition: { duration: 0.6, ease },
-  },
-};
-
-function useStagger(delay = 0.06) {
-  const shouldReduce = useReducedMotion();
-  return {
-    hidden: {},
-    visible: {
-      transition: { staggerChildren: shouldReduce ? 0 : delay },
-    },
-  };
-}
 
 /* ── Data ──────────────────────────────────────────────────── */
 
@@ -124,11 +92,9 @@ const agentTypes = [
 /* ── Component ─────────────────────────────────────────────── */
 
 export function LandingPage() {
-  const stagger = useStagger();
-
   return (
     <div className="relative">
-      {/* ── Full-page grid background ──────────────────── */}
+      {/* Full-page grid background */}
       <div
         className="fixed inset-0 pointer-events-none z-0"
         style={{
@@ -138,7 +104,7 @@ export function LandingPage() {
         }}
       />
 
-      {/* ── Hero Section ─────────────────────────────────── */}
+      {/* Hero Section */}
       <section className="relative min-h-[calc(100vh-3.5rem)] flex items-center overflow-hidden">
         {/* Atmospheric background layers */}
         <div
@@ -154,14 +120,9 @@ export function LandingPage() {
 
         <div className="relative w-full max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[1fr_1.05fr] gap-10 lg:gap-14 py-12 lg:py-0">
           {/* Left: Copy */}
-          <motion.div
-            className="flex flex-col justify-center gap-7 text-left"
-            variants={stagger}
-            initial="hidden"
-            animate="visible"
-          >
+          <div className="flex flex-col justify-center gap-7 text-left stagger">
             {/* Eyebrow */}
-            <motion.div variants={fadeUp}>
+            <div className="animate-fade-in-up">
               <span
                 className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium tracking-wide"
                 style={{
@@ -176,63 +137,55 @@ export function LandingPage() {
                 </span>
                 The OS for creators and AI workers
               </span>
-            </motion.div>
+            </div>
 
             {/* Headline */}
-            <motion.h1
-              variants={fadeUp}
-              className="font-semibold leading-[1.06] tracking-[-0.04em]"
+            <h1
+              className="font-semibold leading-[1.06] tracking-[-0.04em] animate-fade-in-up"
               style={{
                 fontSize: "clamp(2.75rem, 5.5vw + 1rem, 4.5rem)",
                 color: "var(--color-fg)",
                 textWrap: "balance",
+                animationDelay: "50ms",
               }}
             >
               Ship work.
               <br />
               <span style={{ color: "var(--color-accent)" }}>Get paid instantly.</span>
-            </motion.h1>
+            </h1>
 
             {/* Subheading */}
-            <motion.p
-              variants={fadeUp}
-              className="text-[17px] leading-relaxed"
+            <p
+              className="text-[17px] leading-relaxed animate-fade-in-up"
               style={{
                 color: "var(--color-fg-secondary)",
                 maxWidth: "50ch",
+                animationDelay: "100ms",
               }}
             >
               The marketplace where creators sell products, humans and AI agents
               do the work, and USDC settles in under a second.
-            </motion.p>
+            </p>
 
             {/* CTA row */}
-            <motion.div variants={fadeUp} className="flex items-center gap-3 pt-1">
+            <div className="flex items-center gap-3 pt-1 animate-fade-in-up" style={{ animationDelay: "150ms" }}>
               <Link
                 href="/dashboard"
-                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-150 hover:opacity-90"
-                style={{
-                  backgroundColor: "var(--color-accent)",
-                  color: "oklch(0.99 0.005 260)",
-                }}
+                className="btn-primary"
               >
                 Start Creating
                 <ArrowRight className="w-3.5 h-3.5" />
               </Link>
               <Link
-                href="/dashboard/marketplace"
-                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-150"
-                style={{
-                  border: "1px solid var(--color-bd)",
-                  color: "var(--color-fg-secondary)",
-                }}
+                href="/dashboard/products"
+                className="btn-secondary"
               >
                 Browse Marketplace
               </Link>
-            </motion.div>
+            </div>
 
-            {/* Trust row — enhanced */}
-            <motion.div variants={fadeUp} className="flex flex-col gap-3 pt-3">
+            {/* Trust row */}
+            <div className="flex flex-col gap-3 pt-3 animate-fade-in-up" style={{ animationDelay: "200ms" }}>
               <div className="flex items-center gap-4">
                 <div className="flex -space-x-2">
                   {["A", "M", "K", "R", "S", "J"].map((letter, i) => (
@@ -268,25 +221,20 @@ export function LandingPage() {
                   <span style={{ color: "var(--color-fg-secondary)" }}>623 agents active</span>
                 </span>
               </div>
-            </motion.div>
-          </motion.div>
+            </div>
+          </div>
 
           {/* Right: Dynamic visual */}
-          <motion.div
-            className="flex items-center justify-center lg:justify-end"
-            variants={fadeIn}
-            initial="hidden"
-            animate="visible"
-          >
+          <div className="flex items-center justify-center lg:justify-end animate-scale-in">
             <HeroVisual />
-          </motion.div>
+          </div>
         </div>
       </section>
 
-      {/* ── Activity Ticker ──────────────────────────────── */}
+      {/* Activity Ticker */}
       <ActivityTicker />
 
-      {/* ── Stats Bar ────────────────────────────────────── */}
+      {/* Stats Bar */}
       <section className="py-16 relative">
         <div
           className="absolute inset-0 pointer-events-none"
@@ -317,7 +265,7 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* ── Features Grid ────────────────────────────────── */}
+      {/* Features Grid */}
       <section className="py-16 relative">
         <div
           className="absolute inset-0 pointer-events-none"
@@ -338,16 +286,10 @@ export function LandingPage() {
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {features.map((f, i) => (
-              <motion.div
+            {features.map((f) => (
+              <div
                 key={f.title}
-                className="p-5 rounded-xl transition-all duration-150 hover-lift"
-                style={{
-                  backgroundColor: "var(--color-bg-elevated)",
-                  border: "1px solid var(--color-bd)",
-                }}
-                whileHover={{ y: -3 }}
-                transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                className="p-5 rounded-xl card-interactive"
               >
                 <div
                   className="w-9 h-9 rounded-lg flex items-center justify-center mb-3"
@@ -361,13 +303,13 @@ export function LandingPage() {
                 <p className="text-sm leading-relaxed" style={{ color: "var(--color-fg-secondary)" }}>
                   {f.desc}
                 </p>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── AI Agents Showcase ───────────────────────────── */}
+      {/* AI Agents Showcase */}
       <section className="py-16 relative">
         <div
           className="absolute inset-0 pointer-events-none"
@@ -397,21 +339,15 @@ export function LandingPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {agentTypes.map((agent) => (
-              <motion.div
+              <div
                 key={agent.name}
-                className="p-5 rounded-xl transition-all duration-150 hover-lift"
-                style={{
-                  backgroundColor: "var(--color-bg-elevated)",
-                  border: "1px solid var(--color-bd)",
-                }}
-                whileHover={{ y: -3 }}
-                transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                className="p-5 rounded-xl card-interactive"
               >
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-3">
                     <div
                       className="w-10 h-10 rounded-full flex items-center justify-center"
-                      style={{ backgroundColor: `${agent.color} / 0.12` }}
+                      style={{ backgroundColor: `color-mix(in srgb, ${agent.color} 12%, transparent)` }}
                     >
                       <Bot className="h-5 w-5" style={{ color: agent.color }} />
                     </div>
@@ -446,13 +382,13 @@ export function LandingPage() {
                   </div>
                   <span className="font-medium" style={{ color: "var(--color-fg)" }}>{agent.price}</span>
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── How It Works ─────────────────────────────────── */}
+      {/* How It Works */}
       <section className="py-16">
         <div className="w-full max-w-7xl mx-auto">
           <div className="text-center mb-12">
@@ -497,7 +433,7 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* ── CTA Section ──────────────────────────────────── */}
+      {/* CTA Section */}
       <section className="py-20 relative">
         <div
           className="absolute inset-0 pointer-events-none"
@@ -523,22 +459,14 @@ export function LandingPage() {
             <div className="flex items-center justify-center gap-3">
               <Link
                 href="/dashboard"
-                className="inline-flex items-center gap-2 px-7 py-3 rounded-full text-sm font-medium transition-all duration-150 hover:opacity-90"
-                style={{
-                  backgroundColor: "var(--color-accent)",
-                  color: "oklch(0.99 0.005 260)",
-                }}
+                className="btn-primary"
               >
                 Get Started Free
                 <ArrowRight className="w-4 h-4" />
               </Link>
               <Link
-                href="/dashboard/marketplace"
-                className="inline-flex items-center gap-2 px-7 py-3 rounded-full text-sm font-medium transition-all duration-150"
-                style={{
-                  border: "1px solid var(--color-bd)",
-                  color: "var(--color-fg-secondary)",
-                }}
+                href="/dashboard/products"
+                className="btn-secondary"
               >
                 Browse Marketplace
               </Link>
@@ -547,7 +475,7 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* ── Footer Section ────────────────────────────────── */}
+      {/* Footer Section */}
       <footer className="mt-20 border-t py-12" style={{ borderColor: "var(--color-bd)" }}>
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 px-4">
           <div className="flex flex-col items-center md:items-start">
@@ -560,7 +488,7 @@ export function LandingPage() {
           </div>
           <div className="flex flex-wrap items-center justify-center gap-6 text-sm" style={{ color: "var(--color-fg-secondary)" }}>
             <Link href="/dashboard" className="transition-colors hover:text-[var(--color-accent)]">Dashboard</Link>
-            <Link href="/dashboard/marketplace" className="transition-colors hover:text-[var(--color-accent)]">Marketplace</Link>
+            <Link href="/dashboard/products" className="transition-colors hover:text-[var(--color-accent)]">Marketplace</Link>
             <Link href="/dashboard/bridge" className="transition-colors hover:text-[var(--color-accent)]">Bridge</Link>
             <Link href="/pitch" className="transition-colors hover:text-[var(--color-accent)]">Pitch Deck</Link>
             <Link href="https://github.com" target="_blank" rel="noreferrer" className="transition-colors hover:text-[var(--color-accent)]">GitHub</Link>

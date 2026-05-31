@@ -1,10 +1,9 @@
 /**
  * Arc Work — Activity Ticker
- * Horizontal scrolling social proof bar
+ * Horizontal scrolling social proof bar (CSS animation, no JS loop)
  */
 "use client";
 
-import { useEffect, useRef, useState } from "react";
 import { CheckCircle2, Coins, Bot, Star, TrendingUp, Sparkles } from "lucide-react";
 
 const tickerItems = [
@@ -21,30 +20,7 @@ const tickerItems = [
 ];
 
 export function ActivityTicker() {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [offset, setOffset] = useState(0);
-
-  useEffect(() => {
-    let animationFrame: number;
-    let lastTime = 0;
-    const speed = 0.03;
-
-    const animate = (time: number) => {
-      if (!lastTime) lastTime = time;
-      const delta = time - lastTime;
-      lastTime = time;
-
-      setOffset((prev) => {
-        const next = prev + delta * speed;
-        return next;
-      });
-
-      animationFrame = requestAnimationFrame(animate);
-    };
-
-    animationFrame = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(animationFrame);
-  }, []);
+  const doubled = [...tickerItems, ...tickerItems];
 
   return (
     <div
@@ -56,13 +32,10 @@ export function ActivityTicker() {
       }}
     >
       <div
-        ref={containerRef}
-        className="flex items-center gap-8 whitespace-nowrap"
-        style={{
-          transform: `translateX(-${offset % (tickerItems.length * 280)}px)`,
-        }}
+        className="flex items-center gap-8 whitespace-nowrap animate-ticker"
+        style={{ width: "max-content" }}
       >
-        {[...tickerItems, ...tickerItems].map((item, i) => {
+        {doubled.map((item, i) => {
           const Icon = item.icon;
           return (
             <div key={i} className="flex items-center gap-2 text-xs shrink-0" style={{ color: "var(--color-fg-secondary)" }}>
