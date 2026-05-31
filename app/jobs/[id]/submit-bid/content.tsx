@@ -1,15 +1,19 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
 import { useSubmitBid } from "@/features/bids/hooks/use-submit-bid";
 import { TransactionModal } from "@/features/shared/components/transaction-modal";
 import type { JobRecord } from "@/features/jobs/types/job";
 
 export function SubmitBidPageContent({ job }: { job: JobRecord }) {
-  const router = useRouter();
   const [amount, setAmount] = useState("");
   const { execute, isLoading, isSuccess, state, reset } = useSubmitBid();
+
+  useEffect(() => {
+    if (!isSuccess) return;
+    const t = setTimeout(() => { window.location.href = "/dashboard/provider"; }, 1500);
+    return () => clearTimeout(t);
+  }, [isSuccess]);
 
   if (!job.onchain_job_id) return <p className="text-sm" style={{ color: "var(--color-fg-muted)" }}>This job is not yet onchain.</p>;
 
@@ -18,7 +22,6 @@ export function SubmitBidPageContent({ job }: { job: JobRecord }) {
     const num = parseFloat(amount);
     if (isNaN(num) || num <= 0) return;
     await execute({ jobId: BigInt(job.onchain_job_id!), amount: num });
-    if (isSuccess) setTimeout(() => router.push(`/jobs/${job.id}`), 1500);
   };
 
   return (
@@ -45,7 +48,7 @@ export function SubmitBidPageContent({ job }: { job: JobRecord }) {
           style={{ backgroundColor: "var(--color-accent)", color: "white" }}>
           {isLoading ? "Submitting..." : "Place Bid"}
         </button>
-        {isSuccess && <p className="text-xs text-center" style={{ color: "var(--color-success)" }}>Bid submitted! Redirecting...</p>}
+        {isSuccess && <p className="text-xs text-center" style={{ color: "var(--color-success)" }}>Bid submitted! Redirecting to dashboard...</p>}
       </form>
       <TransactionModal state={state} onClose={reset} />
     </>

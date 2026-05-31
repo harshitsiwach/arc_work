@@ -51,6 +51,14 @@ export default function ClientDashboardPage() {
     })();
   }, []);
 
+  const STATUS_TO_LABEL: Record<number, JobRecord["status"]> = { 0: "open", 1: "funded", 2: "submitted", 3: "completed", 4: "rejected", 5: "expired" };
+
+  const getEffectiveStatus = (job: JobRecord): JobRecord["status"] => {
+    const s = onchainStatuses[job.id];
+    if (s) return STATUS_TO_LABEL[s.status] ?? job.status;
+    return job.status;
+  };
+
   const isMyJob = (job: JobRecord) => {
     const s = onchainStatuses[job.id];
     if (!s) return false;
@@ -64,8 +72,8 @@ export default function ClientDashboardPage() {
 
   const activeStatuses: string[] = ["open", "funded", "submitted", "live"];
   const completedStatuses: string[] = ["completed", "rejected", "expired"];
-  const active = jobs.filter(j => activeStatuses.includes(j.status));
-  const completed = jobs.filter(j => completedStatuses.includes(j.status));
+  const active = jobs.filter(j => activeStatuses.includes(getEffectiveStatus(j)));
+  const completed = jobs.filter(j => completedStatuses.includes(getEffectiveStatus(j)));
   const pendingFunding = jobs.filter(j => needsFunding(j));
 
   return (
@@ -124,7 +132,7 @@ export default function ClientDashboardPage() {
               </div>
             ) : (
               <div className="space-y-2">
-                {active.map(job => <JobRow key={job.id} job={job} needsFunding={needsFunding(job)} />)}
+                {active.map(job => <JobRow key={job.id} job={job} needsFunding={needsFunding(job)} effectiveStatus={getEffectiveStatus(job)} />)}
               </div>
             )}
           </div>
@@ -134,9 +142,9 @@ export default function ClientDashboardPage() {
   );
 }
 
-function JobRow({ job, needsFunding }: { job: JobRecord; needsFunding: boolean }) {
-  const statusLabels: Record<string, string> = { draft: "Draft", live: "Open", open: "Open", funded: "Funded", submitted: "Submitted", completed: "Completed", rejected: "Rejected", expired: "Expired" };
-  const statusColors: Record<string, string> = { open: "var(--color-accent)", live: "var(--color-accent)", funded: "var(--color-warning)", submitted: "var(--color-warning)", completed: "var(--color-success)", rejected: "var(--color-error)", expired: "var(--color-fg-muted)" };
+function JobRow({ job, needsFunding, effectiveStatus }: { job: JobRecord; needsFunding: boolean; effectiveStatus: string }) {
+  const statusLabels: Record<string, string> = { open: "Open", funded: "Funded", submitted: "Submitted", completed: "Completed", rejected: "Rejected", expired: "Expired" };
+  const statusColors: Record<string, string> = { open: "var(--color-accent)", funded: "var(--color-warning)", submitted: "var(--color-warning)", completed: "var(--color-success)", rejected: "var(--color-error)", expired: "var(--color-fg-muted)" };
   const href = needsFunding ? `/jobs/${job.id}/fund` : `/jobs/${job.id}`;
   return (
     <Link href={href} className="block rounded-xl border p-4 transition-colors hover:opacity-80" style={{ borderColor: "var(--color-bd)", backgroundColor: "var(--color-bg-elevated)" }}>
@@ -145,8 +153,8 @@ function JobRow({ job, needsFunding }: { job: JobRecord; needsFunding: boolean }
           <p className="text-sm font-medium" style={{ color: "var(--color-fg)" }}>{job.title}</p>
           <p className="text-xs mt-1" style={{ color: "var(--color-fg-muted)" }}>{job.price_amount} {job.price_currency}{needsFunding ? " — Bid accepted, fund escrow" : ""}</p>
         </div>
-        <span className="text-[10px] font-mono px-2 py-1 rounded" style={{ backgroundColor: (statusColors[job.status] ?? "var(--color-fg-muted)") + "20", color: statusColors[job.status] ?? "var(--color-fg-muted)" }}>
-          {statusLabels[job.status] ?? job.status}
+        <span className="text-[10px] font-mono px-2 py-1 rounded" style={{ backgroundColor: (statusColors[effectiveStatus] ?? "var(--color-fg-muted)") + "20", color: statusColors[effectiveStatus] ?? "var(--color-fg-muted)" }}>
+          {statusLabels[effectiveStatus] ?? effectiveStatus}
         </span>
       </div>
     </Link>

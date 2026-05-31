@@ -58,7 +58,8 @@ export function FundPageContent({ job }: { job: JobRecord }) {
 
   const handleFund = async () => {
     setStep("approve");
-    await execute(BigInt(job.onchain_job_id!), amount);
+    const fundAmount = total > 0n ? total : amount;
+    await execute(BigInt(job.onchain_job_id!), fundAmount);
   };
 
   return (

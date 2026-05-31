@@ -81,10 +81,10 @@ export function JobDetail({ job }: JobDetailProps) {
             <div className="flex flex-wrap gap-3">
               {job.onchain_job_id ? (
                 <>
-                  {/* Client actions */}
+                  {/* ── Primary: creator actions ── */}
                   {isCreator && currentStatus === 0 && !hasProvider && (
                     <Link href={`/jobs/${job.id}/bids`} className="rounded-lg px-4 py-2 text-sm font-medium" style={{ backgroundColor: "var(--color-accent)", color: "white" }}>
-                      View Bids
+                      Review Bids
                     </Link>
                   )}
                   {isCreator && currentStatus === 0 && hasProvider && (
@@ -97,18 +97,16 @@ export function JobDetail({ job }: JobDetailProps) {
                       Review Work
                     </Link>
                   )}
-                  {(currentStatus === 4 || currentStatus === 5) && (
-                    isCreator ? (
-                      <button onClick={async () => { await claimRefund.execute(BigInt(job.onchain_job_id!)); }}
-                        disabled={claimRefund.isLoading}
-                        className="rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50"
-                        style={{ backgroundColor: "var(--color-warning)", color: "white" }}>
-                        {claimRefund.isLoading ? "Processing..." : "Claim Refund"}
-                      </button>
-                    ) : null
+                  {isCreator && (currentStatus === 4 || currentStatus === 5) && (
+                    <button onClick={async () => { await claimRefund.execute(BigInt(job.onchain_job_id!)); }}
+                      disabled={claimRefund.isLoading}
+                      className="rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50"
+                      style={{ backgroundColor: "var(--color-warning)", color: "white" }}>
+                      {claimRefund.isLoading ? "Processing..." : "Claim Refund"}
+                    </button>
                   )}
 
-                  {/* Provider actions */}
+                  {/* ── Primary: provider actions ── */}
                   {!isCreator && currentStatus === 0 && !hasProvider && (
                     <Link href={`/jobs/${job.id}/submit-bid`} className="rounded-lg px-4 py-2 text-sm font-medium" style={{ backgroundColor: "var(--color-accent)", color: "white" }}>
                       Submit Bid
@@ -120,9 +118,12 @@ export function JobDetail({ job }: JobDetailProps) {
                     </Link>
                   )}
 
-                  <Link href={`/jobs/${job.id}/bids`} className="rounded-lg px-4 py-2 text-sm font-medium" style={{ backgroundColor: "var(--color-bg-hover)", color: "var(--color-fg)" }}>
-                    View Bids
-                  </Link>
+                  {/* ── Secondary: view bids (hide if primary already links to bids) ── */}
+                  {!isCreator && (
+                    <Link href={`/jobs/${job.id}/bids`} className="rounded-lg px-4 py-2 text-sm font-medium border" style={{ borderColor: "var(--color-bd)", color: "var(--color-fg-secondary)" }}>
+                      View Bids
+                    </Link>
+                  )}
                 </>
               ) : (
                 <p className="text-xs" style={{ color: "var(--color-fg-muted)" }}>Waiting for onchain deployment...</p>
