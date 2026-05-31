@@ -66,11 +66,11 @@ export function useFundJob() {
 export function useSubmitWork() {
   const tx = useTransaction();
   const execute = useCallback(
-    async (jobId: bigint) => {
+    async (jobId: bigint, deliverable: `0x${string}`) => {
       tx.start("submitWork");
       try {
         tx.setSignaturePending();
-        const txHash = await writes.submitWork({ jobId, deliverable: "0x0000000000000000000000000000000000000000" });
+        const txHash = await writes.submitWork({ jobId, deliverable });
         tx.setTransactionPending(txHash);
         tx.setTransactionConfirming(txHash);
         const receipt = await waitForTransaction(txHash);
@@ -88,11 +88,11 @@ export function useSubmitWork() {
 export function useCompleteJob() {
   const tx = useTransaction();
   const execute = useCallback(
-    async (jobId: bigint) => {
+    async (jobId: bigint, reason?: `0x${string}`) => {
       tx.start("completeJob");
       try {
         tx.setSignaturePending();
-        const txHash = await writes.completeJob({ jobId, reason: "0x0000000000000000000000000000000000000000" });
+        const txHash = await writes.completeJob({ jobId, reason: reason ?? "0x0000000000000000000000000000000000000000000000000000000000000000" });
         tx.setTransactionPending(txHash);
         tx.setTransactionConfirming(txHash);
         const receipt = await waitForTransaction(txHash);
@@ -110,11 +110,11 @@ export function useCompleteJob() {
 export function useRejectJob() {
   const tx = useTransaction();
   const execute = useCallback(
-    async (jobId: bigint) => {
+    async (jobId: bigint, reason?: `0x${string}`) => {
       tx.start("rejectJob");
       try {
         tx.setSignaturePending();
-        const txHash = await writes.rejectJob({ jobId, reason: "0x0000000000000000000000000000000000000000" });
+        const txHash = await writes.rejectJob({ jobId, reason: reason ?? "0x0000000000000000000000000000000000000000000000000000000000000000" });
         tx.setTransactionPending(txHash);
         tx.setTransactionConfirming(txHash);
         const receipt = await waitForTransaction(txHash);

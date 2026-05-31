@@ -72,10 +72,10 @@ export function FundPageContent({ job }: { job: JobRecord }) {
           </div>
           <div className="space-y-3">
             <div className="flex justify-between text-sm"><span style={{ color: "var(--color-fg-secondary)" }}>Bid Amount</span><span className="font-mono" style={{ color: "var(--color-fg)" }}>{formatUSDC(amount)} USDC</span></div>
-            <div className="flex justify-between text-sm"><span style={{ color: "var(--color-fg-secondary)" }}>Platform Fee</span><span className="font-mono" style={{ color: "var(--color-fg-muted)" }}>{platformFee.toString()} USDC</span></div>
-            <div className="flex justify-between text-sm"><span style={{ color: "var(--color-fg-secondary)" }}>Evaluator Fee</span><span className="font-mono" style={{ color: "var(--color-fg-muted)" }}>{evaluatorFee.toString()} USDC</span></div>
+            <div className="flex justify-between text-sm"><span style={{ color: "var(--color-fg-secondary)" }}>Platform Fee</span><span className="font-mono" style={{ color: "var(--color-fg-muted)" }}>{formatUSDC(platformFee)} USDC</span></div>
+            <div className="flex justify-between text-sm"><span style={{ color: "var(--color-fg-secondary)" }}>Evaluator Fee</span><span className="font-mono" style={{ color: "var(--color-fg-muted)" }}>{formatUSDC(evaluatorFee)} USDC</span></div>
             <div className="border-t pt-3" style={{ borderColor: "var(--color-bd)" }}>
-              <div className="flex justify-between text-sm font-semibold"><span style={{ color: "var(--color-fg)" }}>Total Required</span><span className="font-mono" style={{ color: "var(--color-fg)" }}>{total.toString()} USDC</span></div>
+              <div className="flex justify-between text-sm font-semibold"><span style={{ color: "var(--color-fg)" }}>Total Required</span><span className="font-mono" style={{ color: "var(--color-fg)" }}>{formatUSDC(total)} USDC</span></div>
             </div>
           </div>
           <button onClick={handleFund} disabled={isLoading}

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser-client";
+import { reads } from "@/lib/contracts/reads";
 import type { JobRecord } from "../types/job";
 import type { JobStatus } from "@/lib/contracts/types";
 
@@ -22,6 +23,10 @@ interface UseJobListingResult {
 }
 
 const PAGE_SIZE_DEFAULT = 12;
+const STATUS_MAP: { [key: number]: JobRecord["status"] } = {
+  0: "open", 1: "funded", 2: "submitted",
+  3: "completed", 4: "rejected", 5: "expired",
+};
 
 export function useJobListing(options: UseJobListingOptions = {}): UseJobListingResult {
   const {
@@ -48,26 +53,14 @@ export function useJobListing(options: UseJobListingOptions = {}): UseJobListing
         .select("*", { count: "exact" })
         .order("created_at", { ascending: false });
 
-      // Filter by category
       if (category && category !== "All") {
         query = query.eq("category", category);
       }
 
-      // Filter by status
-      if (status !== null) {
-        const statusMap: Record<JobStatus, string> = {
-          0: "open", 1: "funded", 2: "submitted",
-          3: "completed", 4: "rejected", 5: "expired",
-        };
-        query = query.eq("status", statusMap[status]);
-      }
-
-      // Search by title or description
       if (search.trim()) {
         query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%`);
       }
 
-      // Pagination
       const from = (page - 1) * pageSize;
       const to = from + pageSize - 1;
       query = query.range(from, to);
@@ -76,7 +69,7 @@ export function useJobListing(options: UseJobListingOptions = {}): UseJobListing
 
       if (queryError) throw new Error(queryError.message);
 
-      const mapped: JobRecord[] = (data ?? []).map((row: Record<string, unknown>) => ({
+      let mapped: JobRecord[] = (data ?? []).map((row: Record<string, unknown>) => ({
         id: row.id as string,
         onchain_job_id: row.onchain_job_id as number | null,
         creator_profile_id: row.creator_profile_id as string,
@@ -96,6 +89,21 @@ export function useJobListing(options: UseJobListingOptions = {}): UseJobListing
         created_at: row.created_at as string,
         updated_at: row.updated_at as string,
       }));
+
+      // Override status with onchain data for jobs that have onchain_job_id
+      await Promise.all(mapped.filter(j => j.onchain_job_id).map(async (j) => {
+        try {
+          const onchain = await reads.getJob(BigInt(j.onchain_job_id!));
+          const onchainStatus = STATUS_MAP[onchain.status];
+          if (onchainStatus) j.status = onchainStatus as JobRecord["status"];
+        } catch {}
+      }));
+
+      // Apply status filter client-side using authoritative onchain status
+      if (status !== null) {
+        const statusStr = STATUS_MAP[status];
+        mapped = mapped.filter(j => j.status === statusStr);
+      }
 
       setJobs(mapped);
       setTotal(count ?? 0);

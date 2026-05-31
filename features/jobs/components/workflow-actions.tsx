@@ -102,7 +102,7 @@ function SubmitWorkPanel({ jobId, provider, activeAddress, onActionComplete }: {
   }
 
   const handleSubmit = async () => {
-    await execute(jobId);
+    await execute(jobId, "0x0000000000000000000000000000000000000000000000000000000000000000");
     onActionComplete();
   };
 

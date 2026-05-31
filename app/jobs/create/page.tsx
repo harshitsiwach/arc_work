@@ -27,6 +27,7 @@ export default function CreateJobPage() {
   });
   const [created, setCreated] = useState(false);
   const [createdJobId, setCreatedJobId] = useState<string | null>(null);
+  const [createdOnchainId, setCreatedOnchainId] = useState<number | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,7 +39,7 @@ export default function CreateJobPage() {
       const { data: profile } = await supabase.from("profiles").select("id").eq("auth_user_id", user.id).single();
       if (!profile) { toast.error("Profile not found"); return; }
 
-      const gig = await execute({
+      const result = await execute({
         title: form.title,
         description: form.description,
         category: form.category,
@@ -48,9 +49,10 @@ export default function CreateJobPage() {
         skills_required: form.skills_required ? form.skills_required.split(",").map(s => s.trim()).filter(Boolean) : [],
         evaluator_address: "0x0000000000000000000000000000000000000000",
         hook_address: "0x0000000000000000000000000000000000000000",
-      }, profile.id, activeAddress || "");
+      }, profile.id);
 
-      setCreatedJobId(gig.id);
+      setCreatedJobId(result.dbId);
+      setCreatedOnchainId(result.onchainJobId);
       setCreated(true);
       toast.success("Job created!");
     } catch (err: unknown) {
@@ -65,7 +67,7 @@ export default function CreateJobPage() {
           <CheckCircle className="h-12 w-12 mx-auto mb-4" style={{ color: "var(--color-success)" }} />
           <h2 className="text-xl font-bold mb-2" style={{ color: "var(--color-fg)" }}>Job Created</h2>
           <p className="text-sm mb-6" style={{ color: "var(--color-fg-secondary)" }}>
-            {onchainSuccess ? "Deployed onchain and ready for bids." : "Saved to database."}
+            Deployed onchain and ready for bids.
           </p>
           {onchainSuccess && txHash && (
             <>

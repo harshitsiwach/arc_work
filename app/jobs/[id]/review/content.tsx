@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { keccak256, toBytes } from "viem";
 import { reads } from "@/lib/contracts/reads";
 import { useWallet } from "@/lib/web3/wallet-provider";
 import { useCompleteJob, useRejectJob } from "@/features/jobs/hooks/use-workflow-actions";
@@ -14,6 +15,7 @@ export function ReviewPageContent({ job }: { job: JobRecord }) {
   const { activeAddress } = useWallet();
   const [onchainStatus, setOnchainStatus] = useState<number | null>(null);
   const [onchainClientAddress, setOnchainClientAddress] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState("");
   const [loaded, setLoaded] = useState(false);
   const complete = useCompleteJob();
   const reject = useRejectJob();
@@ -45,14 +47,26 @@ export function ReviewPageContent({ job }: { job: JobRecord }) {
   if (onchainStatus !== null && onchainStatus !== 2) return <p className="text-sm" style={{ color: "var(--color-fg-muted)" }}>No work to review yet.</p>;
   if (!onchainClientAddress || !isCreator) return <p className="text-sm" style={{ color: "var(--color-fg-muted)" }}>Only the job creator can review work.</p>;
 
-  const handleComplete = async () => { await complete.execute(BigInt(job.onchain_job_id!)); };
-  const handleReject = async () => { await reject.execute(BigInt(job.onchain_job_id!)); };
+  const handleComplete = async () => {
+    const reasonHash = feedback.trim() ? keccak256(toBytes(feedback.trim())) : undefined;
+    await complete.execute(BigInt(job.onchain_job_id!), reasonHash);
+  };
+  const handleReject = async () => {
+    const reasonHash = feedback.trim() ? keccak256(toBytes(feedback.trim())) : undefined;
+    await reject.execute(BigInt(job.onchain_job_id!), reasonHash);
+  };
 
   return (
     <div className="rounded-xl border p-6 space-y-5" style={{ borderColor: "var(--color-bd)", backgroundColor: "var(--color-bg-elevated)" }}>
       <p className="text-sm" style={{ color: "var(--color-fg-secondary)" }}>
         Review the work submitted for <strong style={{ color: "var(--color-fg)" }}>{job.title}</strong>.
       </p>
+      <div>
+        <label className="text-xs font-mono mb-1 block" style={{ color: "var(--color-fg-muted)" }}>Feedback / Reason (optional)</label>
+        <textarea rows={3} placeholder="Enter feedback or reason for this decision..." value={feedback} onChange={e => setFeedback(e.target.value)}
+          className="w-full rounded-lg border px-3 py-2 text-sm outline-none resize-none" style={{ backgroundColor: "var(--color-bg-inset)", borderColor: "var(--color-bd)", color: "var(--color-fg)" }} />
+        <p className="text-[10px] mt-1" style={{ color: "var(--color-fg-muted)" }}>Feedback is hashed and stored onchain as a bytes32 reference.</p>
+      </div>
       <div className="flex gap-3">
         <button onClick={handleComplete} disabled={isLoading}
           className="flex-1 rounded-lg px-4 py-2.5 text-sm font-medium transition-colors disabled:opacity-50"

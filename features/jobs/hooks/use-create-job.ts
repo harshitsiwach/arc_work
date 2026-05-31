@@ -7,11 +7,11 @@ import { waitForTransaction } from "@/lib/contracts/wait";
 import { decodeContractError } from "@/lib/contracts/errors";
 import { AGENTIC_COMMERCE_ADDRESS } from "@/lib/contracts/instance";
 import { useTransaction } from "@/features/shared/hooks/use-transaction";
-import { jobService } from "../services/job-service";
-import type { CreateJobInput, JobRecord } from "../types/job";
+import { createSupabaseBrowserClient } from "@/lib/supabase/browser-client";
+import type { CreateJobInput } from "../types/job";
 
 interface UseCreateJobReturn {
-  execute: (input: CreateJobInput, profileId: string, walletAddress: string) => Promise<JobRecord>;
+  execute: (input: CreateJobInput, profileId: string) => Promise<{ onchainJobId: number; dbId: string | null }>;
   state: ReturnType<typeof useTransaction>["state"];
   isIdle: boolean;
   isLoading: boolean;
@@ -24,7 +24,6 @@ interface UseCreateJobReturn {
   onchainJobId: number | null;
 }
 
-// keccak256("JobCreated(uint256,address,address,address,uint256,address)")
 const JOB_CREATED_TOPIC = "0xb0f0239bfdd96453e24733e18bfc24b70d8fadf123dd977473518dd577ee79b9";
 
 function extractJobIdFromLogs(logs: Array<{ address: string; topics: readonly `0x${string}`[] }>): number | null {
@@ -32,9 +31,7 @@ function extractJobIdFromLogs(logs: Array<{ address: string; topics: readonly `0
     if (log.address.toLowerCase() !== AGENTIC_COMMERCE_ADDRESS.toLowerCase()) continue;
     if (log.topics[0] !== JOB_CREATED_TOPIC) continue;
     const jobIdHex = log.topics[1];
-    if (jobIdHex) {
-      return Number(BigInt(jobIdHex));
-    }
+    if (jobIdHex) return Number(BigInt(jobIdHex));
   }
   return null;
 }
@@ -45,14 +42,10 @@ export function useCreateJob(): UseCreateJobReturn {
   const [onchainJobId, setOnchainJobId] = useState<number | null>(null);
 
   const execute = useCallback(
-    async (input: CreateJobInput, profileId: string, walletAddress: string): Promise<JobRecord> => {
-      console.log("[createJob] step 1: creating gig in Supabase");
+    async (input: CreateJobInput, profileId: string): Promise<{ onchainJobId: number; dbId: string | null }> => {
       tx.start("createJob");
-      const gig = await jobService.createJob(input, profileId, walletAddress);
-      console.log("[createJob] Supabase gig created:", gig.id);
 
       try {
-        console.log("[createJob] step 2: calling writes.createJob()");
         tx.setSignaturePending();
 
         const nowSeconds = BigInt(Math.floor(Date.now() / 1000));
@@ -60,14 +53,6 @@ export function useCreateJob(): UseCreateJobReturn {
         const defaultDuration = BigInt(30) * oneDay;
         const customDuration = input.delivery_days ? BigInt(input.delivery_days) * oneDay : defaultDuration;
         const expiredAt = nowSeconds + customDuration;
-        console.log("[createJob] deploy params:", {
-          provider: "0x0000...0000",
-          evaluator: input.evaluator_address || "(auto: wallet address)",
-          expiredAt: expiredAt.toString(),
-          description: input.title,
-          hook: input.hook_address || "0x0000...0000",
-        });
-
         const evaluatorAddress = (input.evaluator_address as `0x${string}`) || "0x0000000000000000000000000000000000000000";
 
         const txHash = await writes.createJob({
@@ -78,62 +63,55 @@ export function useCreateJob(): UseCreateJobReturn {
           hook: (input.hook_address as `0x${string}`) || "0x0000000000000000000000000000000000000000",
         });
 
-        console.log("[createJob] step 3: transaction broadcasted:", txHash);
         tx.setTransactionPending(txHash);
-
-        console.log("[createJob] step 4: waiting for confirmation...");
         tx.setTransactionConfirming(txHash);
         const receipt = await waitForTransaction(txHash);
-        console.log("[createJob] receipt status:", receipt.status, "logs count:", receipt.logs.length);
 
         if (receipt.status === "success") {
-          // Log all logs for debugging
-          receipt.logs.forEach((log, i) => {
-            console.log(`[createJob] log ${i}: address=${log.address}, topic0=${log.topics[0]}, topic1=${log.topics[1]}`);
-          });
-
           let onchainId = extractJobIdFromLogs(receipt.logs);
-          console.log("[createJob] extracted onchainJobId from logs:", onchainId);
 
-          // Always try jobCounter as reliable fallback
           if (onchainId === null) {
             try {
               const counter = await reads.jobCounter();
               onchainId = Number(counter) - 1;
-              console.log("[createJob] fallback: jobCounter gave:", onchainId);
-            } catch (e) {
-              console.warn("[createJob] fallback jobCounter failed:", e);
-            }
+            } catch {}
           }
 
-          if (onchainId !== null) {
-            console.log("[createJob] step 5: storing onchain_job_id in Supabase:", onchainId);
-            try {
-              await jobService.updateOnchainJobId(gig.id, onchainId);
-              console.log("[createJob] Supabase updated successfully");
-            } catch (e) {
-              console.error("[createJob] failed to update Supabase:", e);
-            }
-            gig.onchain_job_id = onchainId;
-            setOnchainJobId(onchainId);
-            setOnchainSuccess(true);
-          } else {
-            console.warn("[createJob] could not determine onchain_job_id from event or fallback");
-          }
+          if (onchainId === null) throw new Error("Could not determine onchain job ID from event or contract");
 
+          // Store minimal index record in DB for listing/search
+          let dbId: string | null = null;
+          try {
+            const sb = createSupabaseBrowserClient();
+            const { data } = await sb.from("gigs").insert({
+              onchain_job_id: onchainId,
+              creator_profile_id: profileId,
+              title: input.title,
+              description: input.description,
+              category: input.category,
+              price_amount: input.price_amount,
+              price_currency: "USDC",
+              delivery_days: input.delivery_days,
+              status: "open",
+              agent_only: input.agent_only ?? false,
+              skills_required: input.skills_required ?? [],
+            }).select("id").single();
+            dbId = data?.id ?? null;
+          } catch {}
+
+          setOnchainJobId(onchainId);
+          setOnchainSuccess(true);
           tx.setTransactionSuccess(txHash);
+
+          return { onchainJobId: onchainId, dbId };
         } else {
-          console.error("[createJob] transaction reverted onchain");
-          tx.setTransactionFailed("Transaction reverted onchain");
+          throw new Error("Transaction reverted");
         }
       } catch (err: unknown) {
-        console.error("[createJob] onchain deployment failed:", err);
         const message = decodeContractError(err, "createJob");
-        console.log("[createJob] decoded error:", message);
         tx.setTransactionFailed(message);
+        throw err;
       }
-
-      return gig;
     },
     [tx]
   );

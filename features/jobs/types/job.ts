@@ -3,7 +3,7 @@
  * Domain types for the jobs feature — distinct from contract types
  */
 
-export type JobStatus = "draft" | "live" | "funded" | "submitted" | "completed" | "rejected" | "expired";
+export type JobStatus = "open" | "funded" | "submitted" | "completed" | "rejected" | "expired" | "draft" | "live";
 
 export interface JobRecord {
   id: string;

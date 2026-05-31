@@ -87,7 +87,7 @@ export default function PostGigPage() {
         return;
       }
 
-      const gig = await execute(
+      const result = await execute(
         {
           title: form.title,
           description: form.description,
@@ -101,11 +101,10 @@ export default function PostGigPage() {
           evaluator_address: "0x0000000000000000000000000000000000000000",
           hook_address: "0x0000000000000000000000000000000000000000",
         },
-        profile.id,
-        activeAddress || ""
+        profile.id
       );
 
-      setCreatedJobId(gig.id);
+      setCreatedJobId(result.dbId);
       setCreated(true);
       toast.success("Gig created successfully!");
     } catch (err: unknown) {
