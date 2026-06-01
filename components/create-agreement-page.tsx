@@ -166,7 +166,7 @@ export const CreateAgreementPage = () => {
 
         // Filter out profiles without wallets
         const validBeneficiaries = beneficiaryProfiles.filter(
-          (profile) => profile.wallets && profile.wallets.length > 0
+          (profile: { wallets?: unknown[] }) => profile.wallets && profile.wallets.length > 0
         );
         setBeneficiaries(validBeneficiaries);
       } catch (error) {

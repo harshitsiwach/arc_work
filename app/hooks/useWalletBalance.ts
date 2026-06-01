@@ -157,7 +157,7 @@ export function useWalletBalance(walletId: string): UseWalletBalanceResult {
           table: "wallets",
           filter: `circle_wallet_id=eq.${walletId}`,
         },
-        (payload) => {
+        (payload: { new: { balance: string } }) => {
           const newBalance = parseFloat(payload.new.balance || "0");
           if (newBalance !== balanceRef.current) {
             setBalance(newBalance);

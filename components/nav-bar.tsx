@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X, Plus, ShoppingBag, Bot, Briefcase, LayoutDashboard, Search } from "lucide-react";
+import { Menu, X, Plus, ShoppingBag, LayoutDashboard, Search } from "lucide-react";
 import { ThemeSwitcher } from "@/components/theme-switcher";
 import { WalletConnectButton } from "@/components/wallet-connect-button";
 import { UserMenu } from "@/components/user-menu";
@@ -11,18 +11,16 @@ import { cn } from "@/lib/utils";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browser-client";
 
 const navLinks = [
-  { href: "/explore", label: "Marketplace", icon: ShoppingBag },
-  { href: "/agents", label: "Agents", icon: Bot },
-  { href: "/jobs", label: "Work", icon: Briefcase },
+  { href: "/create", label: "Create", icon: Plus },
+  { href: "/marketplace", label: "Marketplace", icon: ShoppingBag },
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
 ];
 
 function isActive(pathname: string, href: string): boolean {
-  if (href === "/dashboard") return pathname === "/dashboard" || pathname === "/dashboard/";
-  if (href === "/explore") return pathname.startsWith("/explore");
-  if (href === "/agents") return pathname.startsWith("/agents");
-  if (href === "/jobs") return pathname.startsWith("/jobs");
-  return pathname.startsWith(href);
+  if (href === "/create") return pathname.startsWith("/create");
+  if (href === "/marketplace") return pathname.startsWith("/marketplace");
+  if (href === "/dashboard") return pathname.startsWith("/dashboard");
+  return pathname === href;
 }
 
 export function NavBar() {
@@ -33,10 +31,10 @@ export function NavBar() {
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
-    supabase.auth.getUser().then(({ data: { user } }) => {
+    supabase.auth.getUser().then(({ data: { user } }: { data: { user: { email?: string } | null } }) => {
       if (user) setUser(user);
     });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event: string, session: { user?: { email?: string } } | null) => {
       setUser(session?.user ?? null);
     });
     return () => subscription.unsubscribe();
@@ -105,7 +103,6 @@ export function NavBar() {
 
           {/* Right: Actions */}
           <div className="flex items-center gap-2">
-            {/* Search shortcut */}
             <button
               className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium transition-colors"
               style={{

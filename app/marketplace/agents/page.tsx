@@ -2,6 +2,6 @@
 
 import { AIMarketplaceContent } from "@/components/listings/ai-marketplace-content";
 
-export default function AIMarketplacePage() {
+export default function MarketplaceAgentsPage() {
   return <AIMarketplaceContent />;
 }

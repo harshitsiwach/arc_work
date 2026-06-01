@@ -2,6 +2,6 @@
 
 import { JobsListingContent } from "@/components/listings/jobs-listing-content";
 
-export default function JobsPage() {
+export default function MarketplaceJobsPage() {
   return <JobsListingContent />;
 }

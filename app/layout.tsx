@@ -72,9 +72,7 @@ export default function RootLayout({
             )}
 
             <main className="flex-1 pt-14">
-              <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 py-6 animate-page-enter">
-                {children}
-              </div>
+              {children}
             </main>
           </div>
           </WalletProvider>

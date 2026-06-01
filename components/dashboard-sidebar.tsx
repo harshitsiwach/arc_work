@@ -4,16 +4,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
-  LayoutDashboard, Wallet, BarChart3, Package, Bot, PlusCircle,
-  Plus, ShoppingCart, BadgeCheck, User, Settings, Briefcase,
-  TrendingUp, Rocket, HandCoins, UserCheck,
+  LayoutDashboard, Wallet, BarChart3, Package, Bot,
+  BadgeCheck, User, Settings, Briefcase,
 } from "lucide-react";
 
 interface SidebarLink {
   href: string;
   label: string;
   icon: React.ElementType;
-  accent?: boolean;
 }
 
 const sidebarSections: { title: string; links: SidebarLink[] }[] = [
@@ -21,27 +19,16 @@ const sidebarSections: { title: string; links: SidebarLink[] }[] = [
     title: "Workspace",
     links: [
       { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
-      { href: "/dashboard/bridge", label: "Wallet", icon: Wallet },
+      { href: "/dashboard/wallet", label: "Wallet", icon: Wallet },
       { href: "/dashboard/analytics", label: "Analytics", icon: BarChart3 },
     ],
   },
   {
-    title: "Create",
+    title: "Management",
     links: [
-      { href: "/dashboard/products/create", label: "New Product", icon: Plus, accent: true },
-      { href: "/jobs/create", label: "New Job", icon: PlusCircle, accent: true },
-      { href: "/agents/create", label: "New Agent", icon: Rocket, accent: true },
-    ],
-  },
-  {
-    title: "Manage",
-    links: [
-      { href: "/dashboard/client", label: "Client Dashboard", icon: HandCoins },
-      { href: "/dashboard/provider", label: "Provider Dashboard", icon: UserCheck },
+      { href: "/dashboard/work-center", label: "Work Center", icon: Briefcase },
+      { href: "/dashboard/my-agents", label: "My Agents", icon: Bot },
       { href: "/dashboard/my-products", label: "My Products", icon: Package },
-      { href: "/agents", label: "My Agents", icon: Bot },
-      { href: "/jobs", label: "Browse Jobs", icon: Briefcase },
-      { href: "/dashboard/orders", label: "Orders", icon: ShoppingCart },
     ],
   },
   {
@@ -56,7 +43,7 @@ const sidebarSections: { title: string; links: SidebarLink[] }[] = [
 
 function isActive(pathname: string, href: string): boolean {
   if (href === "/dashboard") return pathname === "/dashboard" || pathname === "/dashboard/";
-  return pathname.startsWith(href);
+  return pathname === href || pathname.startsWith(href + "/");
 }
 
 export function DashboardSidebar() {
@@ -96,7 +83,7 @@ export function DashboardSidebar() {
                     <Icon
                       size={15}
                       style={{
-                        color: active ? "var(--color-accent)" : link.accent ? "var(--color-accent)" : "var(--color-fg-muted)",
+                        color: active ? "var(--color-accent)" : "var(--color-fg-muted)",
                         flexShrink: 0,
                       }}
                     />

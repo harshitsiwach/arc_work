@@ -34,7 +34,7 @@ export default function ClientDashboardPage() {
 
       // Fetch onchain status for jobs with onchain_job_id
       const statuses: Record<string, { client: string; status: number; hasProvider: boolean }> = {};
-      await Promise.all(mapped.filter(j => j.onchain_job_id).map(async (j) => {
+      await Promise.all(mapped.filter((j: JobRecord) => j.onchain_job_id).map(async (j: JobRecord) => {
         try {
           const job = await reads.getJob(BigInt(j.onchain_job_id!));
           const bids = await reads.getBids(BigInt(j.onchain_job_id!));

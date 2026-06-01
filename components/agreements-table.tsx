@@ -118,7 +118,7 @@ export const EscrowAgreementsTable = (props: EscrowAgreementsTableProps) => {
           schema: "public",
           table: "escrow_agreements"
         },
-        async payload => {
+        async (payload: { new: { id: string } }) => {
           setSelectedAgreementId(payload.new.id)
         }
       )

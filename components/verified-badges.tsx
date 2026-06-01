@@ -42,7 +42,7 @@ export function VerifiedBadges({ creatorProfileId, compact = false, size = "sm" 
       .from("creator_verifications")
       .select("*")
       .eq("creator_profile_id", creatorProfileId)
-      .then(({ data }) => {
+      .then(({ data }: { data: unknown[] | null }) => {
         setVerifications(data || []);
         setLoading(false);
       });
@@ -108,14 +108,14 @@ export function useCreatorProfileId(authUserId?: string) {
       .select("id")
       .eq("auth_user_id", authUserId)
       .single()
-      .then(({ data: profile }) => {
+      .then(({ data: profile }: { data: { id: string } | null }) => {
         if (!profile) { setLoading(false); return; }
         supabase
           .from("creator_profiles")
           .select("id")
           .eq("profile_id", profile.id)
           .single()
-          .then(({ data: cp }) => {
+          .then(({ data: cp }: { data: { id: string } | null }) => {
             setCpId(cp?.id || null);
             setLoading(false);
           });
