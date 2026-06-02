@@ -53,16 +53,22 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  // Refresh the session — this is required for Server Components
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const isDashboardRoute = request.nextUrl.pathname.startsWith("/dashboard");
+  const hasSessionCookie = request.cookies.getAll().some(cookie => cookie.name.startsWith("sb-"));
+
+  let user = null;
+  if (isDashboardRoute || hasSessionCookie) {
+    // Only call getUser() if we are on a protected route (dashboard)
+    // or if we already have an active Supabase session cookie to check/refresh.
+    // This avoids blocking public page loads and prefetching for guest users.
+    const {
+      data: { user: supabaseUser },
+    } = await supabase.auth.getUser();
+    user = supabaseUser;
+  }
 
   // Protect authenticated routes (dashboard only — explore, agents, marketplace are public)
-  if (
-    !user &&
-    request.nextUrl.pathname.startsWith("/dashboard")
-  ) {
+  if (!user && isDashboardRoute) {
     return NextResponse.redirect(new URL("/", request.url));
   }
 

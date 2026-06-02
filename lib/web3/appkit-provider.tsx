@@ -16,8 +16,18 @@ export const arcTestnet = defineChain({
   name: 'Arc Testnet',
   nativeCurrency: { name: 'Arc', symbol: 'ARC', decimals: 18 },
   rpcUrls: {
-    default: { http: ['https://rpc.testnet.arc.network'] },
-    public: { http: ['https://rpc.testnet.arc.network'] },
+    default: { http: [
+      'https://rpc.quicknode.testnet.arc.network',
+      'https://rpc.drpc.testnet.arc.network',
+      'https://5042002.rpc.thirdweb.com',
+      'https://rpc.testnet.arc.network'
+    ] },
+    public: { http: [
+      'https://rpc.quicknode.testnet.arc.network',
+      'https://rpc.drpc.testnet.arc.network',
+      'https://5042002.rpc.thirdweb.com',
+      'https://rpc.testnet.arc.network'
+    ] },
   },
   blockExplorers: {
     default: { name: 'ArcScan', url: 'https://testnet.arcscan.app' },
@@ -26,12 +36,28 @@ export const arcTestnet = defineChain({
 
 const networks = [sepolia, baseSepolia, arbitrumSepolia, arcTestnet] as [AppKitNetwork, ...AppKitNetwork[]];
 
-// Custom transports with batching to reduce individual RPC calls and avoid rate limits
+// Custom transports with batching and slow polling to reduce individual RPC calls and avoid rate limits
 const transports = {
-  [sepolia.id]: http('https://rpc.sepolia.org', { batch: true, retryCount: 1 }),
-  [baseSepolia.id]: http('https://sepolia.base.org', { batch: true, retryCount: 1 }),
-  [arbitrumSepolia.id]: http('https://sepolia-rollup.arbitrum.io/rpc', { batch: true, retryCount: 1 }),
-  [arcTestnet.id]: http('https://rpc.testnet.arc.network', { batch: true, retryCount: 0 }),
+  [sepolia.id]: http('https://rpc.sepolia.org', { 
+    batch: true, 
+    retryCount: 1, 
+    pollingInterval: 30_000 
+  }),
+  [baseSepolia.id]: http('https://sepolia.base.org', { 
+    batch: true, 
+    retryCount: 1, 
+    pollingInterval: 30_000 
+  }),
+  [arbitrumSepolia.id]: http('https://sepolia-rollup.arbitrum.io/rpc', { 
+    batch: true, 
+    retryCount: 1, 
+    pollingInterval: 30_000 
+  }),
+  [arcTestnet.id]: http('https://rpc.quicknode.testnet.arc.network', { 
+    batch: true, 
+    retryCount: 1, 
+    pollingInterval: 30_000 
+  }),
 };
 
 export const wagmiAdapter = new WagmiAdapter({

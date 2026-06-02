@@ -2,7 +2,7 @@
  * Arc ClipArc - x402 Payment Protocol Verifier
  */
 
-const ARC_RPC_URL = "https://rpc.testnet.arc.network";
+const ARC_RPC_URL = "https://rpc.quicknode.testnet.arc.network";
 const USDC_CONTRACT_ADDRESS = "0x3600000000000000000000000000000000000000";
 
 interface RpcResponse<T> {
