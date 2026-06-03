@@ -40,23 +40,19 @@ const networks = [sepolia, baseSepolia, arbitrumSepolia, arcTestnet] as [AppKitN
 const transports = {
   [sepolia.id]: http('https://rpc.sepolia.org', { 
     batch: true, 
-    retryCount: 1, 
-    pollingInterval: 30_000 
+    retryCount: 1,
   }),
   [baseSepolia.id]: http('https://sepolia.base.org', { 
     batch: true, 
-    retryCount: 1, 
-    pollingInterval: 30_000 
+    retryCount: 1,
   }),
   [arbitrumSepolia.id]: http('https://sepolia-rollup.arbitrum.io/rpc', { 
     batch: true, 
-    retryCount: 1, 
-    pollingInterval: 30_000 
+    retryCount: 1,
   }),
   [arcTestnet.id]: http('https://rpc.quicknode.testnet.arc.network', { 
     batch: true, 
-    retryCount: 1, 
-    pollingInterval: 30_000 
+    retryCount: 1,
   }),
 };
 
@@ -80,6 +76,7 @@ createAppKit({
     url: typeof window !== 'undefined' ? window.location.origin : 'https://arc-work.dev',
     icons: ['https://arc-work.dev/favicon.ico']
   },
+  defaultNetwork: arcTestnet,
   features: { analytics: true }
 });
 
