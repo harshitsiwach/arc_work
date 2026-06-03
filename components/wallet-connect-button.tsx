@@ -51,25 +51,36 @@ export function WalletConnectButton() {
             <ChevronDown size={12} className="opacity-50" />
           </button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-52">
-          <div className="px-3 py-2">
-            <div className="flex items-center gap-2 mb-1">
-              {activeWalletType === "smart" ? (
-                <Fingerprint size={14} style={{ color: "var(--color-success)" }} />
-              ) : (
-                <Wallet size={14} style={{ color: "var(--color-accent)" }} />
-              )}
-              <span className="text-[12px] font-medium" style={{ color: "var(--color-fg)" }}>
-                {activeWalletType === "smart" ? "Smart Wallet" : "Connected Wallet"}
-              </span>
+        <DropdownMenuContent align="end" className="w-72 p-1.5">
+          <div className="px-3 pt-1.5 pb-2">
+            <div className="flex items-center gap-3">
+              <div
+                className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
+                style={{
+                  backgroundColor: activeWalletType === "smart"
+                    ? "color-mix(in srgb, var(--color-success) 12%, transparent)"
+                    : "var(--color-accent-soft)",
+                }}
+              >
+                {activeWalletType === "smart" ? (
+                  <Fingerprint size={16} style={{ color: "var(--color-success)" }} />
+                ) : (
+                  <Wallet size={16} style={{ color: "var(--color-accent)" }} />
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate" style={{ color: "var(--color-fg)" }}>
+                  {activeWalletType === "smart" ? "Smart Wallet" : "Connected Wallet"}
+                </p>
+                <p className="font-mono text-xs mt-0.5 truncate" style={{ color: "var(--color-fg-muted)" }}>
+                  {displayAddress}
+                </p>
+              </div>
             </div>
-            <p className="font-mono text-[11px]" style={{ color: "var(--color-fg-muted)" }}>
-              {displayAddress}
-            </p>
           </div>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={disconnect} className="cursor-pointer">
-            <span className="text-[13px]" style={{ color: "var(--color-error)" }}>Disconnect</span>
+          <DropdownMenuItem onClick={disconnect} className="cursor-pointer px-3 py-2.5">
+            <span className="text-sm font-medium" style={{ color: "var(--color-error)" }}>Disconnect</span>
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
@@ -101,25 +112,37 @@ export function WalletConnectButton() {
           )}
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-60">
+      <DropdownMenuContent align="end" className="w-[340px] p-1.5">
         <DropdownMenuGroup>
-          <DropdownMenuItem onClick={() => connect()} className="cursor-pointer">
+          <DropdownMenuItem onClick={() => connect()}
+            className="cursor-pointer rounded-lg px-3 py-3 transition-colors hover:bg-[var(--color-bg-hover)] focus-visible:bg-[var(--color-bg-hover)]"
+          >
             <div className="flex items-center gap-3 w-full">
-              <Wallet size={16} style={{ color: "var(--color-accent)" }} />
-              <div>
-                <p className="text-[13px] font-medium">Wallet</p>
-                <p className="text-[11px]" style={{ color: "var(--color-fg-muted)" }}>MetaMask, Rainbow, etc.</p>
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                style={{ backgroundColor: "var(--color-accent-soft)" }}
+              >
+                <Wallet size={18} style={{ color: "var(--color-accent)" }} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium" style={{ color: "var(--color-fg)" }}>Wallet</p>
+                <p className="text-xs mt-0.5" style={{ color: "var(--color-fg-muted)" }}>MetaMask, Rainbow, Coinbase Wallet</p>
               </div>
             </div>
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <div className="px-3 py-2">
-          <div className="flex items-center gap-3 mb-2">
-            <Fingerprint size={16} style={{ color: "var(--color-success)" }} />
-            <div>
-              <p className="text-[13px] font-medium">Smart Wallet</p>
-              <p className="text-[11px]" style={{ color: "var(--color-fg-muted)" }}>Passkey, no extension needed</p>
+        <div className="px-3 py-3">
+          <div className="flex items-center gap-3 mb-3">
+            <div
+              className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+              style={{ backgroundColor: "color-mix(in srgb, var(--color-success) 12%, transparent)" }}
+            >
+              <Fingerprint size={18} style={{ color: "var(--color-success)" }} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium" style={{ color: "var(--color-fg)" }}>Smart Wallet</p>
+              <p className="text-xs mt-0.5" style={{ color: "var(--color-fg-muted)" }}>Passkey, email, social login</p>
             </div>
           </div>
           <SmartWalletButton />
