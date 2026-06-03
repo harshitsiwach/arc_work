@@ -7,6 +7,7 @@ import { createContext, useContext, useState, useEffect, useCallback } from "rea
 import { toast } from "sonner";
 import { useAppKitAccount, useDisconnect, useAppKit, useAppKitNetwork, useAppKitProvider } from '@reown/appkit/react';
 import { setWalletProvider } from "@/lib/contracts/instance";
+import { arcTestnet } from "@/lib/web3/appkit-provider";
 
 export type SupportedChain = {
   id: number;
@@ -66,9 +67,36 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
   const [activeWalletType, setActiveWalletType] = useState<WalletType>("none");
 
   const { address: appKitAddress, isConnected: isAppKitConnected } = useAppKitAccount();
-  const { chainId: appKitChainId, caipNetwork } = useAppKitNetwork();
+  const { chainId: appKitChainId, caipNetwork, switchNetwork } = useAppKitNetwork();
   const { disconnect: disconnectAppKit } = useDisconnect();
   const { walletProvider } = useAppKitProvider("eip155");
+  const [hasAttemptedSwitch, setHasAttemptedSwitch] = useState(false);
+
+  // Auto-switch to Arc Testnet when wallet connects
+  useEffect(() => {
+    if (!isAppKitConnected) {
+      setHasAttemptedSwitch(false);
+      return;
+    }
+
+    const currentChainId = appKitChainId || (caipNetwork?.id ? String(caipNetwork.id).split(':')[1] : null);
+    const numericChainId = currentChainId ? parseInt(String(currentChainId).replace('eip155:', ''), 10) : null;
+
+    // We only evaluate and switch once the actual walletProvider is connected and available.
+    // This prevents the default network config from false-triggering hasAttemptedSwitch on mount.
+    if (numericChainId && numericChainId !== 5042002 && switchNetwork && walletProvider && !hasAttemptedSwitch) {
+      console.log("[wallet-provider] Wallet connected on wrong chain. Auto-switching to Arc Testnet...");
+      setHasAttemptedSwitch(true); // Prevent repeated triggers in this session
+      const timer = setTimeout(() => {
+        switchNetwork(arcTestnet).catch((err) => {
+          console.error("[wallet-provider] Auto-switch to Arc Testnet failed:", err);
+        });
+      }, 1000);
+      return () => clearTimeout(timer);
+    } else if (numericChainId === 5042002 && walletProvider) {
+      setHasAttemptedSwitch(true);
+    }
+  }, [isAppKitConnected, appKitChainId, caipNetwork, switchNetwork, walletProvider, hasAttemptedSwitch]);
 
   // Sync AppKit provider to global contract client
   useEffect(() => {
