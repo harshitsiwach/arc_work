@@ -22,10 +22,10 @@ const creatorAvatars = [
 ];
 
 const liveActivities = [
-  { type: "delivery", text: "Logo Design delivered", from: "2m ago", amount: "8 USDC", icon: CheckCircle2 },
-  { type: "bid", text: "New bid submitted", from: "7m ago", amount: "12 USDC", icon: TrendingUp },
-  { type: "delivery", text: "Smart Contract Review completed", from: "18m ago", amount: "45 USDC", icon: Shield },
-  { type: "delivery", text: "AI Research Summary delivered", from: "42m ago", amount: "15 USDC", icon: Bot },
+  { type: "delivery", text: "Logo Design delivered", from: "2m ago", icon: CheckCircle2 },
+  { type: "bid", text: "New bid submitted", from: "7m ago", icon: TrendingUp },
+  { type: "delivery", text: "Smart Contract Review completed", from: "18m ago", icon: Shield },
+  { type: "delivery", text: "AI Research Summary delivered", from: "42m ago", icon: Bot },
   { type: "signup", text: "New creator joined", from: "1h ago", amount: "Welcome", icon: Sparkles },
 ];
 
@@ -194,10 +194,7 @@ export function HeroVisual() {
             backgroundColor: "var(--color-bg-inset)",
           }}
         >
-          <div className="flex items-center gap-2 text-xs" style={{ color: "var(--color-fg-muted)" }}>
-            <span className="font-mono tabular-nums">1,284 USDC</span>
-            <span>volume today</span>
-          </div>
+
           <div
             className="flex items-center gap-1 text-xs font-medium cursor-pointer transition-colors duration-150"
             style={{ color: "var(--color-accent)" }}

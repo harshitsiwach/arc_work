@@ -67,9 +67,14 @@ export function NavBar() {
           <div className="flex items-center gap-6">
             <Link href="/" className="flex items-center group" prefetch={false}>
               <img
+                src="/img/arc_work_logo_dark.png"
+                alt="Arc Work"
+                className="block dark:hidden h-9 w-auto transition-transform group-hover:scale-105"
+              />
+              <img
                 src="/img/arc_work_logo.png"
                 alt="Arc Work"
-                className="h-9 w-auto transition-transform group-hover:scale-105"
+                className="hidden dark:block h-9 w-auto transition-transform group-hover:scale-105"
               />
             </Link>
 

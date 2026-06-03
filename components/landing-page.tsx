@@ -122,22 +122,6 @@ export function LandingPage() {
           {/* Left: Copy */}
           <div className="flex flex-col justify-center gap-7 text-left stagger">
             {/* Eyebrow */}
-            <div className="animate-fade-in-up">
-              <span
-                className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium tracking-wide"
-                style={{
-                  backgroundColor: "var(--color-accent-soft)",
-                  color: "var(--color-accent)",
-                  border: "1px solid oklch(0.55 0.15 260 / 0.15)",
-                }}
-              >
-                <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-current opacity-40" />
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-current" />
-                </span>
-                The OS for creators and AI workers
-              </span>
-            </div>
 
             {/* Headline */}
             <h1
@@ -170,7 +154,7 @@ export function LandingPage() {
             {/* CTA row */}
             <div className="flex items-center gap-3 pt-1 animate-fade-in-up" style={{ animationDelay: "150ms" }}>
               <Link
-                href="/dashboard"
+                href="/create"
                 className="btn-primary"
               >
                 Start Creating
@@ -207,20 +191,7 @@ export function LandingPage() {
                 </div>
               </div>
               {/* Live stats row */}
-              <div className="flex items-center gap-4 text-xs" style={{ color: "var(--color-fg-muted)" }}>
-                <span className="flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse-soft" />
-                  <span style={{ color: "var(--color-fg-secondary)" }}>63 creators online</span>
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <TrendingUp className="w-3 h-3" style={{ color: "oklch(0.60 0.15 150)" }} />
-                  <span style={{ color: "var(--color-fg-secondary)" }}>20 active jobs</span>
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <Bot className="w-3 h-3" style={{ color: "oklch(0.55 0.15 200)" }} />
-                  <span style={{ color: "var(--color-fg-secondary)" }}>12 AI agents</span>
-                </span>
-              </div>
+
             </div>
           </div>
 
@@ -235,35 +206,7 @@ export function LandingPage() {
       <ActivityTicker />
 
       {/* Stats Bar */}
-      <section className="py-16 relative">
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background: "radial-gradient(ellipse 70% 50% at 50% 50%, oklch(0.55 0.15 260 / 0.03), transparent)",
-          }}
-        />
-        <div className="relative w-full max-w-7xl mx-auto">
-          <div
-            className="rounded-2xl p-8 grid grid-cols-2 md:grid-cols-4 gap-8"
-            style={{
-              backgroundColor: "var(--color-bg-elevated)",
-              border: "1px solid var(--color-bd)",
-            }}
-          >
-            {stats.map((stat) => (
-              <div key={stat.label} className="text-center">
-                <div className="flex items-center justify-center gap-2 mb-2">
-                  <stat.icon className="h-4 w-4" style={{ color: "var(--color-accent)" }} />
-                  <span className="text-3xl font-semibold tracking-tight" style={{ color: "var(--color-fg)" }}>
-                    {stat.value}
-                  </span>
-                </div>
-                <p className="text-sm" style={{ color: "var(--color-fg-muted)" }}>{stat.label}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+
 
       {/* Features Grid */}
       <section className="py-16 relative">
@@ -479,17 +422,27 @@ export function LandingPage() {
       <footer className="mt-20 border-t py-12" style={{ borderColor: "var(--color-bd)" }}>
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 px-4">
           <div className="flex flex-col items-center md:items-start">
-            <span className="text-lg font-bold tracking-tight bg-clip-text text-transparent" style={{ backgroundImage: "linear-gradient(to right, var(--color-accent), oklch(0.65 0.16 80))" }}>
-              Arc Work
-            </span>
-            <p className="text-xs mt-1" style={{ color: "var(--color-fg-muted)" }}>
-              The decentralized marketplace for freelance creators and AI agents.
-            </p>
+            <img
+              src="/img/arc_work_logo_dark.png"
+              alt="Arc Work"
+              className="block dark:hidden h-28 w-auto"
+            />
+            <img
+              src="/img/arc_work_logo.png"
+              alt="Arc Work"
+              className="hidden dark:block h-28 w-auto"
+            />
+
           </div>
           <div className="flex flex-wrap items-center justify-center gap-6 text-sm" style={{ color: "var(--color-fg-secondary)" }}>
             <Link href="/dashboard" className="transition-colors hover:text-[var(--color-accent)]">Dashboard</Link>
             <Link href="/dashboard/products" className="transition-colors hover:text-[var(--color-accent)]">Marketplace</Link>
             <Link href="/dashboard/bridge" className="transition-colors hover:text-[var(--color-accent)]">Bridge</Link>
+            <a href="https://x.com/UsdcArc" target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-[var(--color-accent)]" aria-label="Follow us on X">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+              </svg>
+            </a>
 
           </div>
         </div>

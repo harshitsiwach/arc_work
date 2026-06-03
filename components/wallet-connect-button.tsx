@@ -51,7 +51,7 @@ export function WalletConnectButton() {
             <ChevronDown size={12} className="opacity-50" />
           </button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-72 p-1.5">
+        <DropdownMenuContent align="end" className="w-72 p-1.5" style={{ backgroundColor: "var(--color-bg-elevated)", borderColor: "var(--color-bd)", boxShadow: "0 10px 40px oklch(0 0 0 / 0.35), 0 0 0 1px var(--color-bd)" }}>
           <div className="px-3 pt-1.5 pb-2">
             <div className="flex items-center gap-3">
               <div
@@ -112,7 +112,7 @@ export function WalletConnectButton() {
           )}
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-[340px] p-1.5">
+      <DropdownMenuContent align="end" className="w-[340px] p-1.5" style={{ backgroundColor: "var(--color-bg-elevated)", borderColor: "var(--color-bd)", boxShadow: "0 10px 40px oklch(0 0 0 / 0.35), 0 0 0 1px var(--color-bd)" }}>
         <DropdownMenuGroup>
           <DropdownMenuItem onClick={() => connect()}
             className="cursor-pointer rounded-lg px-3 py-3 transition-colors hover:bg-[var(--color-bg-hover)] focus-visible:bg-[var(--color-bg-hover)]"

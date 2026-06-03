@@ -53,7 +53,7 @@ export default function AnalyticsPage() {
           Analytics will appear once you start selling products or deploying agents
         </p>
         <div className="flex justify-center gap-2">
-          <Link href="/explore">
+          <Link href="/marketplace/jobs">
             <Button variant="outline" size="sm">Browse Marketplace</Button>
           </Link>
           <Link href="/dashboard/products/create">
