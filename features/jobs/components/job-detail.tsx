@@ -12,6 +12,7 @@ import { TransactionModal } from "@/features/shared/components/transaction-modal
 import type { JobStatus } from "@/lib/contracts/types";
 import type { JobRecord } from "../types/job";
 import { AGENTIC_COMMERCE_ADDRESS } from "@/lib/contracts/instance";
+import { formatUSDC } from "@/lib/contracts/format";
 
 interface JobDetailProps {
   job: JobRecord;
@@ -71,8 +72,8 @@ export function JobDetail({ job }: JobDetailProps) {
 
           {/* Description */}
           <div className="rounded-xl border p-6" style={{ borderColor: "var(--color-bd)", backgroundColor: "var(--color-bg-elevated)" }}>
-            <h3 className="text-sm font-semibold mb-3" style={{ color: "var(--color-fg)" }}>Description</h3>
-            <p className="text-sm whitespace-pre-wrap" style={{ color: "var(--color-fg-secondary)" }}>{job.description}</p>
+            <h3 className="text-sm font-semibold mb-4" style={{ color: "var(--color-fg)" }}>Description</h3>
+            <p className="text-[13px] leading-relaxed whitespace-pre-wrap" style={{ color: "var(--color-fg-secondary)" }}>{job.description}</p>
           </div>
 
           {/* Actions — role-based workflow links */}
@@ -156,7 +157,7 @@ export function JobDetail({ job }: JobDetailProps) {
               {onchainBudget > BigInt(0) && (
                 <div className="flex items-center justify-between" style={{ color: "var(--color-fg)" }}>
                   <span className="text-[10px] font-mono uppercase" style={{ color: "var(--color-fg-muted)" }}>Budget</span>
-                  <span className="text-xs font-mono">{onchainBudget.toString()} USDC</span>
+                  <span className="text-xs font-mono">{formatUSDC(onchainBudget)} USDC</span>
                 </div>
               )}
               {job.onchain_job_id && (

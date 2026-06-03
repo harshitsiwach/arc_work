@@ -50,10 +50,10 @@ const features = [
 ];
 
 const stats = [
-  { label: "Creators", value: "2,847", icon: Users },
-  { label: "Orders completed", value: "14.2K", icon: CheckCircle2 },
-  { label: "USDC volume", value: "$384K", icon: Coins },
-  { label: "AI agents deployed", value: "623", icon: Bot },
+  { label: "Active Jobs", value: "148", icon: CheckCircle2 },
+  { label: "Creators Online", value: "63", icon: Users },
+  { label: "AI Agents Running", value: "27", icon: Bot },
+  { label: "Jobs this month", value: "120", icon: Sparkles },
 ];
 
 const agentTypes = [
@@ -149,9 +149,9 @@ export function LandingPage() {
                 animationDelay: "50ms",
               }}
             >
-              Ship work.
+              Commerce, For
               <br />
-              <span style={{ color: "var(--color-accent)" }}>Get paid instantly.</span>
+              <span style={{ color: "var(--color-accent)" }}>Agent & Humans</span>
             </h1>
 
             {/* Subheading */}
@@ -203,22 +203,22 @@ export function LandingPage() {
                   ))}
                 </div>
                 <div className="text-xs" style={{ color: "var(--color-fg-secondary)" }}>
-                  <span className="font-medium" style={{ color: "var(--color-fg)" }}>2,847 creators</span> already building
+                  <span className="font-medium" style={{ color: "var(--color-fg)" }}>+1 agents and humans</span>  already building
                 </div>
               </div>
               {/* Live stats row */}
               <div className="flex items-center gap-4 text-xs" style={{ color: "var(--color-fg-muted)" }}>
                 <span className="flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse-soft" />
-                  <span style={{ color: "var(--color-fg-secondary)" }}>142 online now</span>
+                  <span style={{ color: "var(--color-fg-secondary)" }}>63 creators online</span>
                 </span>
                 <span className="flex items-center gap-1.5">
                   <TrendingUp className="w-3 h-3" style={{ color: "oklch(0.60 0.15 150)" }} />
-                  <span style={{ color: "var(--color-fg-secondary)" }}>23 orders/hr</span>
+                  <span style={{ color: "var(--color-fg-secondary)" }}>20 active jobs</span>
                 </span>
                 <span className="flex items-center gap-1.5">
                   <Bot className="w-3 h-3" style={{ color: "oklch(0.55 0.15 200)" }} />
-                  <span style={{ color: "var(--color-fg-secondary)" }}>623 agents active</span>
+                  <span style={{ color: "var(--color-fg-secondary)" }}>12 AI agents</span>
                 </span>
               </div>
             </div>
@@ -490,17 +490,10 @@ export function LandingPage() {
             <Link href="/dashboard" className="transition-colors hover:text-[var(--color-accent)]">Dashboard</Link>
             <Link href="/dashboard/products" className="transition-colors hover:text-[var(--color-accent)]">Marketplace</Link>
             <Link href="/dashboard/bridge" className="transition-colors hover:text-[var(--color-accent)]">Bridge</Link>
-            <Link href="/pitch" className="transition-colors hover:text-[var(--color-accent)]">Pitch Deck</Link>
-            <Link href="https://github.com" target="_blank" rel="noreferrer" className="transition-colors hover:text-[var(--color-accent)]">GitHub</Link>
+
           </div>
         </div>
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 mt-8 pt-8 border-t text-xs px-4" style={{ borderColor: "oklch(0.85 0.008 80 / 0.3)", color: "var(--color-fg-muted)" }}>
-          <p>© 2026 Arc Work. All rights reserved.</p>
-          <div className="flex gap-4">
-            <Link href="#" className="hover:underline">Privacy Policy</Link>
-            <Link href="#" className="hover:underline">Terms of Service</Link>
-          </div>
-        </div>
+
       </footer>
     </div>
   );

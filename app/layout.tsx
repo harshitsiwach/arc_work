@@ -56,13 +56,12 @@ export default function RootLayout({
                 style={{ height: "56px", borderBottom: "1px solid var(--color-bd)" }}
               >
                 <div className="h-full max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-6">
-                  <div className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ backgroundColor: "var(--color-accent)" }}>
-                      <span className="text-white text-xs font-bold">A</span>
-                    </div>
-                    <span className="text-[15px] font-semibold tracking-[-0.03em]" style={{ color: "var(--color-fg)" }}>
-                      arc work
-                    </span>
+                  <div className="flex items-center">
+                    <img
+                      src="/img/arc_work_logo.png"
+                      alt="Arc Work"
+                      className="h-7 w-auto"
+                    />
                   </div>
                   <EnvVarWarning />
                 </div>

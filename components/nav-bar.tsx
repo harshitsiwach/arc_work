@@ -65,16 +65,12 @@ export function NavBar() {
         <div className="h-full max-w-7xl mx-auto flex items-center justify-between px-4 sm:px-6">
           {/* Left: Logo + Nav */}
           <div className="flex items-center gap-6">
-            <Link href="/" className="flex items-center gap-2 group" prefetch={false}>
-              <div
-                className="w-7 h-7 rounded-lg flex items-center justify-center transition-transform group-hover:scale-105"
-                style={{ backgroundColor: "var(--color-accent)" }}
-              >
-                <span className="text-white text-xs font-bold">A</span>
-              </div>
-              <span className="text-[15px] font-semibold tracking-[-0.03em] hidden sm:block" style={{ color: "var(--color-fg)" }}>
-                arc work
-              </span>
+            <Link href="/" className="flex items-center group" prefetch={false}>
+              <img
+                src="/img/arc_work_logo.png"
+                alt="Arc Work"
+                className="h-9 w-auto transition-transform group-hover:scale-105"
+              />
             </Link>
 
             {/* Desktop nav */}
@@ -103,20 +99,7 @@ export function NavBar() {
 
           {/* Right: Actions */}
           <div className="flex items-center gap-2">
-            <button
-              className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[12px] font-medium transition-colors"
-              style={{
-                backgroundColor: "var(--color-bg-hover)",
-                color: "var(--color-fg-muted)",
-                border: "1px solid var(--color-bd)",
-              }}
-            >
-              <Search size={13} />
-              <span className="hidden lg:inline">Search</span>
-              <kbd className="hidden lg:inline text-[10px] px-1 py-0.5 rounded" style={{ backgroundColor: "var(--color-bg-inset)", border: "1px solid var(--color-bd)" }}>
-                /
-              </kbd>
-            </button>
+
 
             <div className="hidden sm:block">
               <ThemeSwitcher />

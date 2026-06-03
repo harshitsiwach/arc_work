@@ -22,34 +22,32 @@ const creatorAvatars = [
 ];
 
 const liveActivities = [
-  { type: "order", text: "New order: Logo Design Pack", from: "@studio-k", amount: "45 USDC", icon: TrendingUp },
-  { type: "delivery", text: "ClipForge delivered 3 clips", from: "to @marcus", amount: "15 USDC", icon: CheckCircle2 },
-  { type: "payout", text: "Payout released", from: "@elena.arc", amount: "2,400 USDC", icon: Coins },
-  { type: "agent", text: "CopyPilot started task", from: "auto-accepted", amount: "Auto", icon: Bot },
-  { type: "escrow", text: "Escrow: Brand Kit", from: "AI validated", amount: "890 USDC", icon: Shield },
-  { type: "signup", text: "New creator joined", from: "@riley.design", amount: "Welcome", icon: Sparkles },
-  { type: "product", text: "New listing: Notion OS", from: "@devcraft", amount: "79 USDC", icon: Package },
+  { type: "delivery", text: "Logo Design delivered", from: "2m ago", amount: "8 USDC", icon: CheckCircle2 },
+  { type: "bid", text: "New bid submitted", from: "7m ago", amount: "12 USDC", icon: TrendingUp },
+  { type: "delivery", text: "Smart Contract Review completed", from: "18m ago", amount: "45 USDC", icon: Shield },
+  { type: "delivery", text: "AI Research Summary delivered", from: "42m ago", amount: "15 USDC", icon: Bot },
+  { type: "signup", text: "New creator joined", from: "1h ago", amount: "Welcome", icon: Sparkles },
 ];
 
 const workflowSteps = [
-  { label: "Order", icon: Play },
-  { label: "Escrow", icon: Shield },
-  { label: "Work", icon: Clock },
-  { label: "AI check", icon: Bot },
-  { label: "Paid", icon: Coins },
+  { label: "Job Posted", icon: Play },
+  { label: "Escrow Funded", icon: Shield },
+  { label: "Work Submitted", icon: Clock },
+  { label: "AI Verification", icon: Bot },
+  { label: "Released", icon: Coins },
 ];
 
 const floatingNotifications = [
-  { text: "+2,400 USDC", sub: "payout received", icon: CreditCard, color: "oklch(0.60 0.15 150)" },
-  { text: "5-star review", sub: "from @marcus", icon: Star, color: "oklch(0.65 0.14 80)" },
-  { text: "Task complete", sub: "ClipForge AI", icon: CheckCircle2, color: "oklch(0.55 0.15 260)" },
+  { text: "5-star review", sub: "from @riley", icon: Star, color: "oklch(0.65 0.14 80)" },
+  { text: "AI verified", sub: "Brand Kit delivery", icon: CheckCircle2, color: "oklch(0.55 0.15 260)" },
+  { text: "New bid", sub: "Logo Design", icon: TrendingUp, color: "oklch(0.55 0.18 30)" },
 ];
 
 /* ── Component ─────────────────────────────────────────────── */
 
 export function HeroVisual() {
   const [activityIndex, setActivityIndex] = useState(0);
-  const [workflowIndex, setWorkflowIndex] = useState(2);
+  const [workflowIndex, setWorkflowIndex] = useState(3);
   const [notifIndex, setNotifIndex] = useState(0);
 
   useEffect(() => {
@@ -197,7 +195,7 @@ export function HeroVisual() {
           }}
         >
           <div className="flex items-center gap-2 text-xs" style={{ color: "var(--color-fg-muted)" }}>
-            <span className="font-mono tabular-nums">5,749 USDC</span>
+            <span className="font-mono tabular-nums">1,284 USDC</span>
             <span>volume today</span>
           </div>
           <div
@@ -244,7 +242,7 @@ export function HeroVisual() {
       >
         <div className="flex items-center justify-between mb-3">
           <span className="text-xs font-medium" style={{ color: "var(--color-fg-secondary)" }}>
-            Order #4821 — Brand Identity
+            Brand Identity Package
           </span>
           <span
             className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-medium"
@@ -254,7 +252,7 @@ export function HeroVisual() {
             }}
           >
             <Clock className="w-2.5 h-2.5" />
-            In Progress
+            AI Verification
           </span>
         </div>
 
@@ -325,13 +323,13 @@ export function HeroVisual() {
             ))}
           </div>
           <div>
-            <p className="text-sm font-medium" style={{ color: "var(--color-fg)" }}>Creators online</p>
-            <p className="text-xs" style={{ color: "var(--color-fg-muted)" }}>142 active right now</p>
+            <p className="text-sm font-medium" style={{ color: "var(--color-fg)" }}>creators and humans</p>
+            <p className="text-xs" style={{ color: "var(--color-fg-muted)" }}> already building</p>
           </div>
         </div>
         <div className="text-right">
           <p className="text-sm font-mono font-medium" style={{ color: "var(--color-accent)" }}>
-            23 orders/hr
+            active jobs
           </p>
           <p className="text-xs" style={{ color: "var(--color-fg-muted)" }}>avg. response 4m</p>
         </div>
@@ -354,8 +352,8 @@ export function HeroVisual() {
             <Bot className="w-3.5 h-3.5" style={{ color: "oklch(0.60 0.15 150)" }} />
           </div>
           <div>
-            <p className="text-[11px] font-medium" style={{ color: "var(--color-fg)" }}>ClipForge AI</p>
-            <p className="text-[10px]" style={{ color: "oklch(0.60 0.15 150)" }}>Working · 3 clips</p>
+            <p className="text-[11px] font-medium" style={{ color: "var(--color-fg)" }}>Research AI</p>
+            <p className="text-[10px]" style={{ color: "oklch(0.60 0.15 150)" }}>Working · 1 task</p>
           </div>
         </div>
       </div>

@@ -1,7 +1,13 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   experimental: {
-    serverComponentsExternalPackages: ["pdf-parse", "mammoth", "openai"],
+    serverComponentsExternalPackages: [
+      "pdf-parse",
+      "mammoth",
+      "openai",
+      "fluent-ffmpeg",
+      "ffmpeg-static",
+    ],
   },
   images: {
     formats: ['image/avif', 'image/webp'],
