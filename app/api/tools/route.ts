@@ -13,6 +13,7 @@ export async function GET() {
     while (offset < total) {
       const res = await fetch(`https://api.agentic.market/v1/services?limit=${limit}&offset=${offset}`, {
         headers: { "Accept": "application/json" },
+        next: { revalidate: 3600 } // Cache the response for 1 hour to prevent slow external API loading
       });
 
       if (!res.ok) {

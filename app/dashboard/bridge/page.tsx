@@ -230,20 +230,67 @@ export default function BridgePage() {
         return `0x095ea7b3${spenderHex}${amountHex}`;
       };
 
+      const toHex = (val: string | number | bigint) => {
+        const clean = val.toString().replace("0x", "");
+        return "0x" + BigInt(clean).toString(16);
+      };
+
+      const hexGasLimit = gasLimit ? (gasLimit.toString().startsWith("0x") ? gasLimit : toHex(gasLimit)) : undefined;
+
+      const waitForTransaction = async (hash: string) => {
+        let receipt = null;
+        for (let i = 0; i < 30; i++) { // poll for up to 30 seconds
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          receipt = await (walletProvider as any).request({
+            method: "eth_getTransactionReceipt",
+            params: [hash],
+          });
+          if (receipt) break;
+        }
+        if (!receipt) {
+          throw new Error("Transaction confirmation timed out. Please check your block explorer.");
+        }
+        if (receipt.status !== "0x1" && receipt.status !== 1 && receipt.status !== "1") {
+          throw new Error("Transaction reverted on-chain");
+        }
+        return receipt;
+      };
+
       let lastTxHash: string | null = null;
-      setSwapStatus("confirming");
 
       for (const instruction of instructions) {
         const { target, data, value, tokenIn, amountToApprove } = instruction;
+        
+        // 1. Send Approve transaction if needed
         if (amountToApprove && BigInt(amountToApprove) > 0n && tokenIn && tokenIn !== ZERO_ADDR) {
-          await (walletProvider as any).request({
+          setSwapStatus("pending");
+          toast.info("Approving token spend... Confirm the transaction in MetaMask.");
+          const approveTxHash = await (walletProvider as any).request({
             method: "eth_sendTransaction",
-            params: [{ from: address, to: tokenIn, data: encodeApprove(target, amountToApprove) }],
+            params: [{ 
+              from: address, 
+              to: tokenIn, 
+              data: encodeApprove(target, amountToApprove),
+              gas: "0x186A0" // Hardcoded 100,000 gas limit to avoid MetaMask doing an eth_estimateGas call on the rate-limited RPC
+            }],
           });
+          
+          toast.info("Waiting for approval transaction to be mined...");
+          await waitForTransaction(approveTxHash);
         }
+        
+        // 2. Send Swap transaction
+        setSwapStatus("confirming");
+        toast.info("Confirm swap transaction in MetaMask.");
         lastTxHash = await (walletProvider as any).request({
           method: "eth_sendTransaction",
-          params: [{ from: address, to: target, data, value: value || "0x0", gas: gasLimit }],
+          params: [{ 
+            from: address, 
+            to: target, 
+            data, 
+            value: value ? (value.toString().startsWith("0x") ? value : toHex(value)) : "0x0", 
+            gas: hexGasLimit 
+          }],
         });
       }
 
