@@ -6,10 +6,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   Loader2, Search, ExternalLink, Zap, Globe, Cpu, Database,
-  Image, Music, Plane, Bot, ShoppingBag, TrendingUp, Sparkles,
+  Image, Music, Plane, Bot, ShoppingBag, TrendingUp,
   ArrowRight, Star, Users, Clock, ChevronRight, Filter,
   Mic, BarChart3, MessageSquare, Code, Layers, Shield,
+  Sparkles,
 } from "lucide-react";
+import { OpenAI, Anthropic, Exa } from "@lobehub/icons";
 import { toast } from "sonner";
 
 const CATEGORY_ICONS: Record<string, any> = {
@@ -20,12 +22,12 @@ const CATEGORY_ICONS: Record<string, any> = {
 };
 
 const CATEGORY_COLORS: Record<string, string> = {
-  Search: "oklch(0.55 0.15 260)", Inference: "oklch(0.55 0.15 300)",
-  Data: "oklch(0.55 0.18 150)", Media: "oklch(0.55 0.20 30)",
-  Social: "oklch(0.55 0.15 260)", Infra: "oklch(0.45 0.01 260)",
-  Travel: "oklch(0.60 0.16 80)", Storage: "oklch(0.55 0.15 260)",
-  Trading: "oklch(0.55 0.18 150)", Voice: "oklch(0.55 0.15 200)",
-  Automation: "oklch(0.55 0.15 320)", Productivity: "oklch(0.55 0.15 180)",
+  Search: "oklch(0.75 0.18 125)", Inference: "oklch(0.75 0.18 125)",
+  Data: "oklch(0.75 0.18 125)", Media: "oklch(0.55 0.20 30)",
+  Social: "oklch(0.75 0.18 125)", Infra: "oklch(0.55 0 0)",
+  Travel: "oklch(0.60 0.16 80)", Storage: "oklch(0.75 0.18 125)",
+  Trading: "oklch(0.75 0.18 125)", Voice: "oklch(0.75 0.18 125)",
+  Automation: "oklch(0.75 0.18 125)", Productivity: "oklch(0.75 0.18 125)",
   Blockchain: "oklch(0.55 0.15 120)",
 };
 
@@ -36,14 +38,14 @@ const ECOSYSTEM_SIGNALS: Record<string, string> = {
   Trading: "High demand", Voice: "New integration",
 };
 
-const FEATURED_PROVIDERS = [
-  { name: "OpenAI", desc: "GPT-4o, o1, DALL-E — leading AI models", category: "Inference", users: "12.4k", icon: Sparkles },
-  { name: "Anthropic", desc: "Claude — advanced reasoning & analysis", category: "Inference", users: "8.9k", icon: Bot },
-  { name: "Deepgram", desc: "Real-time speech-to-text & transcription", category: "Voice", users: "4.2k", icon: Mic },
-  { name: "ElevenLabs", desc: "Premium AI voice generation & cloning", category: "Voice", users: "6.1k", icon: MessageSquare },
-  { name: "Tavily", desc: "AI-optimized search & research API", category: "Search", users: "5.7k", icon: Search },
-  { name: "Exa", desc: "Neural search for AI applications", category: "Search", users: "3.4k", icon: Globe },
-  { name: "The Graph", desc: "Decentralized indexing for blockchain data", category: "Blockchain", users: "7.8k", icon: Database },
+const FEATURED_PROVIDERS: { name: string; desc: string; category: string; users: string; icon?: React.ElementType; iconSrc?: string; brand: boolean }[] = [
+  { name: "OpenAI", desc: "GPT-4o, o1, DALL-E — leading AI models", category: "Inference", users: "12.4k", icon: OpenAI, brand: true },
+  { name: "Anthropic", desc: "Claude — advanced reasoning & analysis", category: "Inference", users: "8.9k", icon: Anthropic, brand: true },
+  { name: "Deepgram", desc: "Real-time speech-to-text & transcription", category: "Voice", users: "4.2k", iconSrc: "/icons/ai/deepgram.svg", brand: false },
+  { name: "ElevenLabs", desc: "Premium AI voice generation & cloning", category: "Voice", users: "6.1k", iconSrc: "/icons/ai/elevenlabs.svg", brand: false },
+  { name: "Tavily", desc: "AI-optimized search & research API", category: "Search", users: "5.7k", iconSrc: "/icons/ai/tavily.svg", brand: false },
+  { name: "Exa", desc: "Neural search for AI applications", category: "Search", users: "3.4k", icon: Exa, brand: true },
+  { name: "The Graph", desc: "Decentralized indexing for blockchain data", category: "Blockchain", users: "7.8k", iconSrc: "/icons/ai/thegraph.svg", brand: false },
 ];
 
 const DISCOVERY_CHIPS = [
@@ -108,7 +110,7 @@ export function AIMarketplaceContent() {
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
-            background: "radial-gradient(ellipse at 20% 50%, oklch(0.55 0.15 260 / 0.08) 0%, transparent 50%), radial-gradient(ellipse at 80% 50%, oklch(0.55 0.15 300 / 0.06) 0%, transparent 50%)",
+            background: "radial-gradient(ellipse at 20% 50%, oklch(0.75 0.18 125 / 0.08) 0%, transparent 50%), radial-gradient(ellipse at 80% 50%, oklch(0.75 0.18 125 / 0.06) 0%, transparent 50%)",
           }}
         />
 
@@ -193,6 +195,7 @@ export function AIMarketplaceContent() {
           {FEATURED_PROVIDERS.map((provider) => {
             const Icon = provider.icon;
             const color = CATEGORY_COLORS[provider.category] || "var(--color-accent)";
+            const isBrand = provider.brand;
             return (
               <div
                 key={provider.name}
@@ -206,9 +209,22 @@ export function AIMarketplaceContent() {
                 <div className="flex items-start justify-between mb-3">
                   <div
                     className="w-10 h-10 rounded-lg flex items-center justify-center"
-                    style={{ backgroundColor: `color-mix(in oklch, ${color} 12%, transparent)` }}
+                    style={isBrand
+                      ? { backgroundColor: "var(--color-bg-inset)" }
+                      : { backgroundColor: `color-mix(in oklch, ${color} 12%, transparent)` }}
                   >
-                    <Icon size={18} style={{ color }} />
+                    {provider.iconSrc ? (
+                      <img
+                        src={provider.iconSrc}
+                        alt={`${provider.name} icon`}
+                        width={20}
+                        height={20}
+                        style={{ color }}
+                        className="w-5 h-5"
+                      />
+                    ) : Icon ? (
+                      <Icon size={20} style={isBrand ? undefined : { color }} />
+                    ) : null}
                   </div>
                   <ArrowRight size={14} className="opacity-0 group-hover:opacity-100 transition-opacity duration-200" style={{ color: "var(--color-fg-muted)" }} />
                 </div>

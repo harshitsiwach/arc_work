@@ -253,7 +253,7 @@ export default function SubscriptionsPage() {
                         variant="secondary"
                         className={
                           sub.status === "Active"
-                            ? "bg-green-500/10 text-green-500 border border-green-500/20"
+                            ? "bg-[#CBF825]/10 text-[#CBF825] border border-[#CBF825]/20"
                             : sub.status === "PastDue"
                             ? "bg-amber-500/10 text-amber-500 border border-amber-500/20"
                             : "bg-gray-500/10 text-gray-500 border border-gray-500/20"
@@ -396,7 +396,7 @@ export default function SubscriptionsPage() {
                 <Button
                   type="submit"
                   disabled={submitting}
-                  className="w-full text-white gap-2 font-medium"
+                  className="w-full text-[oklch(0.150_0_0)] gap-2 font-medium"
                   style={{ backgroundColor: "var(--color-accent)" }}
                 >
                   {submitting ? (

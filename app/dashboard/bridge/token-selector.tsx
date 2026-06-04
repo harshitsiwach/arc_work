@@ -68,15 +68,22 @@ export function TokenSelector<T extends Token>({ tokens, selected, onSelect, lab
           }}
         >
           {/* Search */}
-          <div className="p-3 border-b border-white/5">
-            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-zinc-900/50 border border-white/5 focus-within:border-white/20 transition-colors">
-              <Search className="h-4 w-4 shrink-0 text-white/40" />
+          <div className="p-3 border-b" style={{ borderColor: "var(--color-bd)" }}>
+            <div
+              className="flex items-center gap-2 px-3 py-2 rounded-lg border transition-colors"
+              style={{
+                backgroundColor: "var(--color-bg-inset)",
+                borderColor: "var(--color-bd)",
+              }}
+            >
+              <Search className="h-4 w-4 shrink-0" style={{ color: "var(--color-fg-muted)" }} />
               <input
                 type="text"
                 placeholder="Search name or paste address"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                className="flex-1 bg-transparent text-sm outline-none text-white placeholder:text-white/30"
+                className="flex-1 bg-transparent text-sm outline-none placeholder:opacity-50"
+                style={{ color: "var(--color-fg)" }}
                 autoFocus
               />
             </div>
@@ -92,7 +99,7 @@ export function TokenSelector<T extends Token>({ tokens, selected, onSelect, lab
                   type="button"
                   onClick={() => { onSelect(token); setOpen(false); setSearch(""); }}
                   className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-150 ${
-                    isSelected ? "bg-white/5" : "hover:bg-white/5"
+                    isSelected ? "bg-[var(--color-bg-hover)]" : "hover:bg-[var(--color-bg-hover)]"
                   }`}
                 >
                   <div className="w-8 h-8 flex items-center justify-center rounded-full shrink-0">
@@ -100,9 +107,9 @@ export function TokenSelector<T extends Token>({ tokens, selected, onSelect, lab
                   </div>
                   <div className="text-left flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <p className="text-sm font-medium text-white truncate">{token.symbol}</p>
+                      <p className="text-sm font-medium truncate" style={{ color: "var(--color-fg)" }}>{token.symbol}</p>
                     </div>
-                    <p className="text-xs text-white/50 truncate">{token.name}</p>
+                    <p className="text-xs truncate" style={{ color: "var(--color-fg-muted)" }}>{token.name}</p>
                   </div>
                   {isSelected && (
                     <Check className="h-4 w-4 text-[var(--color-accent)]" />
@@ -112,7 +119,7 @@ export function TokenSelector<T extends Token>({ tokens, selected, onSelect, lab
             })}
             {filtered.length === 0 && (
               <div className="py-8 text-center">
-                <p className="text-sm text-white/40">No tokens found</p>
+                <p className="text-sm" style={{ color: "var(--color-fg-muted)" }}>No tokens found</p>
               </div>
             )}
           </div>

@@ -5,7 +5,8 @@ import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Loader2, ArrowLeft, Zap, FileCode, Tag, DollarSign, Clock, Layers, Wallet, Bot, ChevronRight, ExternalLink, CheckCircle } from "lucide-react";
+import { Loader2, ArrowLeft, Zap, FileCode, Tag, Clock, Layers, Wallet, Bot, ChevronRight, ExternalLink, CheckCircle } from "lucide-react";
+import { UsdcIcon } from "@/components/icons";
 import { toast } from "sonner";
 import Link from "next/link";
 import { useWallet } from "@/lib/web3/wallet-provider";
@@ -257,7 +258,7 @@ export default function PostGigPage() {
               <SectionHeader number="02" title="Payment" />
             </div>
 
-            <ParamRow label="amount" icon={DollarSign}>
+            <ParamRow label="amount" icon={() => <UsdcIcon size={16} variant="branded" />}>
               <div className="flex items-center gap-2">
                 <Input
                   required

@@ -25,16 +25,17 @@ import { sepolia, baseSepolia, arbitrumSepolia } from "@reown/appkit/networks";
 import { TokenSelector } from "./token-selector";
 import { BridgeFlow } from "./bridge-flow";
 import { TransactionStatus } from "./transaction-status";
+import { getTokenIcon } from "./icons";
 
 /* ── Token definitions ─────────────────────────────────────── */
 
 const BRIDGE_TOKENS = [
-  { symbol: "USDC", name: "USD Coin", icon: "", color: "oklch(0.55 0.15 260)", decimals: 6 },
+  { symbol: "USDC", name: "USD Coin", icon: getTokenIcon("USDC"), color: "var(--color-accent)", decimals: 6 },
 ];
 
 const SWAP_TOKENS = [
-  { symbol: "USDC", name: "USD Coin", icon: "", color: "oklch(0.55 0.15 260)", decimals: 6, contract: "0x3600000000000000000000000000000000000000" as const },
-  { symbol: "EURC", name: "Euro Coin", icon: "", color: "oklch(0.50 0.18 260)", decimals: 6, contract: "0x89B50855Aa3bE2F677cD6303Cec089B5F319D72a" as const },
+  { symbol: "USDC", name: "USD Coin", icon: getTokenIcon("USDC"), color: "var(--color-accent)", decimals: 6, contract: "0x3600000000000000000000000000000000000000" as const },
+  { symbol: "EURC", name: "Euro Coin", icon: getTokenIcon("EURC"), color: "var(--color-accent)", decimals: 6, contract: "0x89B50855Aa3bE2F677cD6303Cec089B5F319D72a" as const },
 ];
 
 const CREATOR_ACTIONS = [
@@ -393,15 +394,15 @@ export default function BridgePage() {
             className="w-full mb-4 p-1"
             style={{ backgroundColor: "var(--color-bg-elevated)", border: "1px solid var(--color-bd)" }}
           >
-            <TabsTrigger value="ramp" className="flex-1 data-[state=active]:bg-[var(--color-accent)] data-[state=active]:text-white">
+            <TabsTrigger value="ramp" className="flex-1 data-[state=active]:bg-[var(--color-accent)] data-[state=active]:text-[oklch(0.150_0_0)]">
               <DollarSign className="mr-2 h-4 w-4" />
               Buy Crypto
             </TabsTrigger>
-            <TabsTrigger value="bridge" className="flex-1 data-[state=active]:bg-[var(--color-accent)] data-[state=active]:text-white">
+            <TabsTrigger value="bridge" className="flex-1 data-[state=active]:bg-[var(--color-accent)] data-[state=active]:text-[oklch(0.150_0_0)]">
               <ArrowDown className="mr-2 h-4 w-4" />
               Bridge
             </TabsTrigger>
-            <TabsTrigger value="swap" className="flex-1 data-[state=active]:bg-[var(--color-accent)] data-[state=active]:text-white">
+            <TabsTrigger value="swap" className="flex-1 data-[state=active]:bg-[var(--color-accent)] data-[state=active]:text-[oklch(0.150_0_0)]">
               <ArrowRightLeft className="mr-2 h-4 w-4" />
               Swap
             </TabsTrigger>
@@ -441,7 +442,7 @@ export default function BridgePage() {
                     style={{ borderBottom: "1px solid var(--color-bd)" }}
                   >
                     <div className="flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-green-500" />
+                      <span className="w-2 h-2 rounded-full bg-[#CBF825]" />
                       <span className="text-sm font-medium" style={{ color: "var(--color-fg)" }}>
                         {address?.slice(0, 6)}...{address?.slice(-4)}
                       </span>
@@ -450,8 +451,8 @@ export default function BridgePage() {
                       variant="secondary"
                       className="text-[10px]"
                       style={{
-                        backgroundColor: isOnSourceChain ? "oklch(0.60 0.15 150 / 0.12)" : "oklch(0.65 0.14 80 / 0.12)",
-                        color: isOnSourceChain ? "oklch(0.60 0.15 150)" : "oklch(0.65 0.14 80)",
+                        backgroundColor: isOnSourceChain ? "oklch(0.75 0.18 125 / 0.12)" : "oklch(0.65 0.14 80 / 0.12)",
+                        color: isOnSourceChain ? "var(--color-accent)" : "oklch(0.65 0.14 80)",
                       }}
                     >
                       {SUPPORTED_SOURCE_CHAINS.find(c => c.id === chainId)?.name || `Chain ${chainId}`}
@@ -618,7 +619,7 @@ export default function BridgePage() {
                     style={{ borderBottom: "1px solid var(--color-bd)" }}
                   >
                     <div className="flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-green-500" />
+                      <span className="w-2 h-2 rounded-full bg-[#CBF825]" />
                       <span className="text-sm font-medium" style={{ color: "var(--color-fg)" }}>
                         {address?.slice(0, 6)}...{address?.slice(-4)}
                       </span>
@@ -627,8 +628,8 @@ export default function BridgePage() {
                       variant="secondary"
                       className="text-[10px]"
                       style={{
-                        backgroundColor: isOnArc ? "oklch(0.60 0.15 150 / 0.12)" : "oklch(0.65 0.14 80 / 0.12)",
-                        color: isOnArc ? "oklch(0.60 0.15 150)" : "oklch(0.65 0.14 80)",
+                        backgroundColor: isOnArc ? "oklch(0.75 0.18 125 / 0.12)" : "oklch(0.65 0.14 80 / 0.12)",
+                        color: isOnArc ? "var(--color-accent)" : "oklch(0.65 0.14 80)",
                       }}
                     >
                       {isOnArc ? "Arc Testnet" : `Chain ${chainId}`}
@@ -774,14 +775,14 @@ export default function BridgePage() {
                   <div className="flex bg-zinc-900/50 p-1 rounded-lg border border-white/10 w-full mb-6">
                     <button
                       onClick={() => setRampMode("buy")}
-                      className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${rampMode === "buy" ? "bg-[var(--color-accent)] text-white shadow-sm" : "text-white/60 hover:text-white"
+                      className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${rampMode === "buy" ? "bg-[var(--color-accent)] text-[oklch(0.150_0_0)] shadow-sm" : "text-white/60 hover:text-white"
                         }`}
                     >
                       Buy USDC
                     </button>
                     <button
                       onClick={() => setRampMode("sell")}
-                      className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${rampMode === "sell" ? "bg-[var(--color-accent)] text-white shadow-sm" : "text-white/60 hover:text-white"
+                      className={`flex-1 py-2 text-sm font-medium rounded-md transition-all ${rampMode === "sell" ? "bg-[var(--color-accent)] text-[oklch(0.150_0_0)] shadow-sm" : "text-white/60 hover:text-white"
                         }`}
                     >
                       Sell USDC
@@ -931,7 +932,7 @@ export default function BridgePage() {
               </div>
               <div className="flex justify-between text-xs">
                 <span style={{ color: "var(--color-fg-secondary)" }}>Est. arrival</span>
-                <span className="font-medium flex items-center gap-1" style={{ color: "oklch(0.60 0.15 150)" }}>
+                <span className="font-medium flex items-center gap-1" style={{ color: "var(--color-accent)" }}>
                   <Zap className="h-3 w-3" />
                   {estimate.time}
                 </span>
@@ -953,22 +954,22 @@ export default function BridgePage() {
             style={{ backgroundColor: "var(--color-bg-elevated)", border: "1px solid var(--color-bd)" }}
           >
             <div className="flex items-center gap-2">
-              <Shield className="h-3.5 w-3.5" style={{ color: "oklch(0.60 0.15 150)" }} />
+              <Shield className="h-3.5 w-3.5" style={{ color: "var(--color-accent)" }} />
               <h4 className="text-xs font-semibold uppercase tracking-wider" style={{ color: "var(--color-fg-muted)" }}>
                 Security
               </h4>
             </div>
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-xs">
-                <CheckCircle2 className="h-3 w-3" style={{ color: "oklch(0.60 0.15 150)" }} />
+                <CheckCircle2 className="h-3 w-3" style={{ color: "var(--color-accent)" }} />
                 <span style={{ color: "var(--color-fg-secondary)" }}>Deterministic finality</span>
               </div>
               <div className="flex items-center gap-2 text-xs">
-                <CheckCircle2 className="h-3 w-3" style={{ color: "oklch(0.60 0.15 150)" }} />
+                <CheckCircle2 className="h-3 w-3" style={{ color: "var(--color-accent)" }} />
                 <span style={{ color: "var(--color-fg-secondary)" }}>No re-org risk</span>
               </div>
               <div className="flex items-center gap-2 text-xs">
-                <CheckCircle2 className="h-3 w-3" style={{ color: "oklch(0.60 0.15 150)" }} />
+                <CheckCircle2 className="h-3 w-3" style={{ color: "var(--color-accent)" }} />
                 <span style={{ color: "var(--color-fg-secondary)" }}>Circle-verified bridges</span>
               </div>
             </div>

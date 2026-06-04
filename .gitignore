@@ -60,3 +60,7 @@ next-env.d.ts
 venv/
 scratch/venv/
 
+# local marketing assets (not pushed)
+/marketing/
+/app/marketing/
+

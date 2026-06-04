@@ -26,7 +26,7 @@ const PRODUCT_TYPE_BADGES: Record<string, { label: string; className: string }> 
   },
   template: {
     label: "Template",
-    className: "bg-purple-500/10 text-purple-500 border-purple-500/20",
+    className: "bg-[#CBF825]/10 text-[#CBF825] border-[#CBF825]/20",
   },
   membership: {
     label: "Membership",
@@ -34,7 +34,7 @@ const PRODUCT_TYPE_BADGES: Record<string, { label: string; className: string }> 
   },
   automation: {
     label: "AI Automation",
-    className: "bg-green-500/10 text-green-500 border-green-500/20",
+    className: "bg-[#CBF825]/10 text-[#CBF825] border-[#CBF825]/20",
   },
   service: {
     label: "Service",

@@ -285,7 +285,7 @@ export const Transactions: FunctionComponent<Props> = (props) => {
             >
               <TableCell>{transaction.created_at}</TableCell>
               {transaction.transaction_type === "INBOUND" && (
-                <TableCell className="text-green-600">
+                <TableCell className="text-[#CBF825]">
                   +{transaction.amount}
                 </TableCell>
               )}

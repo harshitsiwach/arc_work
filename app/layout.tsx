@@ -37,7 +37,7 @@ export default function RootLayout({
         <ThemeProvider
           attribute="class"
           defaultTheme="light"
-          enableSystem
+          enableSystem={false}
           disableTransitionOnChange
         >
           <Toaster expand />
@@ -46,9 +46,9 @@ export default function RootLayout({
               <div className="min-h-screen flex flex-col relative">
                 {/* Background effects */}
                 <div className="fixed inset-0 pointer-events-none z-[-1] overflow-hidden">
-                  <div className="absolute -top-32 -left-32 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl animate-float-subtle"></div>
-                  <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl animate-float-subtle" style={{ animationDelay: '2s' }}></div>
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-radial from-emerald-500/5 to-transparent rounded-full"></div>
+                  <div className="absolute -top-32 -left-32 w-96 h-96 bg-[#CBF825]/10 rounded-full blur-3xl animate-float-subtle"></div>
+                  <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-[#CBF825]/10 rounded-full blur-3xl animate-float-subtle" style={{ animationDelay: '2s' }}></div>
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-radial from-[#CBF825]/5 to-transparent rounded-full"></div>
                 </div>
                 {!hasEnvVars ? (
                   <nav

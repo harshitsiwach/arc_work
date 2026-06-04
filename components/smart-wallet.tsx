@@ -170,7 +170,7 @@ export function SmartWalletSetup() {
     return (
       <Card>
         <CardContent className="p-4 flex items-center gap-3">
-          <CheckCircle2 className="h-5 w-5 text-green-500 shrink-0" />
+          <CheckCircle2 className="h-5 w-5 text-[#CBF825] shrink-0" />
           <div>
             <p className="text-sm font-medium">Smart Wallet Active</p>
             <p className="text-xs text-muted-foreground font-mono">{smartWallet.address}</p>

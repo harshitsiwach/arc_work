@@ -183,7 +183,7 @@ export default function CoursePlayerPage({ params }: { params: { id: string } })
     return (
       <div className="h-screen w-screen bg-background flex flex-col items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin mb-3 text-primary" />
-        <p className="text-sm text-text-secondary">Loading course content player...</p>
+        <p className="text-sm text-[var(--color-fg-secondary)]">Loading course content player...</p>
       </div>
     );
   }
@@ -224,9 +224,9 @@ export default function CoursePlayerPage({ params }: { params: { id: string } })
                     <span className="truncate pr-2 font-medium">{mod.title}</span>
                     <span className="flex-shrink-0">
                       {mod.isFree ? (
-                        <Badge className="bg-green-500/10 text-green-500 border border-green-500/20 text-[9px]">Free</Badge>
+                        <Badge className="bg-[#CBF825]/10 text-[#CBF825] border border-[#CBF825]/20 text-[9px]">Free</Badge>
                       ) : txHashes[mod.id] || verifiedPayment ? (
-                        <Unlock size={11} className="text-green-500" />
+                        <Unlock size={11} className="text-[#CBF825]" />
                       ) : (
                         <Lock size={11} className="text-[var(--color-fg-muted)]" />
                       )}
@@ -289,7 +289,7 @@ export default function CoursePlayerPage({ params }: { params: { id: string } })
                   {activeModule?.title}
                 </h2>
                 {verifiedPayment && (
-                  <Badge className="bg-green-500/10 text-green-500 border border-green-500/20 flex items-center gap-1">
+                  <Badge className="bg-[#CBF825]/10 text-[#CBF825] border border-[#CBF825]/20 flex items-center gap-1">
                     <Award size={12} /> x402 Verified
                   </Badge>
                 )}
@@ -300,12 +300,12 @@ export default function CoursePlayerPage({ params }: { params: { id: string } })
               </p>
 
               {verifiedPayment && (
-                <div className="p-4 rounded-lg border border-green-500/20 text-xs space-y-1.5" style={{ backgroundColor: "rgba(34, 197, 94, 0.03)" }}>
-                  <div className="font-semibold text-green-500 flex items-center gap-1.5">
+                <div className="p-4 rounded-lg border border-[#CBF825]/20 text-xs space-y-1.5" style={{ backgroundColor: "rgba(203, 248, 37, 0.03)" }}>
+                  <div className="font-semibold text-[#CBF825] flex items-center gap-1.5">
                     <Award size={13} /> On-chain Payment Proof (Arc Testnet)
                   </div>
                   <div>Sender: <code className="text-[var(--color-fg-muted)]">{verifiedPayment.from}</code></div>
-                  <div>Transferred: <span className="font-bold text-green-500">{verifiedPayment.amountUSDC} USDC</span></div>
+                  <div>Transferred: <span className="font-bold text-[#CBF825]">{verifiedPayment.amountUSDC} USDC</span></div>
                   <div>Block Confirmed: <span className="font-bold">{verifiedPayment.blockNumber}</span></div>
                 </div>
               )}

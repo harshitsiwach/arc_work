@@ -94,10 +94,10 @@ export default function CoursesPage() {
             <Link key={course.id} href={`/dashboard/courses/${course.id}`}>
               <Card className="hover-lift transition-all duration-200 h-full cursor-pointer" style={{ backgroundColor: "var(--color-bg-elevated)", borderColor: "var(--color-bd)" }}>
                 {/* Gradient header */}
-                <div className="h-32 rounded-t-xl flex items-center justify-center relative overflow-hidden" style={{ background: "linear-gradient(135deg, oklch(0.30 0.08 260), oklch(0.25 0.06 200))" }}>
+                <div className="h-32 rounded-t-xl flex items-center justify-center relative overflow-hidden" style={{ background: "linear-gradient(135deg, oklch(0.30 0.03 125), oklch(0.25 0.03 125))" }}>
                   <GraduationCap className="h-12 w-12 text-white/20" />
                   <div className="absolute top-3 right-3">
-                    <Badge className="text-[10px] font-medium" style={{ backgroundColor: "oklch(0.60 0.15 150 / 0.2)", color: "oklch(0.80 0.12 150)", border: "none" }}>
+                    <Badge className="text-[10px] font-medium" style={{ backgroundColor: "oklch(0.75 0.18 125 / 0.2)", color: "var(--color-accent)", border: "none" }}>
                       {course.freeModules} free module
                     </Badge>
                   </div>

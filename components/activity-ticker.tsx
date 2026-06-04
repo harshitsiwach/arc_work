@@ -4,19 +4,22 @@
  */
 "use client";
 
-import { CheckCircle2, Coins, Bot, Star, TrendingUp, Sparkles } from "lucide-react";
+import { CheckCircle2, Bot, Star, TrendingUp, Sparkles, Coins } from "lucide-react";
+import { UsdcIcon } from "@/components/icons";
 
-const tickerItems = [
-  { icon: CheckCircle2, text: "ClipForge delivered 3 clips to @marcus — 15 USDC", color: "oklch(0.60 0.15 150)" },
-  { icon: TrendingUp, text: "New order: Landing Page Design — 320 USDC", color: "oklch(0.55 0.15 260)" },
-  { icon: Bot, text: "CopyPilot auto-completed email sequence", color: "oklch(0.65 0.14 80)" },
-  { icon: Coins, text: "Payout released to @elena.arc — 2,400 USDC", color: "oklch(0.55 0.18 30)" },
-  { icon: Star, text: "@kai.design earned 5-star review on logo pack", color: "oklch(0.65 0.14 80)" },
-  { icon: Sparkles, text: "New creator @riley joined the marketplace", color: "oklch(0.55 0.15 200)" },
-  { icon: CheckCircle2, text: "Escrow released: Video editing package — 890 USDC", color: "oklch(0.60 0.15 150)" },
-  { icon: Bot, text: "DesignBot started thumbnail batch for @studio-k", color: "oklch(0.65 0.14 80)" },
-  { icon: Coins, text: "Cross-chain bridge: 500 USDC from Base Sepolia", color: "oklch(0.55 0.18 30)" },
-  { icon: TrendingUp, text: "AI validation passed: Smart contract audit", color: "oklch(0.55 0.15 260)" },
+type IconRender = () => React.ReactNode;
+
+const tickerItems: { icon: IconRender; text: string; color: string }[] = [
+  { icon: () => <CheckCircle2 className="w-3.5 h-3.5" />, text: "ClipForge delivered 3 clips to @marcus — 15 USDC", color: "oklch(0.75 0.18 125)" },
+  { icon: () => <TrendingUp className="w-3.5 h-3.5" />, text: "New order: Landing Page Design — 320 USDC", color: "oklch(0.75 0.18 125)" },
+  { icon: () => <Bot className="w-3.5 h-3.5" />, text: "CopyPilot auto-completed email sequence", color: "oklch(0.65 0.14 80)" },
+  { icon: () => <UsdcIcon size={14} variant="branded" />, text: "Payout released to @elena.arc — 2,400 USDC", color: "oklch(0.75 0.18 125)" },
+  { icon: () => <Star className="w-3.5 h-3.5" />, text: "@kai.design earned 5-star review on logo pack", color: "oklch(0.65 0.14 80)" },
+  { icon: () => <Sparkles className="w-3.5 h-3.5" />, text: "New creator @riley joined the marketplace", color: "oklch(0.75 0.18 125)" },
+  { icon: () => <CheckCircle2 className="w-3.5 h-3.5" />, text: "Escrow released: Video editing package — 890 USDC", color: "oklch(0.75 0.18 125)" },
+  { icon: () => <Bot className="w-3.5 h-3.5" />, text: "DesignBot started thumbnail batch for @studio-k", color: "oklch(0.65 0.14 80)" },
+  { icon: () => <UsdcIcon size={14} variant="branded" />, text: "Cross-chain bridge: 500 USDC from Base Sepolia", color: "oklch(0.75 0.18 125)" },
+  { icon: () => <TrendingUp className="w-3.5 h-3.5" />, text: "AI validation passed: Smart contract audit", color: "oklch(0.75 0.18 125)" },
 ];
 
 export function ActivityTicker() {
@@ -36,10 +39,9 @@ export function ActivityTicker() {
         style={{ width: "max-content" }}
       >
         {doubled.map((item, i) => {
-          const Icon = item.icon;
           return (
             <div key={i} className="flex items-center gap-2 text-xs shrink-0" style={{ color: "var(--color-fg-secondary)" }}>
-              <Icon className="w-3.5 h-3.5 shrink-0" style={{ color: item.color }} />
+              <span className="shrink-0 flex items-center" style={{ color: item.color }}>{item.icon()}</span>
               <span>{item.text}</span>
             </div>
           );
