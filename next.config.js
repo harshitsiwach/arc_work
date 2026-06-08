@@ -8,8 +8,6 @@ const nextConfig = {
       "pdf-parse",
       "mammoth",
       "openai",
-      "fluent-ffmpeg",
-      "ffmpeg-static",
     ],
   },
   images: {
