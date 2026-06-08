@@ -14,11 +14,11 @@ import {
 /* ── Mock data ─────────────────────────────────────────────── */
 
 const creatorAvatars = [
-  { name: "Elena", initial: "E", color: "oklch(0.55 0.15 260)" },
-  { name: "Marcus", initial: "M", color: "oklch(0.60 0.15 150)" },
+  { name: "Elena", initial: "E", color: "oklch(0.75 0.18 125)" },
+  { name: "Marcus", initial: "M", color: "oklch(0.75 0.18 125)" },
   { name: "Kai", initial: "K", color: "oklch(0.65 0.14 80)" },
   { name: "Riley", initial: "R", color: "oklch(0.55 0.18 30)" },
-  { name: "Sam", initial: "S", color: "oklch(0.55 0.15 200)" },
+  { name: "Sam", initial: "S", color: "oklch(0.75 0.18 125)" },
 ];
 
 const liveActivities = [
@@ -39,7 +39,7 @@ const workflowSteps = [
 
 const floatingNotifications = [
   { text: "5-star review", sub: "from @riley", icon: Star, color: "oklch(0.65 0.14 80)" },
-  { text: "AI verified", sub: "Brand Kit delivery", icon: CheckCircle2, color: "oklch(0.55 0.15 260)" },
+  { text: "AI verified", sub: "Brand Kit delivery", icon: CheckCircle2, color: "oklch(0.75 0.18 125)" },
   { text: "New bid", sub: "Logo Design", icon: TrendingUp, color: "oklch(0.55 0.18 30)" },
 ];
 
@@ -82,7 +82,7 @@ export function HeroVisual() {
       <div
         className="absolute -inset-8 rounded-3xl pointer-events-none"
         style={{
-          background: "radial-gradient(ellipse at center, oklch(0.55 0.15 260 / 0.06), transparent 70%)",
+          background: "radial-gradient(ellipse at center, oklch(0.75 0.18 125 / 0.06), transparent 70%)",
         }}
       />
 
@@ -132,8 +132,8 @@ export function HeroVisual() {
           <div className="flex items-center gap-2">
             <span className="text-xs" style={{ color: "var(--color-fg-muted)" }}>Live</span>
             <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-40" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500" />
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#CBF825] opacity-40" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-[#CBF825]" />
             </span>
           </div>
         </div>
@@ -344,13 +344,13 @@ export function HeroVisual() {
         >
           <div
             className="w-7 h-7 rounded-lg flex items-center justify-center"
-            style={{ backgroundColor: "oklch(0.60 0.15 150 / 0.12)" }}
+            style={{ backgroundColor: "oklch(0.75 0.18 125 / 0.12)" }}
           >
-            <Bot className="w-3.5 h-3.5" style={{ color: "oklch(0.60 0.15 150)" }} />
+            <Bot className="w-3.5 h-3.5" style={{ color: "oklch(0.75 0.18 125)" }} />
           </div>
           <div>
             <p className="text-[11px] font-medium" style={{ color: "var(--color-fg)" }}>Research AI</p>
-            <p className="text-[10px]" style={{ color: "oklch(0.60 0.15 150)" }}>Working · 1 task</p>
+            <p className="text-[10px]" style={{ color: "oklch(0.75 0.18 125)" }}>Working · 1 task</p>
           </div>
         </div>
       </div>

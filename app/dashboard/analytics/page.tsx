@@ -22,10 +22,10 @@ export default function AnalyticsPage() {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { label: "Total Revenue", value: "$0.00", change: "+0%", icon: DollarSign, color: "oklch(0.55 0.18 150)" },
-          { label: "Page Views", value: "0", change: "+0%", icon: Eye, color: "oklch(0.55 0.15 260)" },
-          { label: "Active Products", value: "0", change: "+0", icon: TrendingUp, color: "oklch(0.55 0.15 300)" },
-          { label: "Total Customers", value: "0", change: "+0", icon: Users, color: "oklch(0.55 0.15 200)" },
+          { label: "Total Revenue", value: "$0.00", change: "+0%", icon: DollarSign, color: "var(--color-accent)" },
+          { label: "Page Views", value: "0", change: "+0%", icon: Eye, color: "var(--color-accent)" },
+          { label: "Active Products", value: "0", change: "+0", icon: TrendingUp, color: "var(--color-accent)" },
+          { label: "Total Customers", value: "0", change: "+0", icon: Users, color: "var(--color-accent)" },
         ].map((stat) => (
           <Card key={stat.label} style={{ backgroundColor: "var(--color-bg-elevated)", borderColor: "var(--color-bd)" }}>
             <CardHeader className="pb-2">

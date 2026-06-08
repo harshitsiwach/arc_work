@@ -29,7 +29,7 @@ const agentTemplates = [
     name: "Twitter/X Agent",
     desc: "Auto-post threads, engage with followers, grow your audience",
     icon: Twitter,
-    color: "oklch(0.55 0.15 260)",
+    color: "oklch(0.75 0.18 125)",
     metrics: "2.4k deployed",
   },
   {
@@ -43,14 +43,14 @@ const agentTemplates = [
     name: "Discord Moderator",
     desc: "AI-powered community moderation and engagement",
     icon: MessageSquare,
-    color: "oklch(0.55 0.15 200)",
+    color: "oklch(0.75 0.18 125)",
     metrics: "3.1k deployed",
   },
   {
     name: "Research Assistant",
     desc: "Aggregate data, summarize reports, and surface insights",
     icon: Search,
-    color: "oklch(0.55 0.18 150)",
+    color: "oklch(0.75 0.18 125)",
     metrics: "1.2k deployed",
   },
   {
@@ -190,7 +190,7 @@ export function MyAgentsContent({ createHref = "/agents/create" }: MyAgentsConte
             <span style={{ color: "var(--color-bd)" }}>·</span>
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-wider" style={{ color: "var(--color-fg-muted)" }}>Online</p>
-              <p className="text-xl font-semibold" style={{ color: "oklch(0.60 0.15 150)" }}>
+              <p className="text-xl font-semibold" style={{ color: "oklch(0.75 0.18 125)" }}>
                 {agents.filter(a => a.availability_status === "online").length}
               </p>
             </div>
@@ -289,11 +289,11 @@ export function MyAgentsContent({ createHref = "/agents/create" }: MyAgentsConte
                         <CardTitle className="text-base" style={{ color: "var(--color-fg)" }}>{agent.agent_name}</CardTitle>
                         <span className={`inline-flex items-center gap-1 text-[11px] px-2 py-0.5 rounded-full ${
                           agent.availability_status === "online"
-                            ? "bg-green-500/10 text-green-500"
+                            ? "bg-[#CBF825]/10 text-[#CBF825]"
                             : "bg-muted text-muted-foreground"
                         }`}>
                           <span className={`w-1.5 h-1.5 rounded-full ${
-                            agent.availability_status === "online" ? "bg-green-500" : "bg-muted-foreground"
+                            agent.availability_status === "online" ? "bg-[#CBF825]" : "bg-muted-foreground"
                           }`} />
                           {agent.availability_status || "offline"}
                         </span>

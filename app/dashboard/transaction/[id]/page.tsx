@@ -78,8 +78,8 @@ export default async function Transaction({
       case "completed":
       case "success":
         return {
-          bg: "oklch(0.60 0.15 150 / 0.12)",
-          fg: "oklch(0.60 0.15 150)"
+          bg: "oklch(0.75 0.18 125 / 0.12)",
+          fg: "var(--color-accent)"
         };
       case "pending":
       case "processing":

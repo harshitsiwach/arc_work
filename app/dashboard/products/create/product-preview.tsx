@@ -97,7 +97,7 @@ export function ProductPreview({
             {deliveryType && (
               <span
                 className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-medium"
-                style={{ backgroundColor: "oklch(0.60 0.15 150 / 0.1)", color: "oklch(0.60 0.15 150)" }}
+                style={{ backgroundColor: "oklch(0.75 0.18 125 / 0.1)", color: "var(--color-accent)" }}
               >
                 {deliveryType.label}
               </span>
@@ -153,7 +153,7 @@ export function ProductPreview({
           </div>
           <div className="flex justify-between text-xs font-medium pt-1.5" style={{ borderTop: "1px solid var(--color-bd)" }}>
             <span style={{ color: "var(--color-fg)" }}>You earn</span>
-            <span className="font-mono" style={{ color: "oklch(0.60 0.15 150)" }}>
+            <span className="font-mono" style={{ color: "var(--color-accent)" }}>
               {youEarn} USDC
             </span>
           </div>
@@ -166,7 +166,7 @@ export function ProductPreview({
         style={{ backgroundColor: "var(--color-bg-elevated)", border: "1px solid var(--color-bd)" }}
       >
         <div className="flex items-center gap-2">
-          <Bot className="h-3.5 w-3.5" style={{ color: "oklch(0.55 0.15 200)" }} />
+          <Bot className="h-3.5 w-3.5" style={{ color: "var(--color-accent)" }} />
           <span className="text-xs font-medium" style={{ color: "var(--color-fg)" }}>
             AI compatibility
           </span>
@@ -174,17 +174,17 @@ export function ProductPreview({
 
         <div className="space-y-2">
           <div className="flex items-center gap-2 text-xs">
-            <CheckCircle2 className="h-3 w-3" style={{ color: "oklch(0.60 0.15 150)" }} />
+            <CheckCircle2 className="h-3 w-3" style={{ color: "var(--color-accent)" }} />
             <span style={{ color: "var(--color-fg-secondary)" }}>AI agents can discover & recommend</span>
           </div>
           <div className="flex items-center gap-2 text-xs">
-            <CheckCircle2 className="h-3 w-3" style={{ color: "oklch(0.60 0.15 150)" }} />
+            <CheckCircle2 className="h-3 w-3" style={{ color: "var(--color-accent)" }} />
             <span style={{ color: "var(--color-fg-secondary)" }}>Auto-validation on delivery</span>
           </div>
           {tags.some(t => ["AI Tools", "Automation", "Templates", "Workflows"].includes(t)) && (
             <div className="flex items-center gap-2 text-xs">
-              <CheckCircle2 className="h-3 w-3" style={{ color: "oklch(0.60 0.15 150)" }} />
-              <span style={{ color: "oklch(0.55 0.15 200)" }}>AI-optimized category</span>
+              <CheckCircle2 className="h-3 w-3" style={{ color: "var(--color-accent)" }} />
+              <span style={{ color: "var(--color-accent)" }}>AI-optimized category</span>
             </div>
           )}
         </div>
@@ -208,7 +208,7 @@ export function ProductPreview({
             <span style={{ color: "var(--color-fg-secondary)" }}>Instant USDC payout</span>
           </div>
           <div className="flex items-center gap-2 text-xs">
-            <Shield className="h-3 w-3" style={{ color: "oklch(0.60 0.15 150)" }} />
+            <Shield className="h-3 w-3" style={{ color: "var(--color-accent)" }} />
             <span style={{ color: "var(--color-fg-secondary)" }}>Escrow-protected sales</span>
           </div>
         </div>

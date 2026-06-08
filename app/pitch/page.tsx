@@ -31,6 +31,7 @@ import {
   Wrench,
   Link2,
 } from "lucide-react";
+import { UsdcIcon, EurcIcon } from "@/components/icons";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -248,7 +249,7 @@ function SlideExecutiveSummary() {
           <div className="absolute inset-10 rounded-full border border-dashed animate-[spin_40s_linear_infinite_reverse]" style={{ borderColor: "var(--color-bd)" }} />
           
           <div className="relative z-10 text-center">
-            <Coins size={44} className="mx-auto mb-2 text-[var(--color-accent)] animate-bounce-slow" />
+            <UsdcIcon size={44} variant="branded" className="mx-auto mb-2 animate-bounce-slow" />
             <p className="text-sm font-semibold uppercase tracking-widest" style={{ color: "var(--color-fg)" }}>Arc L2 Core</p>
             <p className="text-xs" style={{ color: "var(--color-fg-secondary)" }}>Circle USDC Rails</p>
           </div>
@@ -277,13 +278,13 @@ function SlideTheProblem() {
       title: "Locked-In Reputation Silos",
       desc: "A creator's client feedback, metrics, and transaction history are owned by individual platforms, trapping them due to high switching costs.",
       icon: Users,
-      color: "oklch(0.50 0.18 260)",
+      color: "var(--color-accent)",
     },
     {
       title: "AI Agents Excluded from Rails",
       desc: "Autonomous software workers cannot register bank accounts, hold digital dollars, negotiate contracts, or verify deliveries programmatically.",
       icon: Bot,
-      color: "oklch(0.55 0.18 150)",
+      color: "var(--color-accent)",
     },
   ];
 
@@ -334,25 +335,25 @@ function SlideTheSolution() {
       title: "Instant 2.5% USDC Settlement",
       desc: "Gas-less transfers routed via Circle developer-controlled wallets settle in <1 second directly to independent freelancers.",
       icon: Coins,
-      color: "oklch(0.55 0.18 150)",
+      color: "var(--color-accent)",
     },
     {
       title: "Smart Escrows (EIP-712)",
       desc: "Safe, programmatic trust agreements holding milestone deposits that payout automatically when terms are satisfied.",
       icon: Shield,
-      color: "oklch(0.55 0.18 150)",
+      color: "var(--color-accent)",
     },
     {
       title: "AI-Powered Deliverable Audit",
       desc: "Integrates OpenAI Vision APIs to inspect code, visual assets, or transcripts automatically before releasing funds.",
       icon: Cpu,
-      color: "oklch(0.55 0.18 150)",
+      color: "var(--color-accent)",
     },
     {
       title: "Open, Portable Identity Registry",
       desc: "Reputation, reviews, and transaction volumes are stored as standard smart contract metadata, portable anywhere on-chain.",
       icon: Layers,
-      color: "oklch(0.55 0.18 150)",
+      color: "var(--color-accent)",
     },
   ];
 
@@ -372,7 +373,7 @@ function SlideTheSolution() {
             className="p-5 rounded-xl border flex gap-4 transition-all duration-200 hover:scale-[1.01]"
             style={{
               backgroundColor: "var(--color-bg-inset)",
-              borderColor: "oklch(0.55 0.18 150 / 0.3)",
+              borderColor: "oklch(0.75 0.18 125 / 0.3)",
             }}
           >
             <div
@@ -729,7 +730,7 @@ function SlideMarketOpportunity() {
           <div className="flex items-center justify-between text-[11px]" style={{ color: "var(--color-fg-muted)" }}>
             <span>Earnings Chart (USD)</span>
             <div className="flex gap-3">
-              {showArc && <span className="flex items-center gap-1"><span className="w-2.5 h-1.5 bg-[oklch(0.55_0.18_150)] rounded" /> Arc Work (2.5%)</span>}
+              {showArc && <span className="flex items-center gap-1"><span className="w-2.5 h-1.5 bg-[oklch(0.75 0.18 125)] rounded" /> Arc Work (2.5%)</span>}
               {showWhop && <span className="flex items-center gap-1"><span className="w-2.5 h-1.5 bg-[oklch(0.60_0.16_80)] rounded" /> Whop (5%)</span>}
               {showUpwork && <span className="flex items-center gap-1"><span className="w-2.5 h-1.5 bg-[oklch(0.55_0.20_30)] rounded" /> Legacy (20%)</span>}
             </div>
@@ -783,7 +784,7 @@ function SlideMarketOpportunity() {
                   y1={getY(0)}
                   x2={getX(maxVolume)}
                   y2={getY(maxVolume * (1 - ARC_RATE))}
-                  stroke="oklch(0.55 0.18 150)"
+                  stroke="var(--color-accent)"
                   strokeWidth="2"
                 />
               )}
@@ -802,7 +803,7 @@ function SlideMarketOpportunity() {
               {/* Dots at intersections */}
               {showUpwork && <circle cx={currentX} cy={getY(volume * (1 - UPWORK_RATE))} r="4" fill="oklch(0.55 0.20 30)" />}
               {showWhop && <circle cx={currentX} cy={getY(volume * (1 - WHOP_RATE))} r="4" fill="oklch(0.60 0.16 80)" />}
-              {showArc && <circle cx={currentX} cy={getY(volume * (1 - ARC_RATE))} r="4" fill="oklch(0.55 0.18 150)" />}
+              {showArc && <circle cx={currentX} cy={getY(volume * (1 - ARC_RATE))} r="4" fill="var(--color-accent)" />}
             </svg>
           </div>
 
@@ -887,9 +888,9 @@ function SlideMarketOpportunity() {
             )}
 
             {showArc && (
-              <div className="flex items-center justify-between p-2.5 rounded-lg border text-xs" style={{ backgroundColor: "oklch(0.55 0.18 150 / 0.05)", borderColor: "oklch(0.55 0.18 150 / 0.3)" }}>
+              <div className="flex items-center justify-between p-2.5 rounded-lg border text-xs" style={{ backgroundColor: "oklch(0.75 0.18 125 / 0.05)", borderColor: "oklch(0.75 0.18 125 / 0.3)" }}>
                 <span className="flex items-center gap-1.5 font-bold" style={{ color: "var(--color-fg)" }}>
-                  <span className="w-2.5 h-2.5 rounded-full bg-[oklch(0.55_0.18_150)]" />
+                  <span className="w-2.5 h-2.5 rounded-full bg-[oklch(0.75 0.18 125)]" />
                   Arc Work (2.5% fee)
                 </span>
                 <div className="text-right">
@@ -1087,7 +1088,7 @@ function SlideRoadmap() {
             className="p-5 rounded-xl border flex flex-col justify-between"
             style={{
               backgroundColor: "var(--color-bg-inset)",
-              borderColor: p.status === "Complete" ? "oklch(0.55 0.18 150 / 0.3)" : "var(--color-bd)",
+              borderColor: p.status === "Complete" ? "oklch(0.75 0.18 125 / 0.3)" : "var(--color-bd)",
             }}
           >
             <div className="space-y-2">

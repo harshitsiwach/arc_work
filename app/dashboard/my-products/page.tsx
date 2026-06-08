@@ -144,8 +144,8 @@ export default async function MyProductsPage() {
                       variant="secondary"
                       className="text-[10px]"
                       style={{
-                        backgroundColor: product.status === "active" ? "oklch(0.60 0.15 150 / 0.12)" : "var(--color-bg-hover)",
-                        color: product.status === "active" ? "oklch(0.60 0.15 150)" : "var(--color-fg-muted)",
+                        backgroundColor: product.status === "active" ? "oklch(0.75 0.18 125 / 0.12)" : "var(--color-bg-hover)",
+                        color: product.status === "active" ? "var(--color-accent)" : "var(--color-fg-muted)",
                       }}
                     >
                       {product.status}

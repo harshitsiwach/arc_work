@@ -248,7 +248,7 @@ arc_work/                          ← repo root
 ├── llms.txt                       Short LLM-friendly summary page
 ├── PITCH_DECK.md                  Pitch deck narrative
 ├── ARCHITECTURE.md                ← THIS FILE
-├── AGENT_HANDOFF.md               Agent context handoff
+├── AGENTS.md                      Agent instruction notes
 ├── .env.example                 Env var template
 ├── .env.local                    Local secrets — DO NOT COMMIT
 └── supabase.bak                  Supabase backup
@@ -600,7 +600,7 @@ NEXT_PUBLIC_CIRCLE_KIT_KEY=KIT_KEY:<keyId>:<keySecret>
 | `GOOGLE_CLIENT_SECRET` | server | Google OAuth |
 | `NEXT_PUBLIC_CIRCLE_KIT_KEY` | public | Circle App Kit key for swap/bridge |
 | `NEXT_PUBLIC_TRANSAK_API_KEY` | public | Transak on-ramp/off-ramp |
-| `AGENT_HANDOFF.md` | public | Handoff summary doc |
+| `AGENTS.md` | public | Agent instruction notes |
 | `LLMS.TXT` | public | Assign locations |
 
 ---

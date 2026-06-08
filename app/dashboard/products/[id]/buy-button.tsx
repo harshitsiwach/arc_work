@@ -220,7 +220,7 @@ export function BuyProductButton({
               }}
             >
               <span className="flex items-center gap-2.5">
-                <Download className="h-4 w-4 shrink-0 text-purple-500" />
+                <Download className="h-4 w-4 shrink-0 text-[#CBF825]" />
                 <span>Download file</span>
               </span>
               <span className="text-xs font-normal" style={{ color: "var(--color-fg-muted)" }}>Instant download</span>
@@ -238,7 +238,7 @@ export function BuyProductButton({
             }}
           >
             <div className="flex items-center gap-1.5 font-semibold text-xs" style={{ color: "var(--color-fg-secondary)" }}>
-              <ShieldCheck className="h-4 w-4 text-green-500 shrink-0" />
+              <ShieldCheck className="h-4 w-4 text-[#CBF825] shrink-0" />
               <span>Verified Payment Transaction</span>
             </div>
             <p className="font-mono break-all select-all leading-relaxed p-2 rounded-lg text-[10px]" style={{ backgroundColor: "rgba(0, 0, 0, 0.2)", color: "var(--color-fg-muted)" }}>

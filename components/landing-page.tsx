@@ -65,7 +65,7 @@ const agentTypes = [
     rating: 4.9,
     price: "5 USDC/clip",
     status: "online",
-    color: "oklch(0.55 0.15 260)",
+    color: "oklch(0.75 0.18 125)",
   },
   {
     name: "CopyPilot",
@@ -75,7 +75,7 @@ const agentTypes = [
     rating: 4.8,
     price: "15 USDC/piece",
     status: "online",
-    color: "oklch(0.60 0.15 150)",
+    color: "oklch(0.75 0.18 125)",
   },
   {
     name: "DesignBot",
@@ -100,7 +100,7 @@ export function LandingPage() {
         style={{
           backgroundImage: `linear-gradient(var(--color-fg) 1px, transparent 1px), linear-gradient(90deg, var(--color-fg) 1px, transparent 1px)`,
           backgroundSize: "60px 60px",
-          opacity: 0.03,
+          opacity: "var(--grid-opacity)",
         }}
       />
 
@@ -111,8 +111,8 @@ export function LandingPage() {
           className="absolute inset-0 pointer-events-none"
           style={{
             background: `
-              radial-gradient(ellipse 80% 60% at 70% 40%, oklch(0.55 0.15 260 / 0.04), transparent),
-              radial-gradient(ellipse 60% 50% at 20% 70%, oklch(0.60 0.15 150 / 0.03), transparent),
+              radial-gradient(ellipse 80% 60% at 70% 40%, oklch(0.75 0.18 125 / 0.04), transparent),
+              radial-gradient(ellipse 60% 50% at 20% 70%, oklch(0.75 0.18 125 / 0.03), transparent),
               radial-gradient(ellipse 50% 40% at 85% 80%, oklch(0.65 0.14 80 / 0.03), transparent)
             `,
           }}
@@ -177,7 +177,7 @@ export function LandingPage() {
                       key={letter}
                       className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-semibold border-2"
                       style={{
-                        backgroundColor: `oklch(0.55 0.15 ${260 + i * 30})`,
+                        backgroundColor: `oklch(0.75 0.18 125)`,
                         color: "white",
                         borderColor: "var(--color-bg)",
                       }}
@@ -214,7 +214,7 @@ export function LandingPage() {
           className="absolute inset-0 pointer-events-none"
           style={{
             background: `
-              radial-gradient(ellipse 60% 40% at 30% 50%, oklch(0.60 0.15 150 / 0.03), transparent),
+              radial-gradient(ellipse 60% 40% at 30% 50%, oklch(0.75 0.18 125 / 0.03), transparent),
               radial-gradient(ellipse 50% 35% at 75% 60%, oklch(0.65 0.14 80 / 0.03), transparent)
             `,
           }}
@@ -257,7 +257,7 @@ export function LandingPage() {
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
-            background: "radial-gradient(ellipse 50% 40% at 60% 50%, oklch(0.55 0.15 200 / 0.04), transparent)",
+            background: "radial-gradient(ellipse 50% 40% at 60% 50%, oklch(0.75 0.18 125 / 0.04), transparent)",
           }}
         />
         <div className="relative w-full max-w-7xl mx-auto">
@@ -302,11 +302,11 @@ export function LandingPage() {
                   <span
                     className="inline-flex items-center gap-1 text-[10px] px-2 py-0.5 rounded-full font-medium"
                     style={{
-                      backgroundColor: agent.status === "online" ? "oklch(0.60 0.15 150 / 0.12)" : "oklch(0.65 0.14 80 / 0.12)",
-                      color: agent.status === "online" ? "oklch(0.60 0.15 150)" : "oklch(0.65 0.14 80)",
+                      backgroundColor: agent.status === "online" ? "oklch(0.75 0.18 125 / 0.12)" : "oklch(0.65 0.14 80 / 0.12)",
+                      color: agent.status === "online" ? "oklch(0.75 0.18 125)" : "oklch(0.65 0.14 80)",
                     }}
                   >
-                    <span className={`w-1 h-1 rounded-full ${agent.status === "online" ? "animate-pulse-soft" : ""}`} style={{ backgroundColor: agent.status === "online" ? "oklch(0.60 0.15 150)" : "oklch(0.65 0.14 80)" }} />
+                    <span className={`w-1 h-1 rounded-full ${agent.status === "online" ? "animate-pulse-soft" : ""}`} style={{ backgroundColor: agent.status === "online" ? "oklch(0.75 0.18 125)" : "oklch(0.65 0.14 80)" }} />
                     {agent.status}
                   </span>
                 </div>
@@ -381,7 +381,7 @@ export function LandingPage() {
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
-            background: "radial-gradient(ellipse 60% 50% at 50% 50%, oklch(0.55 0.15 260 / 0.05), transparent)",
+            background: "radial-gradient(ellipse 60% 50% at 50% 50%, oklch(0.75 0.18 125 / 0.05), transparent)",
           }}
         />
         <div className="relative w-full max-w-7xl mx-auto">

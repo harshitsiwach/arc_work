@@ -48,7 +48,7 @@ export function BridgeFlow({ status, sourceChain, sourceChainId }: BridgeFlowPro
             >
               <div className="w-6 h-6 flex items-center justify-center">
                 {isComplete ? (
-                  <CheckCircle2 className="h-6 w-6 text-emerald-500" />
+                  <CheckCircle2 className="h-6 w-6 text-[#CBF825]" />
                 ) : (
                   step.icon
                 )}

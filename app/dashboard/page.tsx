@@ -303,7 +303,7 @@ export default function DashboardOverviewPage() {
             icon={Bot}
             title="Create Agent"
             description="Deploy an autonomous AI agent with onchain identity"
-            color="oklch(0.55 0.15 260)"
+            color="var(--color-accent)"
           />
           <QuickActionCard
             href="/create/product"
@@ -317,7 +317,7 @@ export default function DashboardOverviewPage() {
             icon={Briefcase}
             title="Post Job"
             description="Hire talent with onchain escrow protection"
-            color="oklch(0.55 0.18 150)"
+            color="var(--color-accent)"
           />
         </div>
       </section>

@@ -17,7 +17,8 @@
  */
 
 import { useRef, useState } from "react";
-import { FileText, ExternalLink, CircleDollarSign, Loader2, ImageUp, Trash2, HandCoins } from "lucide-react";
+import { FileText, ExternalLink, Loader2, ImageUp, Trash2 } from "lucide-react";
+import { UsdcIcon } from "@/components/icons";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { AgreementStatus, EscrowAgreementWithDetails } from "@/types/escrow";
@@ -268,7 +269,7 @@ export const EscrowAgreementItem: React.FC<EscrowAgreementCardProps> = ({
                 </>
               ) : (
                 <>
-                  <CircleDollarSign className="mr-2 h-4 w-4" />
+                  <UsdcIcon size={16} variant="branded" className="mr-2" />
                   Deposit funds
                 </>
               )}
@@ -307,7 +308,7 @@ export const EscrowAgreementItem: React.FC<EscrowAgreementCardProps> = ({
                   </>
                 ) : (
                   <>
-                    <HandCoins className="mr-2 h-4 w-4" />
+                    <UsdcIcon size={16} variant="branded" className="mr-2" />
                     Issue refund
                   </>
                 )}
