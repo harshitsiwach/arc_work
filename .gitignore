@@ -64,3 +64,4 @@ scratch/venv/
 /marketing/
 /app/marketing/
 
+package-lock.json
