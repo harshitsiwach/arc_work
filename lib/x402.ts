@@ -2,6 +2,8 @@
  * Arc ClipArc - x402 Payment Protocol Verifier
  */
 
+import { decodeFunctionData } from "viem";
+
 const ARC_RPC_URL = "https://rpc.quicknode.testnet.arc.network";
 const USDC_CONTRACT_ADDRESS = "0x3600000000000000000000000000000000000000";
 
@@ -174,3 +176,97 @@ export async function verifyX402Payment(
     },
   };
 }
+
+const X402_VALIDATOR_DECODE_ABI = [
+  {
+    name: "payForService",
+    type: "function",
+    inputs: [
+      { name: "serviceId", type: "string" },
+      { name: "amount", type: "uint256" },
+    ],
+    outputs: [{ name: "", type: "bool" }],
+    stateMutability: "nonpayable",
+  },
+] as const;
+
+/**
+ * Verifies a transaction hash on-chain for a payment processed through our custom X402Validator contract.
+ */
+export async function verifyX402ValidatorPayment(
+  txHash: string,
+  expectedServiceId: string,
+  expectedAmountUSDC: number,
+  validatorAddress: string
+): Promise<VerificationResult> {
+  if (!txHash || !txHash.startsWith("0x")) {
+    return { success: false, error: "Invalid transaction hash format" };
+  }
+
+  // 1. Get transaction details
+  const tx = await callRpc<TransactionData>("eth_getTransactionByHash", [txHash]);
+  if (!tx) {
+    return { success: false, error: "Transaction not found on Arc Testnet" };
+  }
+
+  // 2. Validate token destination contract address is our validator
+  if (!tx.to || tx.to.toLowerCase() !== validatorAddress.toLowerCase()) {
+    return { success: false, error: `Transaction destination is not the X402Validator contract. Expected: ${validatorAddress}, Got: ${tx.to}` };
+  }
+
+  // 3. Decode input data using viem
+  try {
+    const { args, functionName } = decodeFunctionData({
+      abi: X402_VALIDATOR_DECODE_ABI,
+      data: tx.input as `0x${string}`,
+    });
+
+    if (functionName !== "payForService") {
+      return { success: false, error: "Invalid function called, expected payForService" };
+    }
+
+    const [serviceId, amount] = args;
+
+    // 4. Verify service ID
+    if (serviceId.toLowerCase() !== expectedServiceId.toLowerCase()) {
+      return {
+        success: false,
+        error: `Service ID mismatch. Expected: ${expectedServiceId}, Got: ${serviceId}`,
+      };
+    }
+
+    // USDC has 6 decimals, convert expected USDC (float) to units
+    const expectedAmountUnits = BigInt(Math.round(expectedAmountUSDC * 1_000_000));
+    if (amount < expectedAmountUnits) {
+      return {
+        success: false,
+        error: `Amount mismatch. Expected at least: ${expectedAmountUSDC} USDC (${expectedAmountUnits} units), Paid: ${Number(amount) / 1_000_000} USDC (${amount} units)`,
+      };
+    }
+
+    // 5. Get transaction receipt to verify status is 0x1 (success)
+    const receipt = await callRpc<TransactionReceipt>("eth_getTransactionReceipt", [txHash]);
+    if (!receipt) {
+      return { success: false, error: "Transaction receipt not available yet" };
+    }
+
+    if (receipt.status !== "0x1") {
+      return { success: false, error: "Transaction failed on-chain" };
+    }
+
+    const blockNumber = parseInt(receipt.blockNumber, 16);
+
+    return {
+      success: true,
+      details: {
+        from: tx.from,
+        to: validatorAddress,
+        amountUSDC: Number(amount) / 1_000_000,
+        blockNumber,
+      },
+    };
+  } catch (error: any) {
+    return { success: false, error: `Failed to decode transaction: ${error.message}` };
+  }
+}
+

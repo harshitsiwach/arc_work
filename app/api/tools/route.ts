@@ -3,8 +3,17 @@
  */
 import { NextResponse } from "next/server";
 
+// Simple in-memory cache to bypass Next.js 2MB fetch cache limit warnings
+let cachedServices: any[] | null = null;
+let cacheTimestamp = 0;
+const CACHE_TTL = 3600 * 1000; // 1 hour
+
 export async function GET() {
   try {
+    const now = Date.now();
+    if (cachedServices && (now - cacheTimestamp < CACHE_TTL)) {
+      return NextResponse.json({ services: cachedServices });
+    }
     let allServicesRaw: any[] = [];
     let offset = 0;
     let total = 200; // Will be updated on first response
@@ -13,7 +22,7 @@ export async function GET() {
     while (offset < total) {
       const res = await fetch(`https://api.agentic.market/v1/services?limit=${limit}&offset=${offset}`, {
         headers: { "Accept": "application/json" },
-        next: { revalidate: 3600 } // Cache the response for 1 hour to prevent slow external API loading
+        cache: "no-store" // Disable Next.js fetch cache to prevent warnings about items over 2MB
       });
 
       if (!res.ok) {
@@ -59,6 +68,9 @@ export async function GET() {
         networks: s.networks || [],
       };
     });
+
+    cachedServices = services;
+    cacheTimestamp = now;
 
     return NextResponse.json({ services });
   } catch (error: any) {

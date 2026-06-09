@@ -40,13 +40,18 @@ let _usdcAddress: `0x${string}` | null = null;
 async function getUSDCAddress(): Promise<`0x${string}`> {
   if (_usdcAddress) return _usdcAddress;
 
-  const publicClient = getPublicClient();
-  const result = await publicClient.readContract({
-    address: AGENTIC_COMMERCE_ADDRESS,
-    abi: ABI,
-    functionName: "paymentToken",
-  });
-  _usdcAddress = result as `0x${string}`;
+  try {
+    const publicClient = getPublicClient();
+    const result = await publicClient.readContract({
+      address: AGENTIC_COMMERCE_ADDRESS,
+      abi: ABI,
+      functionName: "paymentToken",
+    });
+    _usdcAddress = result as `0x${string}`;
+  } catch (error) {
+    console.warn("[USDC] Failed to fetch USDC address from AgenticCommerce contract, using fallback:", error);
+    _usdcAddress = (process.env.NEXT_PUBLIC_USDC_CONTRACT_ADDRESS as `0x${string}`) || "0x3600000000000000000000000000000000000000";
+  }
   return _usdcAddress;
 }
 
