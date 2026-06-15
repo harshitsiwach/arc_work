@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Bot, Package, Briefcase } from "lucide-react";
+import { Bot, Package, Briefcase, Medal } from "lucide-react";
 
 interface SidebarLink {
   href: string;
@@ -13,6 +13,7 @@ interface SidebarLink {
 
 const marketplaceLinks: SidebarLink[] = [
   { href: "/marketplace/agents", label: "Agents", icon: Bot },
+  { href: "/marketplace/bounties", label: "Bounties", icon: Medal },
   { href: "/marketplace/products", label: "Products", icon: Package },
   { href: "/marketplace/jobs", label: "Jobs", icon: Briefcase },
 ];
