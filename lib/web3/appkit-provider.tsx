@@ -2,7 +2,7 @@
 
 import { createAppKit } from '@reown/appkit/react';
 import { WagmiAdapter } from '@reown/appkit-adapter-wagmi';
-import { AppKitNetwork, sepolia, baseSepolia, arbitrumSepolia, defineChain } from '@reown/appkit/networks';
+import { AppKitNetwork, sepolia, baseSepolia, arbitrumSepolia, defineChain, base } from '@reown/appkit/networks';
 import { WagmiProvider } from 'wagmi';
 import { http } from 'viem';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -43,7 +43,7 @@ export const customSepolia = {
   }
 } as AppKitNetwork;
 
-const networks = [customSepolia, baseSepolia, arbitrumSepolia, arcTestnet] as [AppKitNetwork, ...AppKitNetwork[]];
+const networks = [customSepolia, baseSepolia, arbitrumSepolia, arcTestnet, base] as [AppKitNetwork, ...AppKitNetwork[]];
 
 // Custom transports with batching to reduce individual RPC calls and avoid rate limits
 const transports = {
@@ -62,6 +62,10 @@ const transports = {
   [arcTestnet.id]: http('https://rpc.quicknode.testnet.arc.network', { 
     batch: true, 
     retryCount: 1, 
+  }),
+  [base.id]: http('https://mainnet.base.org', {
+    batch: true,
+    retryCount: 1,
   }),
 };
 
@@ -108,3 +112,5 @@ export function AppKitProvider({ children }: { children: React.ReactNode }) {
     </WagmiProvider>
   );
 }
+
+export { base };
