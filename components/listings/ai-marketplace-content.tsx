@@ -11,7 +11,6 @@ import {
   Mic, BarChart3, MessageSquare, Code, Layers, Shield,
   Sparkles, Unlock,
 } from "lucide-react";
-import { OpenAI, Anthropic, Exa } from "@lobehub/icons";
 import { toast } from "sonner";
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from "@/components/ui/dialog";
@@ -47,12 +46,12 @@ const ECOSYSTEM_SIGNALS: Record<string, string> = {
 };
 
 const FEATURED_PROVIDERS: { name: string; desc: string; category: string; users: string; icon?: React.ElementType; iconSrc?: string; brand: boolean }[] = [
-  { name: "OpenAI", desc: "GPT-4o, o1, DALL-E — leading AI models", category: "Inference", users: "12.4k", icon: OpenAI, brand: true },
-  { name: "Anthropic", desc: "Claude — advanced reasoning & analysis", category: "Inference", users: "8.9k", icon: Anthropic, brand: true },
+  { name: "OpenAI", desc: "GPT-4o, o1, DALL-E — leading AI models", category: "Inference", users: "12.4k", icon: OpenAIIcon, brand: true },
+  { name: "Anthropic", desc: "Claude — advanced reasoning & analysis", category: "Inference", users: "8.9k", icon: AnthropicIcon, brand: true },
   { name: "Deepgram", desc: "Real-time speech-to-text & transcription", category: "Voice", users: "4.2k", iconSrc: "/icons/ai/deepgram.svg", brand: false },
   { name: "ElevenLabs", desc: "Premium AI voice generation & cloning", category: "Voice", users: "6.1k", iconSrc: "/icons/ai/elevenlabs.svg", brand: false },
   { name: "Tavily", desc: "AI-optimized search & research API", category: "Search", users: "5.7k", iconSrc: "/icons/ai/tavily.svg", brand: false },
-  { name: "Exa", desc: "Neural search for AI applications", category: "Search", users: "3.4k", icon: Exa, brand: true },
+  { name: "Exa", desc: "Neural search for AI applications", category: "Search", users: "3.4k", icon: ExaIcon, brand: true },
   { name: "The Graph", desc: "Decentralized indexing for blockchain data", category: "Blockchain", users: "7.8k", iconSrc: "/icons/ai/thegraph.svg", brand: false },
 ];
 
@@ -72,6 +71,36 @@ interface ToolService {
   endpoints: { url: string; method: string; description: string; price: string }[];
   source: string;
   networks: string[];
+}
+
+/* ── Brand Icon SVGs ──────────────────────────────────────── */
+
+function OpenAIIcon({ size = 20, ...props }: { size?: number; [key: string]: any }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" {...props}>
+      <circle cx="16" cy="16" r="16" fill="#10A37F" />
+      <path d="M16 6c-2.2 0-4 1.8-4 4v1.5c0 .6.5 1 1 1h5c1.7 0 3 1.3 3 3s-1.3 3-3 3h-4c-.6 0-1 .5-1 1V22c0 2.2 1.8 4 4 4s4-1.8 4-4h-2c0 1.1-.9 2-2 2s-2-.9-2-2v-2.5c0-.6.5-1 1-1h3c2.8 0 5-2.2 5-5s-2.2-5-5-5h-2V10c0-1.1.9-2 2-2s2 .9 2 2h2c0-2.2-1.8-4-4-4z" fill="white" />
+      <path d="M12 12c-2.8 0-5 2.2-5 5s2.2 5 5 5h2v-2h-2c-1.7 0-3-1.3-3-3s1.3-3 3-3h4c.6 0 1-.5 1-1V10c0-2.2-1.8-4-4-4s-4 1.8-4 4h2c0-1.1.9-2 2-2s2 .9 2 2v1.5c0 .6-.5 1-1 1h-3z" fill="white" />
+    </svg>
+  );
+}
+
+function AnthropicIcon({ size = 20, ...props }: { size?: number; [key: string]: any }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" {...props}>
+      <circle cx="16" cy="16" r="16" fill="#C9B8F5" />
+      <text x="16" y="22" textAnchor="middle" fill="black" fontSize="16" fontWeight="bold" fontFamily="serif">C</text>
+    </svg>
+  );
+}
+
+function ExaIcon({ size = 20, ...props }: { size?: number; [key: string]: any }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" {...props}>
+      <circle cx="16" cy="16" r="16" fill="#1A1A2E" />
+      <text x="16" y="22" textAnchor="middle" fill="white" fontSize="14" fontWeight="bold" fontFamily="Arial">E</text>
+    </svg>
+  );
 }
 
 export function AIMarketplaceContent() {
