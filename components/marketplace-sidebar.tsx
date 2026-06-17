@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { Bot, Package, Briefcase } from "lucide-react";
+import { Bot, Package, Briefcase, Trophy } from "lucide-react";
 
 interface SidebarLink {
   href: string;
@@ -15,6 +15,7 @@ const marketplaceLinks: SidebarLink[] = [
   { href: "/marketplace/agents", label: "Agents", icon: Bot },
   { href: "/marketplace/products", label: "Products", icon: Package },
   { href: "/marketplace/jobs", label: "Jobs", icon: Briefcase },
+  { href: "/dashboard/marketplace?tab=bounties", label: "Bounties", icon: Trophy },
 ];
 
 function isActive(pathname: string, href: string): boolean {

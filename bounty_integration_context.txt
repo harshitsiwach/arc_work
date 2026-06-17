@@ -1,0 +1,471 @@
+# BOUNTY BOARD INTEGRATION — arc_work
+# Full context for AI coding agent
+# Project: https://github.com/harshitsiwach/arc_work
+# Date: June 17, 2026
+
+================================================================================
+## 1. WHAT WE ARE BUILDING
+================================================================================
+
+Add a "Bounties" tab inside the existing Marketplace section of the arc_work app.
+Inspired by Pump.fun GO ("pay anyone to do anything"), but better:
+- Decentralized moderation instead of centralized
+- AI agents can post AND complete bounties (not just humans)
+- USDC escrow on Arc Testnet (not SOL)
+- OpenAI-powered deliverable validation built in
+- Integrated into existing Whop+Fiverr-style platform for humans and AI agents
+
+This is NOT a new app. It is a new tab/feature inside the existing dashboard.
+
+================================================================================
+## 2. EXISTING STACK (DO NOT REINSTALL OR RECONFIGURE ANY OF THIS)
+================================================================================
+
+- Framework:        Next.js (App Router, TypeScript strict mode)
+- Auth + DB:        Supabase (auth, Postgres, Realtime subscriptions)
+- Wallet:           Circle Developer Controlled Wallets + Reown AppKit
+                    Adapter: @circle-fin/adapter-viem-v2
+                    Provider: lib/web3/appkit-provider.tsx (Arc Testnet already registered)
+- Smart Contracts:  @circle-fin/smart-contract-platform
+                    ERC-8183 already implemented in /contract and /hooks
+- Payments:         USDC on Arc Testnet via x402 protocol
+                    Circle CCTP bridge + Fly DEX swap already configured
+- AI Validation:    OpenAI (vision models) — existing client in lib/openai or similar
+- Styling:          Tailwind CSS + shadcn/ui (components.json present)
+- Agent Identity:   .agents/skills folder — ERC-8004 scaffolded
+- Network:          Arc Testnet | Chain ID: 5042002 | RPC: https://rpc.testnet.arc.network
+- USDC Address:     0x36000 (Arc Testnet)
+
+================================================================================
+## 3. HOW BOUNTIES FIT INTO THE EXISTING ARCHITECTURE
+================================================================================
+
+Existing escrow flow:
+  Creator → selects specific worker → private agreement → escrow → validate → release
+
+Bounty flow (same mechanics, public-facing):
+  Creator → posts publicly → anyone applies → escrow → validate → release
+
+Reuse mapping:
+  Circle Dev Controlled Wallets + USDC   →  bounty funding/escrow
+  OpenAI vision model                     →  deliverable validation
+  Supabase Realtime                       →  live bounty board updates
+  AppKit + viem adapter                   →  wallet interactions (zero changes)
+  @circle-fin/smart-contract-platform     →  deploy BountyEscrow.sol
+  .agents/skills + ERC-8004               →  agents as bounty posters/submitters
+  x402 payment protocol                   →  USDC payout pipeline
+
+================================================================================
+## 4. WHERE IT LIVES IN THE APP
+================================================================================
+
+Route: /dashboard/marketplace?tab=bounties
+Detail: /dashboard/marketplace/bounties/[id]
+
+Modify the existing marketplace page to read a `tab` query param and render
+<BountyBoard /> when tab=bounties. Do NOT add a new sidebar item — it's a tab
+inside the existing Marketplace page alongside existing tabs (Services, Agents, etc.)
+
+================================================================================
+## 5. DATABASE SCHEMA (append to supabase_setup.sql — DO NOT replace existing tables)
+================================================================================
+
+-- Bounties table
+CREATE TABLE bounties (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  creator_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  description TEXT NOT NULL,
+  reward_usdc NUMERIC(18,6) NOT NULL,
+  deadline TIMESTAMPTZ NOT NULL,
+  worker_type TEXT NOT NULL CHECK (worker_type IN ('HUMAN', 'AGENT', 'BOTH')),
+  status TEXT NOT NULL DEFAULT 'OPEN' CHECK (status IN ('OPEN', 'FUNDED', 'SUBMITTED', 'COMPLETED', 'REFUNDED', 'DISPUTED')),
+  winner_id UUID REFERENCES auth.users(id),
+  contract_bounty_id TEXT,
+  escrow_tx_hash TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Submissions table
+CREATE TABLE bounty_submissions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  bounty_id UUID REFERENCES bounties(id) ON DELETE CASCADE,
+  submitter_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  proof_hash TEXT NOT NULL,
+  proof_url TEXT,
+  notes TEXT,
+  status TEXT NOT NULL DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'APPROVED', 'REJECTED')),
+  ai_validation_score NUMERIC,
+  ai_validation_notes TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- RLS
+ALTER TABLE bounties ENABLE ROW LEVEL SECURITY;
+ALTER TABLE bounty_submissions ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Anyone can read open bounties" ON bounties FOR SELECT USING (true);
+CREATE POLICY "Creator can insert bounty" ON bounties FOR INSERT WITH CHECK (auth.uid() = creator_id);
+CREATE POLICY "Creator can update own bounty" ON bounties FOR UPDATE USING (auth.uid() = creator_id);
+CREATE POLICY "Anyone can read submissions" ON bounty_submissions FOR SELECT USING (true);
+CREATE POLICY "Submitter can insert" ON bounty_submissions FOR INSERT WITH CHECK (auth.uid() = submitter_id);
+
+================================================================================
+## 6. SMART CONTRACT (contracts/BountyEscrow.sol)
+================================================================================
+
+Write NEW file — do NOT modify existing contracts in /contract.
+Use Solidity ^0.8.20 with OpenZeppelin.
+
+Libraries: SafeERC20, ReentrancyGuard, AccessControl, Pausable
+
+Roles: MODERATOR_ROLE, ADMIN_ROLE
+
+Enums:
+  WorkerType  { HUMAN, AGENT, BOTH }
+  BountyStatus { OPEN, FUNDED, SUBMITTED, COMPLETED, REFUNDED, DISPUTED }
+
+Structs:
+  Bounty {
+    uint256 id;
+    address creator;
+    uint256 reward;
+    uint256 deadline;
+    WorkerType workerType;
+    BountyStatus status;
+    address winner;
+    uint256 submissionCount;
+  }
+
+  Submission {
+    uint256 id;
+    uint256 bountyId;
+    address submitter;
+    bytes32 proofHash;
+    uint256 submittedAt;
+    bool isApproved;
+  }
+
+Functions:
+  createBounty(string description, uint256 reward, uint256 deadline, WorkerType workerType)
+    → transfers USDC from creator into contract escrow, emits BountyCreated, returns bountyId
+
+  submitWork(uint256 bountyId, bytes32 proofHash)
+    → stores submission, increments submissionCount, emits WorkSubmitted
+
+  approveSubmission(uint256 bountyId, uint256 submissionId)
+    → MODERATOR_ROLE only, releases USDC to submitter, sets COMPLETED, emits SubmissionApproved + BountyCompleted
+
+  rejectSubmission(uint256 bountyId, uint256 submissionId)
+    → MODERATOR_ROLE only, emits SubmissionRejected
+
+  refundCreator(uint256 bountyId)
+    → callable by anyone after deadline if status != COMPLETED, returns USDC to creator, emits BountyRefunded
+
+  raiseDispute(uint256 bountyId)
+    → callable by creator or submitter, sets DISPUTED, emits DisputeRaised
+
+  getBounty(uint256 id) view returns (Bounty memory)
+  getSubmissions(uint256 bountyId) view returns (Submission[] memory)
+
+Security: ReentrancyGuard on all state-changing functions. SafeERC20 for all transfers.
+
+Events: BountyCreated, WorkSubmitted, SubmissionApproved, SubmissionRejected,
+        BountyCompleted, BountyRefunded, DisputeRaised
+
+================================================================================
+## 7. DEPLOY SCRIPT (scripts/deployBounty.ts)
+================================================================================
+
+Hardhat deploy script:
+- Deploy BountyEscrow.sol to Arc Testnet
+- Constructor args: USDC address = 0x36000
+- Grant MODERATOR_ROLE to deployer address
+- Save output to deployments/bounty-escrow-arc-testnet.json:
+  { address, abi, deployedAt, network: "arc-testnet", chainId: 5042002 }
+
+================================================================================
+## 8. HOOKS (hooks/useBounty.ts) — NEW FILE
+================================================================================
+
+Reuse existing viem adapter pattern from lib/web3/appkit-provider.tsx.
+DO NOT create a new wallet provider. Import contract ABI from constants/BountyEscrowABI.ts.
+Import Supabase client from existing lib/supabase (or wherever it already lives).
+Import OpenAI client from existing setup.
+
+--- useCreateBounty() ---
+  1. Call USDC.approve(bountyEscrowAddress, reward) via existing wallet
+  2. Call BountyEscrow.createBounty(description, reward, deadline, workerType)
+  3. Insert row into Supabase `bounties` table with returned contract bounty ID + tx hash
+  Returns: { createBounty(params), isLoading, error, txHash }
+
+  params type:
+  {
+    title: string
+    description: string
+    rewardUsdc: string        // human-readable, e.g. "50.00"
+    deadline: Date
+    workerType: 'HUMAN' | 'AGENT' | 'BOTH'
+  }
+
+--- useSubmitWork() ---
+  1. Accept File object from user
+  2. Upload to IPFS via https://api.web3.storage (token: NEXT_PUBLIC_WEB3_STORAGE_TOKEN)
+  3. Convert returned CID to bytes32
+  4. Call BountyEscrow.submitWork(bountyId, proofHash)
+  5. Insert row into Supabase `bounty_submissions`
+  6. POST to /api/bounties/validate with { proofUrl, bountyDescription, submissionId }
+     (fire-and-forget, don't block the tx)
+  Returns: { submitWork(bountyId, file, notes?), isLoading, error, txHash }
+
+--- useBounties(filters?) ---
+  filters type: { status?: string, workerType?: string, minReward?: number, maxReward?: number }
+  1. Query Supabase `bounties` table with filters
+  2. Subscribe to Supabase Realtime on `bounties` table for live inserts/updates
+  3. Unsubscribe on unmount
+  Returns: { bounties, isLoading, error }
+
+--- useBountyById(id: string) ---
+  1. Fetch single bounty from Supabase by id
+  2. Fetch all submissions for that bounty
+  Returns: { bounty, submissions, isLoading, error }
+
+--- useApproveSubmission() ---
+  1. Call BountyEscrow.approveSubmission(bountyId, submissionId) (requires MODERATOR_ROLE wallet)
+  2. Update Supabase: submission status → 'APPROVED', bounty status → 'COMPLETED', winner_id → submitter_id
+  Returns: { approve(bountyId, submissionId), isLoading, error }
+
+--- useRefundCreator() ---
+  1. Call BountyEscrow.refundCreator(bountyId)
+  2. Update Supabase: bounty status → 'REFUNDED'
+  Returns: { refund(bountyId), isLoading, error }
+
+================================================================================
+## 9. API ROUTE (app/api/bounties/validate/route.ts)
+================================================================================
+
+POST handler only. Body: { proofUrl: string, bountyDescription: string, submissionId: string }
+
+1. Call OpenAI (reuse existing client) with:
+   - Model: gpt-4o (vision capable)
+   - Prompt: "You are validating a bounty submission. Bounty description: [bountyDescription].
+     The submitter provided this proof: [proofUrl].
+     Rate how well this proof satisfies the bounty requirements.
+     Return JSON: { score: number between 0 and 1, notes: string (1-2 sentences) }"
+2. Parse response → { score, notes }
+3. Update Supabase `bounty_submissions`:
+   SET ai_validation_score = score, ai_validation_notes = notes WHERE id = submissionId
+4. Return { score, notes }
+
+================================================================================
+## 10. UI COMPONENTS (components/bounty/)
+================================================================================
+
+Use existing shadcn/ui components. Match existing app design (Tailwind, dark theme).
+All components: named exports, TypeScript strict, handle loading/empty/error states.
+
+--- BountyBoard.tsx ---
+Props: none (reads from useBounties hook)
+Layout:
+  - Top bar: tab filters (All / Open / In Progress / Completed) + workerType toggle (Human / Agent / Both) + reward range
+  - "Post Bounty" button (primary, top right) → opens PostBountyModal
+  - Responsive grid: 1 col mobile / 2 col tablet / 3 col desktop
+  - Maps bounties → <BountyCard />
+  - Empty state: "No bounties yet. Be the first to post one."
+  - Loading state: skeleton cards
+
+--- BountyCard.tsx ---
+Props: { bounty: BountyRow }
+Shows:
+  - Title (truncated at 2 lines)
+  - Reward in USDC (bold, prominent)
+  - Deadline as relative time ("3 days left" / "Expired")
+  - workerType badge: Human 👤 / Agent 🤖 / Both
+  - Status badge (color-coded: green=OPEN, yellow=SUBMITTED, blue=COMPLETED, red=DISPUTED)
+  - Submission count ("5 submissions")
+  - Click → router.push(`/dashboard/marketplace/bounties/${bounty.id}`)
+
+--- PostBountyModal.tsx ---
+Two-step modal using shadcn Dialog:
+  Step 1 — Form:
+    - title (Input, required)
+    - description (Textarea, required)
+    - reward (Input type=number, label "USDC Reward", min 1)
+    - deadline (shadcn DatePicker, must be future date)
+    - workerType (RadioGroup: Human / AI Agent / Both)
+    - "Continue" button → validates, moves to Step 2
+
+  Step 2 — Confirm & Pay:
+    - Summary of bounty details
+    - Warning: "Funds will be locked until a submission is approved or deadline passes"
+    - "Approve USDC & Post Bounty" button
+    - On click: calls useCreateBounty() → shows tx pending spinner
+    - On success: close modal, show shadcn toast "Bounty posted!", board refreshes via Realtime
+    - On error: show inline error, stay on Step 2
+
+--- BountyDetailPage.tsx ---
+Props: { bountyId: string }
+Uses: useBountyById(bountyId)
+
+Layout:
+  - Header: title, reward (large), status badge, deadline, workerType badge
+  - Description (full text)
+  - Creator info (avatar + address truncated)
+  - Conditional action buttons:
+    - If session.user.id === bounty.creator_id AND deadline passed AND status !== COMPLETED:
+      → "Claim Refund" button → useRefundCreator()
+    - If wallet has MODERATOR_ROLE AND status === 'SUBMITTED':
+      → Per submission: "Approve" / "Reject" buttons
+    - If user hasn't submitted AND bounty.status === 'OPEN' AND user is not creator:
+      → "Submit Work" button → opens SubmissionModal
+  - Submissions section:
+    - List of SubmissionCard components:
+      - Submitter address (truncated)
+      - Submitted at (relative time)
+      - Proof link (IPFS URL, opens in new tab)
+      - Notes
+      - AI validation score badge (0-100%, color: green >70, yellow 40-70, red <40)
+      - Status badge
+
+--- SubmissionModal.tsx ---
+shadcn Dialog:
+  - File upload input (accepts image/*, application/pdf, .zip)
+    OR toggle to URL/hash text input
+  - Notes textarea (optional)
+  - "Submit Work" button → calls useSubmitWork(bountyId, file, notes)
+  - Shows upload progress bar (IPFS upload) then tx pending state
+  - On success: close modal, show toast "Work submitted!", detail page refreshes
+
+================================================================================
+## 11. PAGES
+================================================================================
+
+--- app/dashboard/marketplace/page.tsx (MODIFY EXISTING) ---
+Add a "Bounties" tab to the existing tab bar.
+When tab=bounties: render <BountyBoard />
+Use searchParams to read the active tab:
+  const tab = searchParams.get('tab') ?? 'default'
+  if (tab === 'bounties') return <BountyBoard />
+
+--- app/dashboard/marketplace/bounties/[id]/page.tsx (CREATE NEW) ---
+  import { BountyDetailPage } from '@/components/bounty/BountyDetailPage'
+  export default function Page({ params }) {
+    return <BountyDetailPage bountyId={params.id} />
+  }
+
+================================================================================
+## 12. CONSTANTS (constants/BountyEscrowABI.ts)
+================================================================================
+
+After contract is compiled, export the ABI as a typed const:
+  export const BOUNTY_ESCROW_ABI = [...] as const
+  export const BOUNTY_ESCROW_ADDRESS = process.env.NEXT_PUBLIC_BOUNTY_ESCROW_ADDRESS as `0x${string}`
+
+================================================================================
+## 13. ENV ADDITIONS (.env.example — append only)
+================================================================================
+
+# Bounty Escrow Contract (Arc Testnet)
+NEXT_PUBLIC_BOUNTY_ESCROW_ADDRESS=
+
+# IPFS storage for submission proof uploads
+NEXT_PUBLIC_WEB3_STORAGE_TOKEN=
+
+================================================================================
+## 14. COMPLETE BOUNTY LIFECYCLE (end-to-end flow)
+================================================================================
+
+POST A BOUNTY:
+  1. User opens Marketplace → clicks Bounties tab
+  2. Clicks "Post Bounty" → PostBountyModal opens
+  3. Fills form → Step 2: approves USDC + calls BountyEscrow.createBounty()
+  4. USDC locked in contract escrow
+  5. Supabase row inserted with contract_bounty_id + escrow_tx_hash
+  6. Bounty appears live on board (Supabase Realtime pushes to all viewers)
+
+SUBMIT WORK:
+  7. Another user (human or AI agent) clicks bounty → BountyDetailPage
+  8. Clicks "Submit Work" → SubmissionModal
+  9. Uploads file → goes to IPFS → CID converted to bytes32
+  10. BountyEscrow.submitWork(bountyId, proofHash) called on-chain
+  11. Supabase submission row inserted
+  12. /api/bounties/validate fires → OpenAI scores the submission → score saved to DB
+  13. Creator sees submission with AI score in BountyDetailPage
+
+RESOLUTION:
+  APPROVE:  Moderator clicks Approve → BountyEscrow.approveSubmission()
+            → USDC released to winner's wallet → bounty COMPLETED
+  REJECT:   Moderator rejects → submitter can resubmit (if deadline not passed)
+  DISPUTE:  Creator or submitter raises dispute → 48hr manual review window
+  REFUND:   Deadline passes, no winner → creator calls refundCreator() → USDC returned
+
+================================================================================
+## 15. AI AGENT PARTICIPATION (key differentiator vs Pump.fun GO)
+================================================================================
+
+Pump.fun GO only allows humans. Your app allows AI agents natively:
+
+- Agents can POST bounties: createBounty() called from agent wallet
+- Agents can SUBMIT to bounties: submitWork() called from agent contract address
+  → contract checks the submitter address, doesn't care if it's human or smart contract
+- Agent capability matching: when bounty workerType=AGENT, match against ERC-8004
+  capability claims in .agents/skills to auto-suggest or auto-bid on bounties
+- Agents get paid directly to their wallet/contract address via approveSubmission()
+
+================================================================================
+## 16. FILES TO CREATE / MODIFY (complete list)
+================================================================================
+
+MODIFY (2 files):
+  app/dashboard/marketplace/page.tsx       ← add Bounties tab
+  supabase_setup.sql                       ← append bounties + bounty_submissions tables
+
+CREATE (10 files):
+  contracts/BountyEscrow.sol
+  scripts/deployBounty.ts
+  hooks/useBounty.ts
+  app/api/bounties/validate/route.ts
+  app/dashboard/marketplace/bounties/[id]/page.tsx
+  components/bounty/BountyBoard.tsx
+  components/bounty/BountyCard.tsx
+  components/bounty/PostBountyModal.tsx
+  components/bounty/BountyDetailPage.tsx
+  components/bounty/SubmissionModal.tsx
+  constants/BountyEscrowABI.ts             ← after contract is compiled
+  deployments/bounty-escrow-arc-testnet.json
+
+================================================================================
+## 17. HARD CONSTRAINTS
+================================================================================
+
+- NEVER use localStorage or sessionStorage anywhere
+- NEVER reinstall or reconfigure AppKit, Supabase, Circle wallets, x402, or OpenAI
+- NEVER modify existing contracts in /contract folder
+- NEVER create a new wallet provider — reuse lib/web3/appkit-provider.tsx
+- ALL new Supabase queries must use existing RLS patterns
+- OpenAI validation is SERVER-SIDE ONLY (API route, never client)
+- TypeScript strict — no `any` types anywhere
+- Named exports for all components (no default exports except page files)
+- All components must handle: loading state, empty state, error state
+- External links (IPFS proof URLs) must use target="_blank" rel="noopener noreferrer"
+- Match existing app code style exactly
+
+================================================================================
+## 18. EXECUTION ORDER (pause for confirmation between each)
+================================================================================
+
+  STEP 1: Task DB    → Append schema to supabase_setup.sql, run migration, confirm tables exist
+  STEP 2: Task SC    → Write BountyEscrow.sol, compile only (don't deploy yet), fix any errors
+  STEP 3: Task DS    → Write deployBounty.ts, review together before running
+  STEP 4: Deploy     → Run deploy script, save address to .env + deployments/bounty-escrow-arc-testnet.json
+  STEP 5: Task ABI   → Export ABI to constants/BountyEscrowABI.ts
+  STEP 6: Task Hooks → Write hooks/useBounty.ts using deployed contract address
+  STEP 7: Task API   → Write app/api/bounties/validate/route.ts
+  STEP 8: Task UI    → Write all 5 components in components/bounty/
+  STEP 9: Task Pages → Create bounties/[id]/page.tsx + modify marketplace/page.tsx
+  STEP 10: Task Env  → Append to .env.example
+
+================================================================================
+## END OF CONTEXT FILE
+================================================================================
