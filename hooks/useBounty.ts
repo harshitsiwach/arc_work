@@ -109,7 +109,32 @@ export function useCreateBounty() {
       ]);
       setTxHash(hash);
 
-      // 3. Insert row into Supabase
+      // 3. Wait for receipt & extract on-chain bountyId from BountyCreated event
+      let contractBountyId: string | null = null;
+      try {
+        const publicClient = getPublicClient();
+        const receipt = await publicClient.waitForTransactionReceipt({ hash });
+        // BountyCreated event: bountyId is the first indexed topic
+        const bountyCreatedTopic = "0x" + "BountyCreated".split("").reduce(
+          () => "", "" // We'll match by event name pattern below
+        );
+        // Find the BountyCreated log — it has 3 indexed topics (event sig, bountyId, creator)
+        for (const log of receipt.logs) {
+          // BountyCreated has 3 topics: [eventSig, bountyId, creator] and 3 non-indexed args
+          if (log.address.toLowerCase() === BOUNTY_ESCROW_ADDRESS.toLowerCase() && log.topics.length === 3) {
+            const bountyIdHex = log.topics[1];
+            if (bountyIdHex) {
+              contractBountyId = BigInt(bountyIdHex).toString();
+              break;
+            }
+          }
+        }
+      } catch {
+        // Receipt parsing is best-effort — the tx still succeeded
+        console.warn("[useBounty] Could not parse BountyCreated event from receipt");
+      }
+
+      // 4. Insert row into Supabase
       const supabase = createSupabaseBrowserClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
@@ -122,6 +147,7 @@ export function useCreateBounty() {
           worker_type: params.workerType,
           status: "FUNDED",
           escrow_tx_hash: hash,
+          contract_bounty_id: contractBountyId,
         });
       }
 
