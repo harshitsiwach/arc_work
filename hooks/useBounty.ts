@@ -98,7 +98,11 @@ export function useCreateBounty() {
       const workerTypeNum = WORKER_TYPE_MAP[params.workerType] ?? 2;
 
       // 1. Approve USDC spend
-      await usdc.approveIfNeeded(BOUNTY_ESCROW_ADDRESS, rewardUnits);
+      const approveTxHash = await usdc.approveIfNeeded(BOUNTY_ESCROW_ADDRESS, rewardUnits);
+      if (approveTxHash) {
+        const publicClient = getPublicClient();
+        await publicClient.waitForTransactionReceipt({ hash: approveTxHash });
+      }
 
       // 2. Call createBounty on-chain
       const hash = await bountyWrite("createBounty", [
@@ -138,7 +142,7 @@ export function useCreateBounty() {
       const supabase = createSupabaseBrowserClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        await supabase.from("bounties").insert({
+        const { error: insertError } = await supabase.from("bounties").insert({
           creator_id: user.id,
           title: params.title,
           description: params.description,
@@ -149,6 +153,10 @@ export function useCreateBounty() {
           escrow_tx_hash: hash,
           contract_bounty_id: contractBountyId,
         });
+        if (insertError) {
+          console.error("[useCreateBounty] Database insert error:", insertError);
+          throw new Error(`Failed to save bounty to database: ${insertError.message}`);
+        }
       }
 
       return hash;
@@ -207,7 +215,7 @@ export function useSubmitWork() {
       }
 
       // Insert submission into Supabase
-      const { data: submission } = await supabase.from("bounty_submissions").insert({
+      const { data: submission, error: submitError } = await supabase.from("bounty_submissions").insert({
         bounty_id: bountyId,
         submitter_id: user.id,
         proof_hash: proofHash,
@@ -216,8 +224,17 @@ export function useSubmitWork() {
         status: "PENDING",
       }).select("id").single();
 
+      if (submitError) {
+        console.error("[useSubmitWork] Database insert error:", submitError);
+        throw new Error(`Failed to save submission to database: ${submitError.message}`);
+      }
+
       // Update bounty status to SUBMITTED
-      await supabase.from("bounties").update({ status: "SUBMITTED" }).eq("id", bountyId);
+      const { error: updateError } = await supabase.from("bounties").update({ status: "SUBMITTED" }).eq("id", bountyId);
+      if (updateError) {
+        console.error("[useSubmitWork] Database update error:", updateError);
+        throw new Error(`Failed to update bounty status: ${updateError.message}`);
+      }
 
       // Fire-and-forget: AI validation
       if (submission?.id) {
