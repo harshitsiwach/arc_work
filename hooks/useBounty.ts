@@ -98,7 +98,11 @@ export function useCreateBounty() {
       const workerTypeNum = WORKER_TYPE_MAP[params.workerType] ?? 2;
 
       // 1. Approve USDC spend
-      await usdc.approveIfNeeded(BOUNTY_ESCROW_ADDRESS, rewardUnits);
+      const approveTxHash = await usdc.approveIfNeeded(BOUNTY_ESCROW_ADDRESS, rewardUnits);
+      if (approveTxHash) {
+        const publicClient = getPublicClient();
+        await publicClient.waitForTransactionReceipt({ hash: approveTxHash });
+      }
 
       // 2. Call createBounty on-chain
       const hash = await bountyWrite("createBounty", [
@@ -109,11 +113,36 @@ export function useCreateBounty() {
       ]);
       setTxHash(hash);
 
-      // 3. Insert row into Supabase
+      // 3. Wait for receipt & extract on-chain bountyId from BountyCreated event
+      let contractBountyId: string | null = null;
+      try {
+        const publicClient = getPublicClient();
+        const receipt = await publicClient.waitForTransactionReceipt({ hash });
+        // BountyCreated event: bountyId is the first indexed topic
+        const bountyCreatedTopic = "0x" + "BountyCreated".split("").reduce(
+          () => "", "" // We'll match by event name pattern below
+        );
+        // Find the BountyCreated log — it has 3 indexed topics (event sig, bountyId, creator)
+        for (const log of receipt.logs) {
+          // BountyCreated has 3 topics: [eventSig, bountyId, creator] and 3 non-indexed args
+          if (log.address.toLowerCase() === BOUNTY_ESCROW_ADDRESS.toLowerCase() && log.topics.length === 3) {
+            const bountyIdHex = log.topics[1];
+            if (bountyIdHex) {
+              contractBountyId = BigInt(bountyIdHex).toString();
+              break;
+            }
+          }
+        }
+      } catch {
+        // Receipt parsing is best-effort — the tx still succeeded
+        console.warn("[useBounty] Could not parse BountyCreated event from receipt");
+      }
+
+      // 4. Insert row into Supabase
       const supabase = createSupabaseBrowserClient();
       const { data: { user } } = await supabase.auth.getUser();
       if (user) {
-        await supabase.from("bounties").insert({
+        const { error: insertError } = await supabase.from("bounties").insert({
           creator_id: user.id,
           title: params.title,
           description: params.description,
@@ -122,7 +151,12 @@ export function useCreateBounty() {
           worker_type: params.workerType,
           status: "FUNDED",
           escrow_tx_hash: hash,
+          contract_bounty_id: contractBountyId,
         });
+        if (insertError) {
+          console.error("[useCreateBounty] Database insert error:", insertError);
+          throw new Error(`Failed to save bounty to database: ${insertError.message}`);
+        }
       }
 
       return hash;
@@ -181,7 +215,7 @@ export function useSubmitWork() {
       }
 
       // Insert submission into Supabase
-      const { data: submission } = await supabase.from("bounty_submissions").insert({
+      const { data: submission, error: submitError } = await supabase.from("bounty_submissions").insert({
         bounty_id: bountyId,
         submitter_id: user.id,
         proof_hash: proofHash,
@@ -190,8 +224,17 @@ export function useSubmitWork() {
         status: "PENDING",
       }).select("id").single();
 
+      if (submitError) {
+        console.error("[useSubmitWork] Database insert error:", submitError);
+        throw new Error(`Failed to save submission to database: ${submitError.message}`);
+      }
+
       // Update bounty status to SUBMITTED
-      await supabase.from("bounties").update({ status: "SUBMITTED" }).eq("id", bountyId);
+      const { error: updateError } = await supabase.from("bounties").update({ status: "SUBMITTED" }).eq("id", bountyId);
+      if (updateError) {
+        console.error("[useSubmitWork] Database update error:", updateError);
+        throw new Error(`Failed to update bounty status: ${updateError.message}`);
+      }
 
       // Fire-and-forget: AI validation
       if (submission?.id) {
