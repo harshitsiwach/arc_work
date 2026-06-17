@@ -43,6 +43,7 @@ interface BountyFilters {
   workerType?: string;
   minReward?: number;
   maxReward?: number;
+  creatorId?: string;
 }
 
 interface CreateBountyParams {
@@ -90,8 +91,14 @@ export function useCreateBounty() {
     setError(null);
     setTxHash(null);
     try {
+      // 0. Validate & check auth before any on-chain tx
       const rewardFloat = parseFloat(params.rewardUsdc);
       if (isNaN(rewardFloat) || rewardFloat <= 0) throw new Error("Invalid reward amount");
+
+      const supabase = createSupabaseBrowserClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("You must be signed in to create a bounty.");
+      if (!user.id) throw new Error("Unable to verify your identity. Try signing in again.");
 
       const rewardUnits = usdcToUnits(rewardFloat);
       const deadlineUnix = BigInt(Math.floor(params.deadline.getTime() / 1000));
@@ -118,13 +125,7 @@ export function useCreateBounty() {
       try {
         const publicClient = getPublicClient();
         const receipt = await publicClient.waitForTransactionReceipt({ hash });
-        // BountyCreated event: bountyId is the first indexed topic
-        const bountyCreatedTopic = "0x" + "BountyCreated".split("").reduce(
-          () => "", "" // We'll match by event name pattern below
-        );
-        // Find the BountyCreated log — it has 3 indexed topics (event sig, bountyId, creator)
         for (const log of receipt.logs) {
-          // BountyCreated has 3 topics: [eventSig, bountyId, creator] and 3 non-indexed args
           if (log.address.toLowerCase() === BOUNTY_ESCROW_ADDRESS.toLowerCase() && log.topics.length === 3) {
             const bountyIdHex = log.topics[1];
             if (bountyIdHex) {
@@ -134,29 +135,24 @@ export function useCreateBounty() {
           }
         }
       } catch {
-        // Receipt parsing is best-effort — the tx still succeeded
         console.warn("[useBounty] Could not parse BountyCreated event from receipt");
       }
 
       // 4. Insert row into Supabase
-      const supabase = createSupabaseBrowserClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { error: insertError } = await supabase.from("bounties").insert({
-          creator_id: user.id,
-          title: params.title,
-          description: params.description,
-          reward_usdc: rewardFloat,
-          deadline: params.deadline.toISOString(),
-          worker_type: params.workerType,
-          status: "FUNDED",
-          escrow_tx_hash: hash,
-          contract_bounty_id: contractBountyId,
-        });
-        if (insertError) {
-          console.error("[useCreateBounty] Database insert error:", insertError);
-          throw new Error(`Failed to save bounty to database: ${insertError.message}`);
-        }
+      const { error: insertError } = await supabase.from("bounties").insert({
+        creator_id: user.id,
+        title: params.title,
+        description: params.description,
+        reward_usdc: rewardFloat,
+        deadline: params.deadline.toISOString(),
+        worker_type: params.workerType,
+        status: "FUNDED",
+        escrow_tx_hash: hash,
+        contract_bounty_id: contractBountyId,
+      });
+      if (insertError) {
+        console.error("[useCreateBounty] Database insert error:", insertError);
+        throw new Error(`Failed to save bounty to database: ${insertError.message}`);
       }
 
       return hash;
@@ -294,12 +290,22 @@ export function useBounties(filters?: BountyFilters) {
         if (filters?.maxReward !== undefined) {
           query = query.lte("reward_usdc", filters.maxReward);
         }
+        if (filters?.creatorId) {
+          query = query.eq("creator_id", filters.creatorId);
+        }
 
         const { data, error: fetchError } = await query;
-        if (fetchError) throw fetchError;
+        if (fetchError) {
+          const msg = fetchError.message || "";
+          if (msg.includes("relation") && msg.includes("does not exist")) {
+            throw new Error("The bounties table has not been created yet. Run `npx supabase migration up` to apply the database migration.");
+          }
+          throw fetchError;
+        }
         setBounties((data as BountyRow[]) ?? []);
       } catch (err: unknown) {
-        setError(err instanceof Error ? err.message : "Failed to load bounties");
+        const message = err instanceof Error ? err.message : "Failed to load bounties";
+        setError(message);
       } finally {
         setIsLoading(false);
       }
@@ -307,7 +313,6 @@ export function useBounties(filters?: BountyFilters) {
 
     fetchBounties();
 
-    // Realtime subscription
     channel = supabase
       .channel("bounties-realtime")
       .on(
@@ -324,9 +329,38 @@ export function useBounties(filters?: BountyFilters) {
         supabase.removeChannel(channel);
       }
     };
-  }, [filters?.status, filters?.workerType, filters?.minReward, filters?.maxReward]);
+  }, [filters?.status, filters?.workerType, filters?.minReward, filters?.maxReward, filters?.creatorId]);
 
   return { bounties, isLoading, error };
+}
+
+// ---- useMyBounties ----
+
+export function useMyBounties() {
+  const [userId, setUserId] = useState<string | null>(null);
+  const [authChecked, setAuthChecked] = useState(false);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const supabase = createSupabaseBrowserClient();
+      const result = await supabase.auth.getUser();
+      const u = result.data?.user ?? null;
+      setUserId(u ? (u as { id: string }).id : null);
+      setAuthChecked(true);
+    };
+    fetchUser();
+  }, []);
+
+  // Wait for auth check before fetching; if authenticated, filter by creator
+  const filters: BountyFilters | undefined =
+    !authChecked ? undefined : userId ? { creatorId: userId } : { creatorId: "__none__" };
+
+  const result = useBounties(filters);
+
+  return {
+    ...result,
+    isLoading: !authChecked || result.isLoading,
+  };
 }
 
 // ---- useBountyById ----

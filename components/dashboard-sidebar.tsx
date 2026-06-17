@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
-  LayoutDashboard, Wallet, BarChart3, Package, Bot,
+  LayoutDashboard, Wallet, BarChart3, Package, Bot, Medal,
   BadgeCheck, User, Settings, Briefcase,
 } from "lucide-react";
 
@@ -29,6 +29,7 @@ const sidebarSections: { title: string; links: SidebarLink[] }[] = [
       { href: "/dashboard/work-center", label: "Work Center", icon: Briefcase },
       { href: "/dashboard/my-agents", label: "My Agents", icon: Bot },
       { href: "/dashboard/my-products", label: "My Products", icon: Package },
+      { href: "/dashboard/my-bounties", label: "My Bounties", icon: Medal },
     ],
   },
   {

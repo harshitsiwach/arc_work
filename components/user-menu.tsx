@@ -62,7 +62,11 @@ export function UserMenu({ email }: { email?: string }) {
           )}
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56">
+      <DropdownMenuContent align="end" className="w-56" style={{
+        backgroundColor: "var(--color-bg-elevated)",
+        borderColor: "var(--color-bd)",
+        boxShadow: "0 10px 40px oklch(0 0 0 / 0.35), 0 0 0 1px var(--color-bd)",
+      }}>
         <DropdownMenuLabel>
           <div className="flex flex-col">
             <span className="text-[13px] font-medium" style={{ color: "var(--color-fg)" }}>

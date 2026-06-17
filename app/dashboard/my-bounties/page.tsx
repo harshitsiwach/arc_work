@@ -1,34 +1,18 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Search, Trophy, Inbox } from "lucide-react";
-import { useBounties } from "@/hooks/useBounty";
-import { BountyCard } from "./BountyCard";
+import { Button } from "@/components/ui/button";
+import { Plus, Medal, Search, Inbox } from "lucide-react";
+import { useMyBounties } from "@/hooks/useBounty";
+import { BountyCard } from "@/components/bounty/BountyCard";
+import { PostBountyModal } from "@/components/bounty/PostBountyModal";
 import { motion } from "framer-motion";
 
-const STATUS_TABS = [
-  { key: "", label: "All" },
-  { key: "FUNDED", label: "Open" },
-  { key: "SUBMITTED", label: "In Progress" },
-  { key: "COMPLETED", label: "Completed" },
-] as const;
-
-const WORKER_TABS = [
-  { key: "", label: "All" },
-  { key: "HUMAN", label: "Human" },
-  { key: "AGENT", label: "Agent" },
-  { key: "BOTH", label: "Both" },
-] as const;
-
-export function BountyBoard() {
-  const [statusFilter, setStatusFilter] = useState("");
-  const [workerFilter, setWorkerFilter] = useState("");
+export default function MyBountiesPage() {
   const [search, setSearch] = useState("");
+  const [modalOpen, setModalOpen] = useState(false);
 
-  const { bounties, isLoading, error } = useBounties({
-    status: statusFilter || undefined,
-    workerType: workerFilter || undefined,
-  });
+  const { bounties, isLoading, error } = useMyBounties();
 
   const filtered = useMemo(() => {
     if (!search.trim()) return bounties;
@@ -44,22 +28,30 @@ export function BountyBoard() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2.5">
-            <Trophy size={22} style={{ color: "var(--color-accent)" }} />
+            <Medal size={22} style={{ color: "var(--color-accent)" }} />
             <h1 className="text-2xl font-bold tracking-tight" style={{ color: "var(--color-fg)" }}>
-              Bounty Board
+              My Bounties
             </h1>
           </div>
           <p className="text-sm mt-1" style={{ color: "var(--color-fg-secondary)" }}>
-            Browse all bounties. Open to humans and AI agents.
+            Create and manage your bounties.
           </p>
         </div>
+        <Button
+          size="sm"
+          onClick={() => setModalOpen(true)}
+          style={{ backgroundColor: "var(--color-accent)", color: "white" }}
+        >
+          <Plus className="mr-1.5 h-3.5 w-3.5" />
+          Post Bounty
+        </Button>
       </div>
 
       {/* Search */}
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: "var(--color-fg-muted)" }} />
         <input
-          placeholder="Search bounties..."
+          placeholder="Search your bounties..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="w-full pl-10 pr-4 py-2.5 rounded-lg text-sm"
@@ -70,51 +62,6 @@ export function BountyBoard() {
             color: "var(--color-fg)",
           }}
         />
-      </div>
-
-      {/* Filters */}
-      <div className="flex flex-wrap items-center gap-3">
-        {/* Status tabs */}
-        <div className="flex gap-1 rounded-lg p-0.5" style={{ backgroundColor: "var(--color-bg-inset)" }}>
-          {STATUS_TABS.map((tab) => {
-            const active = statusFilter === tab.key;
-            return (
-              <button
-                key={tab.key}
-                onClick={() => setStatusFilter(tab.key)}
-                className="px-3 py-1.5 rounded-md text-xs font-medium transition-colors"
-                style={{
-                  backgroundColor: active ? "var(--color-bg-elevated)" : "transparent",
-                  color: active ? "var(--color-fg)" : "var(--color-fg-muted)",
-                  boxShadow: active ? "0 1px 2px rgba(0,0,0,0.1)" : undefined,
-                }}
-              >
-                {tab.label}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Worker type tabs */}
-        <div className="flex gap-1 rounded-lg p-0.5" style={{ backgroundColor: "var(--color-bg-inset)" }}>
-          {WORKER_TABS.map((tab) => {
-            const active = workerFilter === tab.key;
-            return (
-              <button
-                key={tab.key}
-                onClick={() => setWorkerFilter(tab.key)}
-                className="px-3 py-1.5 rounded-md text-xs font-medium transition-colors"
-                style={{
-                  backgroundColor: active ? "var(--color-bg-elevated)" : "transparent",
-                  color: active ? "var(--color-fg)" : "var(--color-fg-muted)",
-                  boxShadow: active ? "0 1px 2px rgba(0,0,0,0.1)" : undefined,
-                }}
-              >
-                {tab.label}
-              </button>
-            );
-          })}
-        </div>
       </div>
 
       {/* Error State */}
@@ -130,7 +77,7 @@ export function BountyBoard() {
       {/* Loading State */}
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {Array.from({ length: 6 }).map((_, i) => (
+          {Array.from({ length: 3 }).map((_, i) => (
             <div
               key={i}
               className="rounded-xl border p-4 animate-pulse"
@@ -154,15 +101,24 @@ export function BountyBoard() {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="text-center py-16"
+          className="text-center py-16 rounded-xl border"
+          style={{ borderColor: "var(--color-bd)", backgroundColor: "var(--color-bg-elevated)" }}
         >
-          <Inbox size={40} className="mx-auto mb-3" style={{ color: "var(--color-fg-muted)" }} />
+          <Medal size={40} className="mx-auto mb-3" style={{ color: "var(--color-fg-muted)" }} />
           <h3 className="text-lg font-semibold mb-1" style={{ color: "var(--color-fg)" }}>
             No bounties yet
           </h3>
-          <p className="text-sm" style={{ color: "var(--color-fg-muted)" }}>
-            Bounties will appear here once posted.
+          <p className="text-sm mb-4" style={{ color: "var(--color-fg-muted)" }}>
+            Create your first bounty to start collaborating.
           </p>
+          <Button
+            size="sm"
+            onClick={() => setModalOpen(true)}
+            style={{ backgroundColor: "var(--color-accent)", color: "white" }}
+          >
+            <Plus className="mr-1.5 h-3.5 w-3.5" />
+            Post Bounty
+          </Button>
         </motion.div>
       ) : (
         /* Grid */
@@ -172,6 +128,8 @@ export function BountyBoard() {
           ))}
         </div>
       )}
+
+      <PostBountyModal open={modalOpen} onOpenChange={setModalOpen} />
     </div>
   );
 }
