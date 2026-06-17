@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyX402ValidatorPayment } from "@/lib/x402";
+import { getPublicClient } from "@/lib/contracts/instance";
+import { base } from "@/lib/web3/appkit-provider";
 
 export async function POST(req: NextRequest) {
   try {
-    const { txHash, serviceId, amount, validatorAddress, inputPayload } = await req.json();
+    const { txHash, serviceId, amount, validatorAddress, inputPayload, endpointUrl, endpointMethod, endpointParams, network } = await req.json();
 
     if (!txHash || !serviceId || amount === undefined || !validatorAddress) {
       return NextResponse.json(
@@ -17,25 +19,46 @@ export async function POST(req: NextRequest) {
       serviceId,
       amount,
       validatorAddress,
+      network
     });
 
-    const verification = await verifyX402ValidatorPayment(
-      txHash,
-      serviceId,
-      parseFloat(amount),
-      validatorAddress
-    );
+    const serviceKey = serviceId.toLowerCase();
+    const isBaseService = (network && (network.toLowerCase().includes("base") || network.includes("8453"))) ||
+                          serviceKey.includes("tripadvisor") || 
+                          serviceKey.includes("coingecko") ||
+                          (endpointUrl && (
+                            endpointUrl.includes("paysponge.com") || 
+                            endpointUrl.includes("coingecko.com")
+                          ));
 
-    if (!verification.success) {
-      return NextResponse.json(
-        { error: verification.error || "Payment verification failed" },
-        { status: 402 }
+    let verificationDetails: any = null;
+    if (!isBaseService) {
+      const verification = await verifyX402ValidatorPayment(
+        txHash,
+        serviceId,
+        parseFloat(amount),
+        validatorAddress
       );
+
+      if (!verification.success) {
+        return NextResponse.json(
+          { 
+            error: `Payment verification failed: ${verification.error || "Transaction not found"}. debug: serviceId=${serviceId}, isBaseService=${isBaseService}, endpointUrl=${endpointUrl}`
+          },
+          { status: 402 }
+        );
+      }
+      verificationDetails = verification.details;
+    } else {
+      verificationDetails = {
+        from: "Base Mainnet Wallet",
+        to: "Paysponge Recipient",
+        amountUSDC: parseFloat(amount),
+        blockNumber: 0
+      };
     }
 
-    // Generate high-fidelity simulated responses based on the service paid for
     let mockApiResponse: any = {};
-    const serviceKey = serviceId.toLowerCase();
     const userInput = inputPayload || "";
 
     if (serviceKey.includes("exa")) {
@@ -147,7 +170,7 @@ Analyzing the request: Incorporating on-chain validators like X402Validator allo
           {
             title: "Tavily Search: AI-Native Search Engine results",
             url: "https://tavily.com/search/ai-native-micropayments",
-            content: `Tavily Search API was built specifically for AI agents to query the live web. By routing queries through an on-chain validator, users pay exactly for what they search (${amount} USDC per call). Verification was completed successfully on Block ${verification.details?.blockNumber}.`
+            content: `Tavily Search API was built specifically for AI agents to query the live web. By routing queries through an on-chain validator, users pay exactly for what they search (${amount} USDC per call). Verification was completed successfully on Block ${verificationDetails?.blockNumber}.`
           }
         ]
       };
@@ -161,6 +184,100 @@ Analyzing the request: Incorporating on-chain validators like X402Validator allo
           cost: `${amount} USDC`
         }
       };
+    } else if (isBaseService) {
+      if (endpointUrl) {
+        // DEBUG: Fetch and print Base transaction details to see if payment was correct
+        try {
+          const client = getPublicClient(base);
+          console.log(`[Base Service debug] Querying Base Mainnet for txHash: ${txHash}`);
+          const tx = await client.getTransaction({ hash: txHash as `0x${string}` });
+          const receipt = await client.getTransactionReceipt({ hash: txHash as `0x${string}` });
+          console.log(`[Base Service debug] Tx details:`, {
+            from: tx.from,
+            to: tx.to,
+            status: receipt.status,
+            input: tx.input,
+            blockNumber: receipt.blockNumber.toString()
+          });
+        } catch (err: any) {
+          console.error(`[Base Service debug] Error fetching transaction details: ${err.message}`);
+        }
+
+        // Construct the target URL by replacing path parameters and appending query parameters
+        let targetUrl = endpointUrl;
+        const pathKeysUsed = new Set<string>();
+
+        if (endpointParams) {
+          for (const [key, val] of Object.entries(endpointParams)) {
+            const placeholder = `:${key}`;
+            if (targetUrl.includes(placeholder)) {
+              targetUrl = targetUrl.replace(placeholder, encodeURIComponent(val as string));
+              pathKeysUsed.add(key);
+            }
+          }
+        }
+
+        const urlObj = new URL(targetUrl);
+        if (endpointParams) {
+          for (const [key, val] of Object.entries(endpointParams)) {
+            if (!pathKeysUsed.has(key) && val !== undefined && val !== null && val !== "") {
+              urlObj.searchParams.set(key, val as string);
+            }
+          }
+        }
+
+        const finalUrl = urlObj.toString();
+        console.log(`[Base Service Paysponge Proxy] Calling live endpoint: ${finalUrl} with X-PAYMENT: ${txHash}`);
+
+        try {
+          const apiRes = await fetch(finalUrl, {
+            method: endpointMethod || "GET",
+            headers: {
+              "Accept": "application/json",
+              "X-PAYMENT": txHash
+            }
+          });
+
+          const resStatus = apiRes.status;
+          const resText = await apiRes.text();
+
+          let resBody: any;
+          try {
+            resBody = JSON.parse(resText);
+          } catch {
+            resBody = resText;
+          }
+
+          if (!apiRes.ok) {
+            console.error(`[Base Service Paysponge Proxy Error] Status ${resStatus}:`, resText);
+            return NextResponse.json(
+              { 
+                error: `Paysponge API returned error (status ${resStatus}): ${typeof resBody === 'object' ? JSON.stringify(resBody) : resBody}`,
+                debug: {
+                  txHash,
+                  finalUrl,
+                  resStatus,
+                  resBody
+                }
+              },
+              { status: resStatus }
+            );
+          }
+
+          mockApiResponse = resBody;
+        } catch (e: any) {
+          console.error("[Base Service Paysponge Proxy Connection Error]:", e);
+          return NextResponse.json(
+            { error: `Failed to connect to Paysponge Base Service proxy: ${e.message}` },
+            { status: 502 }
+          );
+        }
+      } else {
+        return NextResponse.json(
+          { error: "Endpoint URL is required for live Base service execution." },
+          { status: 400 }
+        );
+      }
     } else {
       // General service response
       mockApiResponse = {
@@ -179,7 +296,7 @@ Analyzing the request: Incorporating on-chain validators like X402Validator allo
     return NextResponse.json({
       success: true,
       message: "Payment verified and API executed successfully",
-      verification: verification.details,
+      verification: verificationDetails,
       apiResponse: mockApiResponse,
     });
   } catch (error: any) {

@@ -19,7 +19,7 @@ import { useAppKitProvider, useAppKitNetwork } from "@reown/appkit/react";
 import { getPublicClient, getWalletClient } from "@/lib/contracts/instance";
 import { X402_VALIDATOR_ABI } from "@/lib/contracts/x402-validator-data";
 import { usdc } from "@/lib/contracts/usdc";
-import { arcTestnet } from "@/lib/web3/appkit-provider";
+import { arcTestnet, base } from "@/lib/web3/appkit-provider";
 
 const CATEGORY_ICONS: Record<string, any> = {
   Search: Search, Inference: Cpu, Data: Database, Media: Image,
@@ -103,6 +103,41 @@ function ExaIcon({ size = 20, ...props }: { size?: number; [key: string]: any })
   );
 }
 
+function getEndpointParamsList(url: string) {
+  const params: { name: string; type: "path" | "query"; placeholder: string }[] = [];
+  if (!url) return params;
+  
+  // Extract path parameters starting with :
+  const pathMatches = url.match(/:[a-zA-Z0-9]+/g);
+  if (pathMatches) {
+    pathMatches.forEach(m => {
+      const name = m.substring(1);
+      params.push({
+        name,
+        type: "path",
+        placeholder: `Enter ${name} (e.g. 1500543)`
+      });
+    });
+  }
+  
+  // Add query parameters based on endpoint type
+  if (url.includes("/search") && !url.includes("/nearby_search")) {
+    params.push({
+      name: "query",
+      type: "query",
+      placeholder: "Search query (e.g. Paris, London, Tokyo)"
+    });
+  } else if (url.includes("/nearby_search")) {
+    params.push({
+      name: "latLong",
+      type: "query",
+      placeholder: "Latitude & Longitude (e.g. 48.8566,2.3522)"
+    });
+  }
+  
+  return params;
+}
+
 export function AIMarketplaceContent() {
   const [services, setServices] = useState<ToolService[]>([]);
   const [loading, setLoading] = useState(true);
@@ -125,11 +160,18 @@ export function AIMarketplaceContent() {
   const [paymentTxHash, setPaymentTxHash] = useState<string>("");
   const [paymentVerified, setPaymentVerified] = useState(false);
 
+  // Active endpoint selection state
+  const [selectedEndpoint, setSelectedEndpoint] = useState<any>(null);
+  const [endpointParams, setEndpointParams] = useState<Record<string, string>>({});
+
   // Playground state
   const [playgroundInput, setPlaygroundInput] = useState("");
   const [runningApi, setRunningApi] = useState(false);
   const [apiResponse, setApiResponse] = useState<any>(null);
   const [verificationDetails, setVerificationDetails] = useState<any>(null);
+
+  const isBaseService = !!(selectedService?.networks?.includes("Base") || selectedEndpoint?.network?.includes("Base") || selectedEndpoint?.network?.includes("8453") || selectedEndpoint?.url?.includes("paysponge.com"));
+  const targetChainId = isBaseService ? 8453 : 5042002;
 
   // Load validator address on mount
   useEffect(() => {
@@ -149,52 +191,96 @@ export function AIMarketplaceContent() {
       return;
     }
     
-    if (!validatorAddress) {
+    if (!selectedService) return;
+
+    if (!isBaseService && !validatorAddress) {
       toast.error("No validator contract address configured. Deploy or configure one first.");
       return;
     }
-
-    if (!selectedService) return;
     
     setPaying(true);
     try {
-      const walletClient = getWalletClient();
+      const targetChain = isBaseService ? base : arcTestnet;
+      const walletClient = getWalletClient(targetChain);
       if (!walletClient) throw new Error("Wallet provider not found.");
       
-      const priceVal = parseFloat(selectedService.price_amount) || 0.001; // default to 0.001 if free/not specified
+      const priceVal = parseFloat(selectedEndpoint?.price || selectedService.price_amount) || 0.001; // default to 0.001 if free/not specified
       const usdcUnits = BigInt(Math.round(priceVal * 1_000_000));
       
-      // 1. Approve USDC if needed
-      toast.info("Checking USDC allowance...");
-      const approveTx = await usdc.approveIfNeeded(validatorAddress as `0x${string}`, usdcUnits);
-      if (approveTx) {
-        toast.info("USDC approval requested. Please sign in your wallet...");
-        const publicClient = getPublicClient();
-        await publicClient.waitForTransactionReceipt({ hash: approveTx });
-        toast.success("USDC approved successfully.");
-      }
-      
-      // 2. Pay for service
-      toast.info("Signing payment transaction via X402Validator...");
-      const { request } = await getPublicClient().simulateContract({
-        address: validatorAddress as `0x${string}`,
-        abi: X402_VALIDATOR_ABI,
-        functionName: "payForService",
-        args: [selectedService.name, usdcUnits],
-        account: address as `0x${string}`,
-      });
-      
-      const txHash = await walletClient.writeContract(request);
-      toast.info("Payment submitted to Arc blockchain. Waiting for block confirmation...");
-      
-      const receipt = await getPublicClient().waitForTransactionReceipt({ hash: txHash });
-      
-      if (receipt.status === "success") {
-        toast.success("Payment confirmed on-chain!");
-        setPaymentTxHash(txHash);
-        setPaymentVerified(true);
+      if (isBaseService) {
+        // Direct Base Mainnet USDC transfer (no approval needed)
+        const baseUsdcAddress = (selectedEndpoint?.asset || "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913") as `0x${string}`;
+        const payToAddress = (selectedEndpoint?.payTo || "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57") as `0x${string}`;
+        
+        toast.info(`Paying ${priceVal} USDC directly on Base Mainnet...`);
+        
+        const ERC20_TRANSFER_ABI = [
+          {
+            name: "transfer",
+            type: "function",
+            stateMutability: "nonpayable",
+            inputs: [
+              { name: "recipient", type: "address" },
+              { name: "amount", type: "uint256" }
+            ],
+            outputs: [{ name: "", type: "bool" }]
+          }
+        ] as const;
+        
+        const { request } = await getPublicClient(base).simulateContract({
+          address: baseUsdcAddress,
+          abi: ERC20_TRANSFER_ABI,
+          functionName: "transfer",
+          args: [payToAddress, usdcUnits],
+          account: address as `0x${string}`,
+        });
+        
+        const txHash = await walletClient.writeContract(request);
+        toast.info("USDC transfer submitted on Base Mainnet. Waiting for confirmation...");
+        
+        const receipt = await getPublicClient(base).waitForTransactionReceipt({ hash: txHash });
+        
+        if (receipt.status === "success") {
+          toast.success("USDC transfer confirmed on Base Mainnet!");
+          setPaymentTxHash(txHash);
+          setPaymentVerified(true);
+        } else {
+          throw new Error("USDC transfer failed on Base Mainnet.");
+        }
       } else {
-        throw new Error("Payment transaction failed on-chain.");
+        // Standard validator-based payment on Arc Testnet
+        // 1. Approve USDC if needed
+        toast.info("Checking USDC allowance...");
+        const approveTx = await usdc.approveIfNeeded(validatorAddress as `0x${string}`, usdcUnits);
+        if (approveTx) {
+          toast.info("USDC approval requested. Please sign in your wallet...");
+          const publicClient = getPublicClient(arcTestnet);
+          await publicClient.waitForTransactionReceipt({ hash: approveTx });
+          toast.success("USDC approved successfully.");
+        }
+        
+        // 2. Pay for service
+        toast.info("Signing payment transaction via X402Validator...");
+        const { request } = await getPublicClient(arcTestnet).simulateContract({
+          address: validatorAddress as `0x${string}`,
+          abi: X402_VALIDATOR_ABI,
+          functionName: "payForService",
+          args: [selectedService.name, usdcUnits],
+          account: address as `0x${string}`,
+        });
+        
+        const txHash = await walletClient.writeContract(request);
+        toast.info("Payment submitted to Arc blockchain. Waiting for block confirmation...");
+        
+        const receipt = await getPublicClient(arcTestnet).waitForTransactionReceipt({ hash: txHash });
+        
+        if (receipt.status === "success") {
+          toast.success("Payment confirmed on-chain!");
+          setPaymentTxHash(txHash);
+          setPaymentVerified(true);
+        } else {
+          throw new Error("Payment transaction failed on-chain.");
+        }
       }
     } catch (error: any) {
       console.error("Payment failed:", error);
@@ -210,7 +296,7 @@ export function AIMarketplaceContent() {
     setRunningApi(true);
     setApiResponse(null);
     try {
-      const priceVal = parseFloat(selectedService.price_amount) || 0.001;
+      const priceVal = parseFloat(selectedEndpoint?.price || selectedService.price_amount) || 0.001;
       const res = await fetch("/api/tools/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -219,6 +305,10 @@ export function AIMarketplaceContent() {
           serviceId: selectedService.name,
           amount: priceVal,
           validatorAddress,
+          endpointUrl: selectedEndpoint?.url || "",
+          endpointMethod: selectedEndpoint?.method || "GET",
+          endpointParams,
+          network: selectedEndpoint?.network || selectedService?.networks?.[0] || "",
           inputPayload: playgroundInput
         }),
       });
@@ -246,6 +336,8 @@ export function AIMarketplaceContent() {
     setPlaygroundInput("");
     setApiResponse(null);
     setVerificationDetails(null);
+    setSelectedEndpoint(svc.endpoints?.[0] || null);
+    setEndpointParams({});
   };
 
   useEffect(() => {
@@ -637,6 +729,38 @@ export function AIMarketplaceContent() {
               </DialogHeader>
 
               <div className="space-y-4 py-4">
+                {/* Endpoint Selector */}
+                {selectedService.endpoints && selectedService.endpoints.length > 0 && (
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-semibold" style={{ color: "var(--color-fg-secondary)" }}>
+                      Select Endpoint / API
+                    </label>
+                    <select
+                      disabled={paymentVerified}
+                      value={selectedEndpoint?.url || ""}
+                      onChange={(e) => {
+                        const ep = selectedService.endpoints.find(x => x.url === e.target.value);
+                        setSelectedEndpoint(ep || null);
+                        setEndpointParams({});
+                        setPlaygroundInput("");
+                        setApiResponse(null);
+                      }}
+                      className="w-full p-2.5 rounded-lg border text-xs"
+                      style={{
+                        backgroundColor: "var(--color-bg)",
+                        borderColor: "var(--color-bd)",
+                        color: "var(--color-fg)",
+                      }}
+                    >
+                      {selectedService.endpoints.map((ep, i) => (
+                        <option key={i} value={ep.url}>
+                          [{ep.method || "GET"}] {ep.description || ep.url} (${ep.price} USDC)
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
                 {/* Contract & Price Details */}
                 <div className="grid grid-cols-2 gap-4 p-3 rounded-xl border text-xs" style={{ backgroundColor: "var(--color-bg-inset)", borderColor: "var(--color-bd)" }}>
                   <div>
@@ -648,7 +772,7 @@ export function AIMarketplaceContent() {
                   <div>
                     <span className="block font-medium" style={{ color: "var(--color-fg-muted)" }}>Service Cost</span>
                     <span className="text-sm font-bold block mt-0.5" style={{ color: "var(--color-accent)" }}>
-                      {parseFloat(selectedService.price_amount) || 0.001} USDC
+                      {selectedEndpoint ? parseFloat(selectedEndpoint.price) : (parseFloat(selectedService.price_amount) || 0.001)} USDC
                     </span>
                   </div>
                 </div>
@@ -671,16 +795,16 @@ export function AIMarketplaceContent() {
                         <Button onClick={connect} className="bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/90 text-white font-medium">
                           Connect Wallet
                         </Button>
-                      ) : chainId !== 5042002 ? (
+                      ) : chainId !== targetChainId ? (
                         <Button
-                          onClick={() => switchNetwork && switchNetwork(arcTestnet)}
+                          onClick={() => switchNetwork && switchNetwork(isBaseService ? base : arcTestnet)}
                           className="bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/90 text-white font-medium"
                         >
-                          Switch to Arc Testnet
+                          Switch to {isBaseService ? "Base Mainnet" : "Arc Testnet"}
                         </Button>
                       ) : (
                         <Button
-                          disabled={paying || !validatorAddress}
+                          disabled={paying || (!isBaseService && !validatorAddress)}
                           onClick={handlePayForService}
                           className="bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/90 text-white font-semibold flex items-center gap-2 shadow-lg"
                         >
@@ -691,7 +815,7 @@ export function AIMarketplaceContent() {
                             </>
                           ) : (
                             <>
-                              <Unlock size={14} /> Pay {parseFloat(selectedService.price_amount) || 0.001} USDC
+                              <Unlock size={14} /> Pay {selectedEndpoint ? parseFloat(selectedEndpoint.price) : (parseFloat(selectedService.price_amount) || 0.001)} USDC
                             </>
                           )}
                         </Button>
@@ -714,26 +838,81 @@ export function AIMarketplaceContent() {
                       <div>Validator: <code className="text-[11px] font-mono text-[var(--color-fg-muted)]">{validatorAddress}</code></div>
                     </div>
 
-                    <div className="space-y-2">
-                      <label className="block text-xs font-semibold" style={{ color: "var(--color-fg-secondary)" }}>
-                        Playground Input Payload (e.g. prompt, query, audio transcript)
-                      </label>
-                      <textarea
-                        value={playgroundInput}
-                        onChange={(e) => setPlaygroundInput(e.target.value)}
-                        placeholder={
-                          selectedService.name.toLowerCase().includes("search") || selectedService.name.toLowerCase().includes("exa")
-                            ? "Enter a web search query (e.g., 'USDC micropayments on Arc blockchain')...."
-                            : "Enter prompt input here..."
-                        }
-                        className="w-full h-20 p-2.5 rounded-lg border text-xs resize-none"
-                        style={{
-                          backgroundColor: "var(--color-bg)",
-                          borderColor: "var(--color-bd)",
-                          color: "var(--color-fg)",
-                        }}
-                      />
-                    </div>
+                    {selectedEndpoint ? (
+                      <div className="space-y-3">
+                        <div className="p-2.5 rounded-lg border text-xs space-y-1" style={{ backgroundColor: "var(--color-bg)", borderColor: "var(--color-bd)" }}>
+                          <span className="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded bg-[var(--color-bg-inset)] mr-1.5">
+                            {selectedEndpoint.method || "GET"}
+                          </span>
+                          <span className="font-mono text-[11px]" style={{ color: "var(--color-fg)" }}>
+                            {selectedEndpoint.url}
+                          </span>
+                          <p className="text-[11px] mt-1 text-[var(--color-fg-muted)]">
+                            {selectedEndpoint.description}
+                          </p>
+                        </div>
+
+                        {getEndpointParamsList(selectedEndpoint.url).map((p) => (
+                          <div key={p.name} className="space-y-1">
+                            <label className="block text-xs font-semibold" style={{ color: "var(--color-fg-secondary)" }}>
+                              {p.name} <span className="text-red-500">*</span> ({p.type} parameter)
+                            </label>
+                            <input
+                              type="text"
+                              placeholder={p.placeholder}
+                              value={endpointParams[p.name] || ""}
+                              onChange={(e) => setEndpointParams(prev => ({ ...prev, [p.name]: e.target.value }))}
+                              className="w-full p-2.5 rounded-lg border text-xs"
+                              style={{
+                                backgroundColor: "var(--color-bg)",
+                                borderColor: "var(--color-bd)",
+                                color: "var(--color-fg)",
+                              }}
+                            />
+                          </div>
+                        ))}
+
+                        {getEndpointParamsList(selectedEndpoint.url).length === 0 && (
+                          <div className="space-y-2">
+                            <label className="block text-xs font-semibold" style={{ color: "var(--color-fg-secondary)" }}>
+                              Playground Input Payload (e.g. prompt, query, audio transcript)
+                            </label>
+                            <textarea
+                              value={playgroundInput}
+                              onChange={(e) => setPlaygroundInput(e.target.value)}
+                              placeholder="Enter input payload here..."
+                              className="w-full h-20 p-2.5 rounded-lg border text-xs resize-none"
+                              style={{
+                                backgroundColor: "var(--color-bg)",
+                                borderColor: "var(--color-bd)",
+                                color: "var(--color-fg)",
+                              }}
+                            />
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <label className="block text-xs font-semibold" style={{ color: "var(--color-fg-secondary)" }}>
+                          Playground Input Payload (e.g. prompt, query, audio transcript)
+                        </label>
+                        <textarea
+                          value={playgroundInput}
+                          onChange={(e) => setPlaygroundInput(e.target.value)}
+                          placeholder={
+                            selectedService.name.toLowerCase().includes("search") || selectedService.name.toLowerCase().includes("exa")
+                              ? "Enter a web search query (e.g., 'USDC micropayments on Arc blockchain')...."
+                              : "Enter prompt input here..."
+                          }
+                          className="w-full h-20 p-2.5 rounded-lg border text-xs resize-none"
+                          style={{
+                            backgroundColor: "var(--color-bg)",
+                            borderColor: "var(--color-bd)",
+                            color: "var(--color-fg)",
+                          }}
+                        />
+                      </div>
+                    )}
 
                     <Button
                       disabled={runningApi}

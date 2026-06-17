@@ -320,7 +320,7 @@ export function HeroVisual() {
             ))}
           </div>
           <div>
-            <p className="text-sm font-medium" style={{ color: "var(--color-fg)" }}>creators and humans</p>
+            <p className="text-sm font-medium" style={{ color: "var(--color-fg)" }}>Agents and Humans</p>
             <p className="text-xs" style={{ color: "var(--color-fg-muted)" }}> already building</p>
           </div>
         </div>

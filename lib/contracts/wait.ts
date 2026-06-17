@@ -40,7 +40,7 @@ export async function waitForTransaction(
         return {
           status: receipt.status === "success" ? "success" : "reverted",
           blockNumber: receipt.blockNumber,
-          logs: receipt.logs.map((log) => ({
+          logs: receipt.logs.map((log: any) => ({
             address: log.address,
             topics: log.topics as readonly `0x${string}`[],
             data: log.data,

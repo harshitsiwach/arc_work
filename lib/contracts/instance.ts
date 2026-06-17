@@ -19,17 +19,14 @@ export const ABI = AGENTIC_COMMERCE_ABI.abi;
 
 let _publicClient: PublicClient | null = null;
 
-export function getPublicClient(): PublicClient {
-  if (!_publicClient) {
-    _publicClient = createPublicClient({
-      chain: arcTestnet,
-      transport: http(arcTestnet.rpcUrls.default.http[0], {
-        batch: true,
-        retryCount: 2,
-      }),
-    });
-  }
-  return _publicClient;
+export function getPublicClient(chain: any = arcTestnet): any {
+  return createPublicClient({
+    chain,
+    transport: http(chain.rpcUrls.default.http[0], {
+      batch: true,
+      retryCount: 2,
+    }),
+  });
 }
 
 // EIP-1193 provider reference (set by WalletProvider from AppKit)
@@ -40,13 +37,13 @@ export function setWalletProvider(provider: unknown) {
   console.log("[instance] AppKit wallet provider set:", !!provider);
 }
 
-export function getWalletClient(): WalletClient | null {
+export function getWalletClient(chain: any = arcTestnet): any {
   if (typeof window === "undefined") return null;
 
   if (_walletProvider) {
     console.log("[instance] using AppKit wallet provider");
     return createWalletClient({
-      chain: arcTestnet,
+      chain,
       transport: custom(_walletProvider),
     });
   }
@@ -59,7 +56,7 @@ export function getWalletClient(): WalletClient | null {
   }
 
   return createWalletClient({
-    chain: arcTestnet,
+    chain,
     transport: custom(ethereum as Parameters<typeof custom>[0]),
   });
 }
