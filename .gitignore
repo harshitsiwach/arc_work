@@ -65,3 +65,23 @@ scratch/venv/
 /app/marketing/
 
 package-lock.json
+
+# local logs and profiles
+*.log
+
+# local test/debug scripts
+test-*.mjs
+test-*.js
+
+# HTML design previews
+design-preview.html
+
+# bounty integration context (dev notes)
+bounty_integration_context.txt
+
+# replit config (not needed for deployment)
+.replit
+replit.nix
+
+# agent skill lock
+skills-lock.json

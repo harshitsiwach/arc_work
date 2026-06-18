@@ -6,7 +6,7 @@ import { DollarSign, Users, CheckCircle, Briefcase, TrendingUp, AlertCircle } fr
 import { BountyCard } from "@/components/bounties/bounty-card";
 import { BountyFilters } from "@/components/bounties/bounty-filters";
 import { BountySidebar } from "@/components/bounties/bounty-sidebar";
-import { useBounties } from "@/hooks/useBounty";
+import { useMarketplaceBounties } from "@/hooks/useMarketplaceBounties";
 import type { CollaborationFilter, CategoryFilter } from "@/components/bounties/bounty-filters";
 
 export type BountyStatus = "open" | "in-review" | "completed" | "featured";
@@ -98,35 +98,19 @@ export function BountiesContent() {
   const [collaboration, setCollaboration] = useState<CollaborationFilter>("all");
   const [category, setCategory] = useState<CategoryFilter>("all");
 
-  const { bounties: bountyRows, isLoading, error } = useBounties();
-
-  const bounties: Bounty[] = useMemo(() => {
-    return (bountyRows ?? []).map((row) => ({
-      id: row.id,
-      title: row.title,
-      description: row.description,
-      reward: Number(row.reward_usdc),
-      creator: truncateId(row.creator_id),
-      category: "development",
-      difficulty: deriveDifficulty(Number(row.reward_usdc)),
-      deadline: getRelativeDeadline(row.deadline),
-      applicants: 0,
-      status: STATUS_MAP[row.status] ?? "open",
-      collaborationType: COLLAB_MAP[row.worker_type] ?? "hybrid",
-    }));
-  }, [bountyRows]);
+  const { bounties, isLoading, error } = useMarketplaceBounties();
 
   const metrics = useMemo(() => {
-    const openCount = bountyRows.filter((r) => r.status === "OPEN" || r.status === "FUNDED").length;
-    const totalRewards = bountyRows.reduce((sum, r) => sum + Number(r.reward_usdc), 0);
-    const completedCount = bountyRows.filter((r) => r.status === "COMPLETED").length;
+    const openCount = bounties.filter((r) => r.status === "open").length;
+    const totalRewards = bounties.reduce((sum, r) => sum + r.reward, 0);
+    const completedCount = bounties.filter((r) => r.status === "completed").length;
     return [
       { label: "Open Bounties", value: openCount.toString(), icon: Briefcase },
       { label: "Total Rewards", value: `${totalRewards.toLocaleString()}`, icon: DollarSign },
       { label: "Active Participants", value: "0", icon: Users },
       { label: "Completed Tasks", value: completedCount.toString(), icon: CheckCircle },
     ];
-  }, [bountyRows]);
+  }, [bounties]);
 
   const filtered = useMemo(() => {
     return bounties.filter((b) => {

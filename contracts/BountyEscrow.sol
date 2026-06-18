@@ -25,6 +25,8 @@ contract BountyEscrow is ReentrancyGuard, AccessControl, Pausable {
     struct Bounty {
         uint256 id;
         address creator;
+        string title;
+        string description;
         uint256 reward;
         uint256 deadline;
         WorkerType workerType;
@@ -46,7 +48,14 @@ contract BountyEscrow is ReentrancyGuard, AccessControl, Pausable {
     mapping(uint256 => Bounty) public bounties;
     mapping(uint256 => Submission[]) public bountySubmissions;
 
-    event BountyCreated(uint256 indexed bountyId, address indexed creator, uint256 reward, uint256 deadline, WorkerType workerType);
+    event BountyCreated(
+        uint256 indexed bountyId,
+        address indexed creator,
+        string title,
+        uint256 reward,
+        uint256 deadline,
+        WorkerType workerType
+    );
     event WorkSubmitted(uint256 indexed bountyId, uint256 indexed submissionId, address indexed submitter, bytes32 proofHash);
     event SubmissionApproved(uint256 indexed bountyId, uint256 indexed submissionId, address indexed winner);
     event SubmissionRejected(uint256 indexed bountyId, uint256 indexed submissionId);
@@ -72,7 +81,8 @@ contract BountyEscrow is ReentrancyGuard, AccessControl, Pausable {
     }
 
     function createBounty(
-        string calldata /* description */,
+        string calldata title,
+        string calldata description,
         uint256 reward,
         uint256 deadline,
         WorkerType workerType
@@ -86,6 +96,8 @@ contract BountyEscrow is ReentrancyGuard, AccessControl, Pausable {
         bounties[bountyId] = Bounty({
             id: bountyId,
             creator: msg.sender,
+            title: title,
+            description: description,
             reward: reward,
             deadline: deadline,
             workerType: workerType,
@@ -94,7 +106,7 @@ contract BountyEscrow is ReentrancyGuard, AccessControl, Pausable {
             submissionCount: 0
         });
 
-        emit BountyCreated(bountyId, msg.sender, reward, deadline, workerType);
+        emit BountyCreated(bountyId, msg.sender, title, reward, deadline, workerType);
         return bountyId;
     }
 
@@ -178,8 +190,20 @@ contract BountyEscrow is ReentrancyGuard, AccessControl, Pausable {
         return bounties[bountyId];
     }
 
+    function getAllBounties() external view returns (Bounty[] memory) {
+        Bounty[] memory allBounties = new Bounty[](nextBountyId);
+        for (uint256 i = 0; i < nextBountyId; i++) {
+            allBounties[i] = bounties[i];
+        }
+        return allBounties;
+    }
+
     function getSubmissions(uint256 bountyId) external view returns (Submission[] memory) {
         return bountySubmissions[bountyId];
+    }
+
+    function hasRoleAdmin(address account) external view returns (bool) {
+        return hasRole(ADMIN_ROLE, account);
     }
 
     function pause() external onlyRole(ADMIN_ROLE) {

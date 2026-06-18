@@ -111,8 +111,9 @@ export function useCreateBounty() {
         await publicClient.waitForTransactionReceipt({ hash: approveTxHash });
       }
 
-      // 2. Call createBounty on-chain
+      // 2. Call createBounty on-chain (title, description, reward, deadline, workerType)
       const hash = await bountyWrite("createBounty", [
+        params.title,
         params.description,
         rewardUnits,
         deadlineUnix,

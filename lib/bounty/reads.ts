@@ -4,12 +4,29 @@ import { BOUNTY_ESCROW_ABI, BOUNTY_ESCROW_ADDRESS } from "@/constants/BountyEscr
 export interface BountyContractData {
   id: bigint;
   creator: `0x${string}`;
+  title: string;
+  description: string;
   reward: bigint;
   deadline: bigint;
   workerType: number;
   status: number;
   winner: `0x${string}`;
   submissionCount: bigint;
+}
+
+function parseBountyTuple(raw: Record<string, unknown>): BountyContractData {
+  return {
+    id: raw.id as bigint,
+    creator: raw.creator as `0x${string}`,
+    title: (raw.title as string) ?? "",
+    description: (raw.description as string) ?? "",
+    reward: raw.reward as bigint,
+    deadline: raw.deadline as bigint,
+    workerType: Number(raw.workerType),
+    status: Number(raw.status),
+    winner: raw.winner as `0x${string}`,
+    submissionCount: raw.submissionCount as bigint,
+  };
 }
 
 export const bountyReads = {
@@ -21,17 +38,7 @@ export const bountyReads = {
       functionName: "getBounty",
       args: [bountyId],
     });
-    const raw = result as readonly unknown[];
-    return {
-      id: raw[0] as bigint,
-      creator: raw[1] as `0x${string}`,
-      reward: raw[2] as bigint,
-      deadline: raw[3] as bigint,
-      workerType: Number(raw[4]),
-      status: Number(raw[5]),
-      winner: raw[6] as `0x${string}`,
-      submissionCount: raw[7] as bigint,
-    };
+    return parseBountyTuple(result as Record<string, unknown>);
   },
 
   async nextBountyId(): Promise<bigint> {
@@ -44,20 +51,19 @@ export const bountyReads = {
     return result as bigint;
   },
 
+  /**
+   * Fetch ALL bounties in a single RPC call via the on-chain getAllBounties() view.
+   * This replaces the old N+1 sequential loop and is dramatically faster.
+   */
   async getAllBounties(): Promise<BountyContractData[]> {
-    const total = await this.nextBountyId();
-    if (total === 0n || total > 200n) return [];
-
-    const bounties: BountyContractData[] = [];
-    for (let i = 0n; i < total; i++) {
-      try {
-        const bounty = await this.getBounty(i);
-        bounties.push(bounty);
-      } catch {
-        // skip — bounty may not exist if gaps in IDs
-      }
-    }
-    return bounties;
+    const client = getPublicClient();
+    const result = await client.readContract({
+      address: BOUNTY_ESCROW_ADDRESS,
+      abi: BOUNTY_ESCROW_ABI,
+      functionName: "getAllBounties",
+    });
+    const rawList = result as readonly Record<string, unknown>[];
+    return rawList.map(parseBountyTuple);
   },
 
   async getBountiesByCreator(creator: `0x${string}`): Promise<BountyContractData[]> {
