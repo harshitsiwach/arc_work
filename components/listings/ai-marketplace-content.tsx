@@ -1,64 +1,22 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { useState, useEffect, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import {
-  Loader2, Search, ExternalLink, Zap, Globe, Cpu, Database,
-  Image, Music, Plane, Bot, ShoppingBag, TrendingUp,
-  ArrowRight, Star, Users, Clock, ChevronRight, Filter,
-  Mic, BarChart3, MessageSquare, Code, Layers, Shield,
-  Sparkles, Unlock,
-} from "lucide-react";
+import { Loader2 } from "lucide-react";
+import { motion } from "framer-motion";
 import { toast } from "sonner";
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from "@/components/ui/dialog";
+import { MarketplaceSearch } from "@/components/marketplace/marketplace-search";
+import { MarketplaceTable, type SortKey } from "@/components/marketplace/marketplace-table";
+import { MarketplaceTabs, type TabKey } from "@/components/marketplace/marketplace-tabs";
+import { MarketplaceFilterBar } from "@/components/marketplace/marketplace-filter-bar";
 import { useWallet } from "@/lib/web3/wallet-provider";
-import { useAppKitProvider, useAppKitNetwork } from "@reown/appkit/react";
+import { useAppKitNetwork } from "@reown/appkit/react";
 import { getPublicClient, getWalletClient } from "@/lib/contracts/instance";
 import { X402_VALIDATOR_ABI } from "@/lib/contracts/x402-validator-data";
 import { usdc } from "@/lib/contracts/usdc";
 import { arcTestnet, base } from "@/lib/web3/appkit-provider";
-
-const CATEGORY_ICONS: Record<string, any> = {
-  Search: Search, Inference: Cpu, Data: Database, Media: Image,
-  Social: Globe, Infra: Cpu, Travel: Plane, Storage: Database,
-  Trading: ShoppingBag, Voice: Mic, Automation: Zap,
-  Productivity: Layers, Blockchain: Shield,
-};
-
-const CATEGORY_COLORS: Record<string, string> = {
-  Search: "oklch(0.75 0.18 125)", Inference: "oklch(0.75 0.18 125)",
-  Data: "oklch(0.75 0.18 125)", Media: "oklch(0.55 0.20 30)",
-  Social: "oklch(0.75 0.18 125)", Infra: "oklch(0.55 0 0)",
-  Travel: "oklch(0.60 0.16 80)", Storage: "oklch(0.75 0.18 125)",
-  Trading: "oklch(0.75 0.18 125)", Voice: "oklch(0.75 0.18 125)",
-  Automation: "oklch(0.75 0.18 125)", Productivity: "oklch(0.75 0.18 125)",
-  Blockchain: "oklch(0.55 0.15 120)",
-};
-
-const ECOSYSTEM_SIGNALS: Record<string, string> = {
-  Search: "Used by 3.2k agents", Inference: "Trending in research",
-  Data: "Popular in analytics", Media: "Fast growing",
-  Social: "Trending", Automation: "Most deployed",
-  Trading: "High demand", Voice: "New integration",
-};
-
-const FEATURED_PROVIDERS: { name: string; desc: string; category: string; users: string; icon?: React.ElementType; iconSrc?: string; brand: boolean }[] = [
-  { name: "OpenAI", desc: "GPT-4o, o1, DALL-E — leading AI models", category: "Inference", users: "12.4k", icon: OpenAIIcon, brand: true },
-  { name: "Anthropic", desc: "Claude — advanced reasoning & analysis", category: "Inference", users: "8.9k", icon: AnthropicIcon, brand: true },
-  { name: "Deepgram", desc: "Real-time speech-to-text & transcription", category: "Voice", users: "4.2k", iconSrc: "/icons/ai/deepgram.svg", brand: false },
-  { name: "ElevenLabs", desc: "Premium AI voice generation & cloning", category: "Voice", users: "6.1k", iconSrc: "/icons/ai/elevenlabs.svg", brand: false },
-  { name: "Tavily", desc: "AI-optimized search & research API", category: "Search", users: "5.7k", iconSrc: "/icons/ai/tavily.svg", brand: false },
-  { name: "Exa", desc: "Neural search for AI applications", category: "Search", users: "3.4k", icon: ExaIcon, brand: true },
-  { name: "The Graph", desc: "Decentralized indexing for blockchain data", category: "Blockchain", users: "7.8k", iconSrc: "/icons/ai/thegraph.svg", brand: false },
-];
-
-const DISCOVERY_CHIPS = [
-  "Research", "Automation", "Inference", "Voice",
-  "Trading", "Social", "Content", "Data",
-];
 
 interface ToolService {
   id: string;
@@ -73,86 +31,26 @@ interface ToolService {
   networks: string[];
 }
 
-/* ── Brand Icon SVGs ──────────────────────────────────────── */
 
-function OpenAIIcon({ size = 20, ...props }: { size?: number; [key: string]: any }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" {...props}>
-      <circle cx="16" cy="16" r="16" fill="#10A37F" />
-      <path d="M16 6c-2.2 0-4 1.8-4 4v1.5c0 .6.5 1 1 1h5c1.7 0 3 1.3 3 3s-1.3 3-3 3h-4c-.6 0-1 .5-1 1V22c0 2.2 1.8 4 4 4s4-1.8 4-4h-2c0 1.1-.9 2-2 2s-2-.9-2-2v-2.5c0-.6.5-1 1-1h3c2.8 0 5-2.2 5-5s-2.2-5-5-5h-2V10c0-1.1.9-2 2-2s2 .9 2 2h2c0-2.2-1.8-4-4-4z" fill="white" />
-      <path d="M12 12c-2.8 0-5 2.2-5 5s2.2 5 5 5h2v-2h-2c-1.7 0-3-1.3-3-3s1.3-3 3-3h4c.6 0 1-.5 1-1V10c0-2.2-1.8-4-4-4s-4 1.8-4 4h2c0-1.1.9-2 2-2s2 .9 2 2v1.5c0 .6-.5 1-1 1h-3z" fill="white" />
-    </svg>
-  );
-}
-
-function AnthropicIcon({ size = 20, ...props }: { size?: number; [key: string]: any }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" {...props}>
-      <circle cx="16" cy="16" r="16" fill="#C9B8F5" />
-      <text x="16" y="22" textAnchor="middle" fill="black" fontSize="16" fontWeight="bold" fontFamily="serif">C</text>
-    </svg>
-  );
-}
-
-function ExaIcon({ size = 20, ...props }: { size?: number; [key: string]: any }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 32 32" fill="none" {...props}>
-      <circle cx="16" cy="16" r="16" fill="#1A1A2E" />
-      <text x="16" y="22" textAnchor="middle" fill="white" fontSize="14" fontWeight="bold" fontFamily="Arial">E</text>
-    </svg>
-  );
-}
-
-function getEndpointParamsList(url: string) {
-  const params: { name: string; type: "path" | "query"; placeholder: string }[] = [];
-  if (!url) return params;
-  
-  // Extract path parameters starting with :
-  const pathMatches = url.match(/:[a-zA-Z0-9]+/g);
-  if (pathMatches) {
-    pathMatches.forEach(m => {
-      const name = m.substring(1);
-      params.push({
-        name,
-        type: "path",
-        placeholder: `Enter ${name} (e.g. 1500543)`
-      });
-    });
-  }
-  
-  // Add query parameters based on endpoint type
-  if (url.includes("/search") && !url.includes("/nearby_search")) {
-    params.push({
-      name: "query",
-      type: "query",
-      placeholder: "Search query (e.g. Paris, London, Tokyo)"
-    });
-  } else if (url.includes("/nearby_search")) {
-    params.push({
-      name: "latLong",
-      type: "query",
-      placeholder: "Latitude & Longitude (e.g. 48.8566,2.3522)"
-    });
-  }
-  
-  return params;
-}
 
 export function AIMarketplaceContent() {
+  const router = useRouter();
   const [services, setServices] = useState<ToolService[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
   const [visibleCount, setVisibleCount] = useState(24);
-  const featuredRef = useRef<HTMLDivElement>(null);
+  const [activeTab, setActiveTab] = useState<TabKey>("services");
+  const [sort, setSort] = useState<SortKey>("name-asc");
+  const [networkFilter, setNetworkFilter] = useState("");
+  const [verificationFilter, setVerificationFilter] = useState("");
 
   // Wallet & web3 hooks
-  const { isConnected, connect, address, activeWalletType, chainId } = useWallet();
+  const { isConnected, connect, address, chainId } = useWallet();
   const { switchNetwork } = useAppKitNetwork();
 
   // Validator Address
   const [validatorAddress, setValidatorAddress] = useState<string>("0xb0c7709a4ccc69899d922048792fcba240a9afcb");
-  const [showAdminPanel, setShowAdminPanel] = useState(false);
 
   // Active payment service modal
   const [selectedService, setSelectedService] = useState<ToolService | null>(null);
@@ -352,12 +250,15 @@ export function AIMarketplaceContent() {
     setVisibleCount(24);
   }, [search, categoryFilter]);
 
-  const categories = [...new Set(services.map(s => s.category))].sort();
+  const categories = useMemo(() => [...new Set(services.map(s => s.category))].sort(), [services]);
+  const networks = useMemo(() => [...new Set(services.flatMap(s => s.networks || []))].sort(), [services]);
   const filtered = services.filter(s => {
     if (categoryFilter && s.category !== categoryFilter) return false;
+    if (networkFilter && !(s.networks || []).includes(networkFilter)) return false;
     if (search) {
       const q = search.toLowerCase();
-      return s.name.toLowerCase().includes(q) || s.description.toLowerCase().includes(q);
+      const matchesDomain = s.domain?.toLowerCase().includes(q);
+      return s.name.toLowerCase().includes(q) || s.description.toLowerCase().includes(q) || matchesDomain;
     }
     return true;
   });
@@ -365,601 +266,72 @@ export function AIMarketplaceContent() {
   const displayed = filtered.slice(0, visibleCount);
 
   return (
-    <div className="space-y-8">
-      <div
-        className="relative overflow-hidden rounded-2xl p-8"
-        style={{
-          backgroundColor: "var(--color-bg-elevated)",
-          border: "1px solid var(--color-bd)",
-        }}
-      >
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background: "radial-gradient(ellipse at 20% 50%, oklch(0.75 0.18 125 / 0.08) 0%, transparent 50%), radial-gradient(ellipse at 80% 50%, oklch(0.75 0.18 125 / 0.06) 0%, transparent 50%)",
-          }}
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight text-white/90">
+          Marketplace
+        </h1>
+        <p className="text-sm text-white/40 mt-1">
+          Discover AI services, APIs, research tools, analytics services and automation endpoints.
+        </p>
+      </div>
+
+      {/* Tabs */}
+      <MarketplaceTabs active={activeTab} onChange={setActiveTab} />
+
+      {/* Search + Filters row */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+        <div className="flex-1 w-full sm:w-auto">
+          <MarketplaceSearch value={search} onChange={setSearch} />
+        </div>
+        <MarketplaceFilterBar
+          categories={categories}
+          networks={networks}
+          categoryActive={categoryFilter}
+          networkActive={networkFilter}
+          verificationActive={verificationFilter}
+          onCategoryChange={setCategoryFilter}
+          onNetworkChange={setNetworkFilter}
+          onVerificationChange={setVerificationFilter}
         />
-
-        <div className="relative z-10">
-          <div className="flex items-center gap-2 mb-3">
-            <Sparkles size={16} style={{ color: "var(--color-accent)" }} />
-            <p className="text-[11px] font-semibold uppercase tracking-wider" style={{ color: "var(--color-accent)" }}>
-              AI Marketplace
-            </p>
-          </div>
-
-          <div className="flex items-center justify-between">
-            <h1 className="text-3xl font-semibold tracking-tight" style={{ color: "var(--color-fg)" }}>
-              Discover AI Capabilities
-            </h1>
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex items-center gap-2 border-[var(--color-bd)] text-[12px] font-medium"
-              style={{ backgroundColor: "var(--color-bg)", color: "var(--color-fg-secondary)" }}
-              onClick={() => setShowAdminPanel(!showAdminPanel)}
-            >
-              <Shield className="h-3.5 w-3.5" />
-              {showAdminPanel ? "Hide X402 Settings" : "X402 Validator Settings"}
-            </Button>
-          </div>
-          <p className="text-sm mt-2 max-w-2xl" style={{ color: "var(--color-fg-secondary)" }}>
-            Deploy AI tools, APIs, automation services, and capabilities for autonomous agents. Pay per request in USDC.
-          </p>
-
-          {showAdminPanel && (
-            <div
-              className="mt-6 p-4 rounded-xl border space-y-4 text-xs transition-all duration-200"
-              style={{
-                backgroundColor: "var(--color-bg-inset)",
-                borderColor: "var(--color-bd)",
-              }}
-            >
-              <div className="flex items-center justify-between border-b pb-2" style={{ borderColor: "var(--color-bd)" }}>
-                <h3 className="font-semibold text-sm flex items-center gap-1.5" style={{ color: "var(--color-fg)" }}>
-                  <Shield size={14} className="text-[var(--color-accent)]" /> X402 Validator & Facilitator Setup
-                </h3>
-                <Badge variant="outline" className="bg-[#CBF825]/5 text-[#CBF825] border-[#CBF825]/20">
-                  Arc Testnet
-                </Badge>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <div className="font-medium text-[var(--color-fg-secondary)]">X402 Validator Contract Address</div>
-                  <div className="flex">
-                    <input
-                      value={validatorAddress}
-                      readOnly
-                      placeholder="Not Deployed / Paste address..."
-                      className="w-full px-3 py-1.5 rounded-lg border font-mono text-[11px]"
-                      style={{
-                        backgroundColor: "var(--color-bg)",
-                        borderColor: "var(--color-bd)",
-                        color: "var(--color-fg)",
-                      }}
-                    />
-                  </div>
-                  <p className="text-[10px]" style={{ color: "var(--color-fg-muted)" }}>
-                    The official contract address deployed on Arc Testnet.
-                  </p>
-                </div>
-
-                <div className="space-y-1.5">
-                  <div className="font-medium text-[var(--color-fg-secondary)]">Fee Destination (Agent Wallet)</div>
-                  <div className="p-2.5 rounded-lg border font-mono text-[11px] truncate" style={{ backgroundColor: "var(--color-bg)", borderColor: "var(--color-bd)", color: "var(--color-fg)" }}>
-                    {process.env.NEXT_PUBLIC_AGENT_WALLET_ADDRESS || "0x5352c3c9C4c3746a59600eEcd461332f1CFCaA9a (Fallback)"}
-                  </div>
-                  <p className="text-[10px]" style={{ color: "var(--color-fg-muted)" }}>
-                    USDC paid through the validator contract will be sent directly to this address.
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <div className="mt-6 relative max-w-xl">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: "var(--color-fg-muted)" }} />
-            <input
-              placeholder="Search tools, models, services..."
-              className="w-full pl-11 pr-4 py-3 rounded-xl text-sm transition-all duration-200"
-              style={{
-                backgroundColor: "var(--color-bg)",
-                border: "1px solid var(--color-bd)",
-                color: "var(--color-fg)",
-              }}
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-            />
-          </div>
-
-          <div className="mt-4 flex flex-wrap gap-2">
-            {DISCOVERY_CHIPS.map((chip) => (
-              <button
-                key={chip}
-                className="px-3 py-1.5 rounded-full text-[12px] font-medium transition-all duration-200"
-                style={{
-                  backgroundColor: "var(--color-bg)",
-                  border: "1px solid var(--color-bd)",
-                  color: "var(--color-fg-secondary)",
-                }}
-                onClick={() => setSearch(chip.toLowerCase())}
-              >
-                {chip}
-              </button>
-            ))}
-          </div>
-        </div>
       </div>
 
-      <section>
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h2 className="text-sm font-semibold" style={{ color: "var(--color-fg)" }}>Featured Providers</h2>
-            <p className="text-xs mt-0.5" style={{ color: "var(--color-fg-muted)" }}>Trusted AI ecosystem partners</p>
-          </div>
-          <div className="flex gap-1">
-            <button
-              onClick={() => featuredRef.current?.scrollBy({ left: -300, behavior: "smooth" })}
-              className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors duration-150"
-              style={{ backgroundColor: "var(--color-bg-elevated)", border: "1px solid var(--color-bd)" }}
-            >
-              <ChevronRight size={14} className="rotate-180" />
-            </button>
-            <button
-              onClick={() => featuredRef.current?.scrollBy({ left: 300, behavior: "smooth" })}
-              className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors duration-150"
-              style={{ backgroundColor: "var(--color-bg-elevated)", border: "1px solid var(--color-bd)" }}
-            >
-              <ChevronRight size={14} />
-            </button>
-          </div>
-        </div>
-
-        <div
-          ref={featuredRef}
-          className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide"
-          style={{ scrollSnapType: "x mandatory" }}
-        >
-          {FEATURED_PROVIDERS.map((provider) => {
-            const Icon = provider.icon;
-            const color = CATEGORY_COLORS[provider.category] || "var(--color-accent)";
-            const isBrand = provider.brand;
-            return (
-              <div
-                key={provider.name}
-                className="flex-shrink-0 w-64 p-4 rounded-xl hover-lift cursor-pointer group"
-                style={{
-                  backgroundColor: "var(--color-bg-elevated)",
-                  border: "1px solid var(--color-bd)",
-                  scrollSnapAlign: "start",
-                }}
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div
-                    className="w-10 h-10 rounded-lg flex items-center justify-center"
-                    style={isBrand
-                      ? { backgroundColor: "var(--color-bg-inset)" }
-                      : { backgroundColor: `color-mix(in oklch, ${color} 12%, transparent)` }}
-                  >
-                    {provider.iconSrc ? (
-                      <img
-                        src={provider.iconSrc}
-                        alt={`${provider.name} icon`}
-                        width={20}
-                        height={20}
-                        style={{ color }}
-                        className="w-5 h-5"
-                      />
-                    ) : Icon ? (
-                      <Icon size={20} style={isBrand ? undefined : { color }} />
-                    ) : null}
-                  </div>
-                  <ArrowRight size={14} className="opacity-0 group-hover:opacity-100 transition-opacity duration-200" style={{ color: "var(--color-fg-muted)" }} />
-                </div>
-                <p className="text-sm font-semibold mb-1" style={{ color: "var(--color-fg)" }}>{provider.name}</p>
-                <p className="text-[11px] mb-3 line-clamp-2" style={{ color: "var(--color-fg-muted)" }}>{provider.desc}</p>
-                <div className="flex items-center justify-between">
-                  <Badge variant="secondary" className="text-[10px]">{provider.category}</Badge>
-                  <p className="text-[10px] font-medium" style={{ color: "var(--color-accent)" }}>{provider.users} users</p>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
-      <section>
-        <div className="flex items-center gap-2 mb-4">
-          <Filter size={14} style={{ color: "var(--color-fg-muted)" }} />
-          <h2 className="text-sm font-semibold" style={{ color: "var(--color-fg)" }}>Categories</h2>
-        </div>
-        <div className="flex gap-2 flex-wrap">
-          <button
-            className="px-4 py-2 rounded-lg text-[13px] font-medium transition-all duration-200"
-            style={{
-              backgroundColor: !categoryFilter ? "var(--color-accent)" : "var(--color-bg-elevated)",
-              color: !categoryFilter ? "white" : "var(--color-fg-secondary)",
-              border: `1px solid ${!categoryFilter ? "var(--color-accent)" : "var(--color-bd)"}`,
-            }}
-            onClick={() => setCategoryFilter("")}
-          >
-            All
-          </button>
-          {categories.map(c => {
-            const Icon = CATEGORY_ICONS[c] || Zap;
-            const color = CATEGORY_COLORS[c] || "var(--color-fg-muted)";
-            return (
-              <button
-                key={c}
-                className="px-4 py-2 rounded-lg text-[13px] font-medium transition-all duration-200 flex items-center gap-2"
-                style={{
-                  backgroundColor: categoryFilter === c ? `color-mix(in oklch, ${color} 15%, transparent)` : "var(--color-bg-elevated)",
-                  color: categoryFilter === c ? color : "var(--color-fg-secondary)",
-                  border: `1px solid ${categoryFilter === c ? color : "var(--color-bd)"}`,
-                }}
-                onClick={() => setCategoryFilter(c)}
-              >
-                <Icon size={14} />
-                {c}
-              </button>
-            );
-          })}
-        </div>
-      </section>
-
-      <div className="flex items-center gap-4 text-xs" style={{ color: "var(--color-fg-muted)" }}>
-        <span className="flex items-center gap-1">
-          <TrendingUp size={12} />
-          Showing {filtered.length} of {services.length} capabilities
-        </span>
-        <span>·</span>
-        <span>From $0.001/call</span>
-        <span>·</span>
-        <span>Powered by x42 via Agentic Market</span>
-      </div>
-
+      {/* Loading */}
       {loading ? (
-        <div className="flex justify-center py-12">
-          <Loader2 className="h-6 w-6 animate-spin" style={{ color: "var(--color-fg-muted)" }} />
+        <div className="flex justify-center py-24">
+          <motion.div
+            animate={{ rotate: 360 }}
+            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+          >
+            <Loader2 className="h-6 w-6 text-white/30" />
+          </motion.div>
+        </div>
+      ) : activeTab !== "services" ? (
+        <div className="text-center py-16">
+          <p className="text-sm text-white/30">Coming soon</p>
         </div>
       ) : (
-        <>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 stagger-1">
-            {displayed.map((svc) => {
-              const Icon = CATEGORY_ICONS[svc.category] || Zap;
-              const color = CATEGORY_COLORS[svc.category] || "var(--color-fg-muted)";
-              const price = parseFloat(svc.price_amount);
-              const signal = ECOSYSTEM_SIGNALS[svc.category];
-
-              return (
-                <Card key={svc.id} className="hover-lift group" style={{ backgroundColor: "var(--color-bg-elevated)", borderColor: "var(--color-bd)" }}>
-                  <CardHeader>
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <div
-                          className="w-8 h-8 rounded-lg flex items-center justify-center"
-                          style={{ backgroundColor: `color-mix(in oklch, ${color} 12%, transparent)` }}
-                        >
-                          <Icon size={14} style={{ color }} />
-                        </div>
-                        <span className="text-[11px] font-medium" style={{ color: "var(--color-fg-muted)" }}>{svc.source || "Agentic Market"}</span>
-                      </div>
-                      {signal && (
-                        <span className="text-[10px] font-medium" style={{ color: "var(--color-accent)" }}>{signal}</span>
-                      )}
-                    </div>
-
-                    <CardTitle className="text-base" style={{ color: "var(--color-fg)" }}>{svc.name}</CardTitle>
-                    <CardDescription className="text-xs line-clamp-2 mt-1">{svc.description}</CardDescription>
-                  </CardHeader>
-
-                  <CardContent className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <span className="text-lg font-bold" style={{ color: "var(--color-accent)" }}>
-                          ${price < 0.01 ? price.toFixed(4) : price.toFixed(2)}
-                        </span>
-                        <span className="text-xs ml-1" style={{ color: "var(--color-fg-muted)" }}>per call</span>
-                      </div>
-                      {svc.networks?.length > 0 && (
-                        <Badge variant="outline" className="text-[10px]">{svc.networks[0]}</Badge>
-                      )}
-                    </div>
-
-                    <div className="text-xs space-y-1" style={{ color: "var(--color-fg-muted)" }}>
-                      {svc.endpoints.slice(0, 2).map((ep, i) => (
-                        <div key={i} className="flex items-center gap-1.5">
-                          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded" style={{ backgroundColor: "var(--color-bg-inset)" }}>
-                            {ep.method || "POST"}
-                          </span>
-                          <span className="truncate">{ep.description || ep.url}</span>
-                        </div>
-                      ))}
-                      {svc.endpoints.length > 2 && (
-                        <span className="text-[11px]">+{svc.endpoints.length - 2} more endpoints</span>
-                      )}
-                    </div>
-
-                     <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full mt-2 transition-all duration-200 group-hover:border-[var(--color-accent)]"
-                        onClick={() => handleOpenPaymentDialog(svc)}
-                      >
-                        <Zap className="h-3 w-3 mr-1" />
-                        Use via Connected Wallet
-                      </Button>
-                  </CardContent>
-                </Card>
-              );
-            })}
-          </div>
+        <div className="rounded-2xl border border-white/[0.06] bg-[#050505] overflow-hidden">
+          <MarketplaceTable
+            services={displayed}
+            sort={sort}
+            onSortChange={setSort}
+            onRowClick={(id) => router.push(`/marketplace/agents/${id}`)}
+          />
 
           {visibleCount < filtered.length && (
-            <div className="flex justify-center mt-8">
-              <Button variant="outline" onClick={() => setVisibleCount(prev => prev + 24)}>
-                Load More Capabilities
+            <div className="flex justify-center py-4 border-t border-white/[0.03]">
+              <Button
+                onClick={() => setVisibleCount((prev) => prev + 24)}
+                className="bg-white/[0.04] hover:bg-white/[0.08] border border-white/[0.08] text-white/50 hover:text-white/70 text-xs h-9 px-5 rounded-xl transition-all duration-200"
+              >
+                Load More
               </Button>
             </div>
           )}
-        </>
+        </div>
       )}
-
-      {/* X402 Payment & Playground Modal */}
-      <Dialog open={selectedService !== null} onOpenChange={(open) => !open && setSelectedService(null)}>
-        <DialogContent className="max-w-2xl border-[var(--color-bd)] overflow-hidden" style={{ backgroundColor: "var(--color-bg-elevated)", color: "var(--color-fg)" }}>
-          {selectedService && (
-            <>
-              <DialogHeader className="border-b pb-4" style={{ borderColor: "var(--color-bd)" }}>
-                <div className="flex items-center gap-2">
-                  <Badge variant="outline" style={{ color: "var(--color-accent)", borderColor: "color-mix(in oklch, var(--color-accent) 30%, transparent)" }}>
-                    X402 Standard
-                  </Badge>
-                  <span className="text-xs font-mono" style={{ color: "var(--color-fg-muted)" }}>
-                    API Endpoint: {selectedService.name}
-                  </span>
-                </div>
-                <DialogTitle className="text-xl font-bold flex items-center gap-2 mt-2" style={{ color: "var(--color-fg)" }}>
-                  Pay & Call {selectedService.name}
-                </DialogTitle>
-                <DialogDescription style={{ color: "var(--color-fg-secondary)" }}>
-                  {selectedService.description}
-                </DialogDescription>
-              </DialogHeader>
-
-              <div className="space-y-4 py-4">
-                {/* Endpoint Selector */}
-                {selectedService.endpoints && selectedService.endpoints.length > 0 && (
-                  <div className="space-y-1.5">
-                    <label className="block text-xs font-semibold" style={{ color: "var(--color-fg-secondary)" }}>
-                      Select Endpoint / API
-                    </label>
-                    <select
-                      disabled={paymentVerified}
-                      value={selectedEndpoint?.url || ""}
-                      onChange={(e) => {
-                        const ep = selectedService.endpoints.find(x => x.url === e.target.value);
-                        setSelectedEndpoint(ep || null);
-                        setEndpointParams({});
-                        setPlaygroundInput("");
-                        setApiResponse(null);
-                      }}
-                      className="w-full p-2.5 rounded-lg border text-xs"
-                      style={{
-                        backgroundColor: "var(--color-bg)",
-                        borderColor: "var(--color-bd)",
-                        color: "var(--color-fg)",
-                      }}
-                    >
-                      {selectedService.endpoints.map((ep, i) => (
-                        <option key={i} value={ep.url}>
-                          [{ep.method || "GET"}] {ep.description || ep.url} (${ep.price} USDC)
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-
-                {/* Contract & Price Details */}
-                <div className="grid grid-cols-2 gap-4 p-3 rounded-xl border text-xs" style={{ backgroundColor: "var(--color-bg-inset)", borderColor: "var(--color-bd)" }}>
-                  <div>
-                    <span className="block font-medium" style={{ color: "var(--color-fg-muted)" }}>Validator Contract</span>
-                    <code className="text-[11px] font-mono block mt-0.5 truncate" style={{ color: "var(--color-fg)" }}>
-                      {validatorAddress || "Not Configured (Please deploy first)"}
-                    </code>
-                  </div>
-                  <div>
-                    <span className="block font-medium" style={{ color: "var(--color-fg-muted)" }}>Service Cost</span>
-                    <span className="text-sm font-bold block mt-0.5" style={{ color: "var(--color-accent)" }}>
-                      {selectedEndpoint ? parseFloat(selectedEndpoint.price) : (parseFloat(selectedService.price_amount) || 0.001)} USDC
-                    </span>
-                  </div>
-                </div>
-
-                {!paymentVerified ? (
-                  /* Payment Execution Screen */
-                  <div className="space-y-4 text-center py-6">
-                    <div className="mx-auto w-12 h-12 rounded-full flex items-center justify-center bg-violet-500/10 border border-violet-500/20 text-violet-500 mb-2">
-                      <Zap size={24} />
-                    </div>
-                    <h4 className="font-semibold text-sm" style={{ color: "var(--color-fg)" }}>
-                      Authorize Micropayment
-                    </h4>
-                    <p className="text-xs max-w-sm mx-auto" style={{ color: "var(--color-fg-secondary)" }}>
-                      This service requires a USDC payment to be routed through our X402 validator contract. Click below to sign the payment.
-                    </p>
-
-                    <div className="pt-2 flex justify-center gap-3">
-                      {!isConnected ? (
-                        <Button onClick={connect} className="bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/90 text-white font-medium">
-                          Connect Wallet
-                        </Button>
-                      ) : chainId !== targetChainId ? (
-                        <Button
-                          onClick={() => switchNetwork && switchNetwork(isBaseService ? base : arcTestnet)}
-                          className="bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/90 text-white font-medium"
-                        >
-                          Switch to {isBaseService ? "Base Mainnet" : "Arc Testnet"}
-                        </Button>
-                      ) : (
-                        <Button
-                          disabled={paying || (!isBaseService && !validatorAddress)}
-                          onClick={handlePayForService}
-                          className="bg-[var(--color-accent)] hover:bg-[var(--color-accent)]/90 text-white font-semibold flex items-center gap-2 shadow-lg"
-                        >
-                          {paying ? (
-                            <>
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                              Processing Payment...
-                            </>
-                          ) : (
-                            <>
-                              <Unlock size={14} /> Pay {selectedEndpoint ? parseFloat(selectedEndpoint.price) : (parseFloat(selectedService.price_amount) || 0.001)} USDC
-                            </>
-                          )}
-                        </Button>
-                      )}
-                    </div>
-                    {!validatorAddress && (
-                      <p className="text-[10px] text-red-500 font-medium mt-2">
-                        * Please deploy the X402 Validator contract first from the settings panel.
-                      </p>
-                    )}
-                  </div>
-                ) : (
-                  /* API Playground & Execution Screen */
-                  <div className="space-y-4">
-                    <div className="p-3 rounded-lg border border-[#CBF825]/20 text-xs space-y-1.5" style={{ backgroundColor: "rgba(203, 248, 37, 0.03)" }}>
-                      <div className="font-semibold text-[#CBF825] flex items-center gap-1.5">
-                        <Badge className="bg-[#CBF825]/20 text-[#CBF825] border border-[#CBF825]/30">On-Chain Payment Verified</Badge>
-                      </div>
-                      <div className="truncate">Tx Hash: <code className="text-[11px] font-mono text-[var(--color-fg-muted)]">{paymentTxHash}</code></div>
-                      <div>Validator: <code className="text-[11px] font-mono text-[var(--color-fg-muted)]">{validatorAddress}</code></div>
-                    </div>
-
-                    {selectedEndpoint ? (
-                      <div className="space-y-3">
-                        <div className="p-2.5 rounded-lg border text-xs space-y-1" style={{ backgroundColor: "var(--color-bg)", borderColor: "var(--color-bd)" }}>
-                          <span className="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded bg-[var(--color-bg-inset)] mr-1.5">
-                            {selectedEndpoint.method || "GET"}
-                          </span>
-                          <span className="font-mono text-[11px]" style={{ color: "var(--color-fg)" }}>
-                            {selectedEndpoint.url}
-                          </span>
-                          <p className="text-[11px] mt-1 text-[var(--color-fg-muted)]">
-                            {selectedEndpoint.description}
-                          </p>
-                        </div>
-
-                        {getEndpointParamsList(selectedEndpoint.url).map((p) => (
-                          <div key={p.name} className="space-y-1">
-                            <label className="block text-xs font-semibold" style={{ color: "var(--color-fg-secondary)" }}>
-                              {p.name} <span className="text-red-500">*</span> ({p.type} parameter)
-                            </label>
-                            <input
-                              type="text"
-                              placeholder={p.placeholder}
-                              value={endpointParams[p.name] || ""}
-                              onChange={(e) => setEndpointParams(prev => ({ ...prev, [p.name]: e.target.value }))}
-                              className="w-full p-2.5 rounded-lg border text-xs"
-                              style={{
-                                backgroundColor: "var(--color-bg)",
-                                borderColor: "var(--color-bd)",
-                                color: "var(--color-fg)",
-                              }}
-                            />
-                          </div>
-                        ))}
-
-                        {getEndpointParamsList(selectedEndpoint.url).length === 0 && (
-                          <div className="space-y-2">
-                            <label className="block text-xs font-semibold" style={{ color: "var(--color-fg-secondary)" }}>
-                              Playground Input Payload (e.g. prompt, query, audio transcript)
-                            </label>
-                            <textarea
-                              value={playgroundInput}
-                              onChange={(e) => setPlaygroundInput(e.target.value)}
-                              placeholder="Enter input payload here..."
-                              className="w-full h-20 p-2.5 rounded-lg border text-xs resize-none"
-                              style={{
-                                backgroundColor: "var(--color-bg)",
-                                borderColor: "var(--color-bd)",
-                                color: "var(--color-fg)",
-                              }}
-                            />
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
-                        <label className="block text-xs font-semibold" style={{ color: "var(--color-fg-secondary)" }}>
-                          Playground Input Payload (e.g. prompt, query, audio transcript)
-                        </label>
-                        <textarea
-                          value={playgroundInput}
-                          onChange={(e) => setPlaygroundInput(e.target.value)}
-                          placeholder={
-                            selectedService.name.toLowerCase().includes("search") || selectedService.name.toLowerCase().includes("exa")
-                              ? "Enter a web search query (e.g., 'USDC micropayments on Arc blockchain')...."
-                              : "Enter prompt input here..."
-                          }
-                          className="w-full h-20 p-2.5 rounded-lg border text-xs resize-none"
-                          style={{
-                            backgroundColor: "var(--color-bg)",
-                            borderColor: "var(--color-bd)",
-                            color: "var(--color-fg)",
-                          }}
-                        />
-                      </div>
-                    )}
-
-                    <Button
-                      disabled={runningApi}
-                      onClick={handleRunPlaygroundApi}
-                      className="w-full bg-[#CBF825] hover:bg-[#CBF825]/90 text-black font-semibold flex items-center justify-center gap-2"
-                    >
-                      {runningApi ? (
-                        <>
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                          Executing Call (X402 Paid)...
-                        </>
-                      ) : (
-                        <>
-                          <Code size={14} /> Run API Request
-                        </>
-                      )}
-                    </Button>
-
-                    {apiResponse && (
-                      <div className="space-y-2 pt-2">
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="font-semibold" style={{ color: "var(--color-fg-secondary)" }}>API Response Payload</span>
-                          {verificationDetails && (
-                            <span className="font-mono text-[10px]" style={{ color: "var(--color-fg-muted)" }}>
-                              Block Height: {verificationDetails.blockNumber}
-                            </span>
-                          )}
-                        </div>
-                        <pre
-                          className="p-3 rounded-lg border text-[11px] font-mono overflow-auto max-h-48 scrollbar-thin"
-                          style={{
-                            backgroundColor: "var(--color-bg-inset)",
-                            borderColor: "var(--color-bd)",
-                            color: "var(--color-fg)",
-                          }}
-                        >
-                          {JSON.stringify(apiResponse, null, 2)}
-                        </pre>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
