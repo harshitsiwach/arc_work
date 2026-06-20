@@ -1,3 +1,4 @@
+import dynamic from "next/dynamic";
 import { EnvVarWarning } from "@/components/env-var-warning";
 import { hasEnvVars } from "@/lib/utils/supabase/check-env-vars";
 import { Space_Grotesk } from "next/font/google";
@@ -6,6 +7,11 @@ import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 import { NavBar } from "@/components/nav-bar";
 import { Web3Providers } from "@/components/web3-providers";
+
+const SmoothCursor = dynamic(
+  () => import("@/components/global/smooth-cursor").then((m) => m.SmoothCursor),
+  { ssr: false }
+);
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
@@ -48,6 +54,7 @@ export default function RootLayout({
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-radial from-[#CBF825]/5 to-transparent rounded-full"></div>
             </div>
             <Web3Providers>
+              <SmoothCursor />
               {!hasEnvVars ? (
                 <nav
                   className="fixed top-0 left-0 right-0 z-50 glass"
