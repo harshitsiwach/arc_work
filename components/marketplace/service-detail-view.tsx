@@ -113,11 +113,27 @@ export function ServiceDetailView({ serviceId }: ServiceDetailViewProps) {
   const [sidebarEndpointUrl, setSidebarEndpointUrl] = useState("");
 
   useEffect(() => {
-    const envAddress = process.env.NEXT_PUBLIC_X402_VALIDATOR_ADDRESS;
+    const isBase = !!(
+      service?.networks?.includes("Base") ||
+      service?.endpoints?.some((ep: any) => 
+        ep.network?.includes("Base") || 
+        ep.network?.includes("8453") || 
+        ep.url?.includes("paysponge.com")
+      )
+    );
+    const envAddress = isBase 
+      ? process.env.NEXT_PUBLIC_X402_VALIDATOR_ADDRESS_BASE 
+      : process.env.NEXT_PUBLIC_X402_VALIDATOR_ADDRESS;
     const localAddress = localStorage.getItem("arc_x402_validator_address");
+    
+    const defaultAddr = isBase 
+      ? "0x03a42354bfb02458ce371cb1ba07fe25d604306f" 
+      : "0xb0c7709a4ccc69899d922048792fcba240a9afcb";
+
     if (envAddress) setValidatorAddress(envAddress);
     else if (localAddress) setValidatorAddress(localAddress);
-  }, []);
+    else setValidatorAddress(defaultAddr);
+  }, [service]);
 
   useEffect(() => {
     fetch("/api/tools")
@@ -139,7 +155,14 @@ export function ServiceDetailView({ serviceId }: ServiceDetailViewProps) {
     }
   }, [service, sidebarEndpointUrl]);
 
-  const isBaseService = !!(service?.networks?.includes("Base"));
+  const isBaseService = !!(
+    service?.networks?.includes("Base") ||
+    service?.endpoints?.some((ep: any) => 
+      ep.network?.includes("Base") || 
+      ep.network?.includes("8453") || 
+      ep.url?.includes("paysponge.com")
+    )
+  );
   const targetChainId = isBaseService ? 8453 : 5042002;
 
   const handlePayForEndpoint = async (endpointUrl: string) => {
@@ -160,21 +183,65 @@ export function ServiceDetailView({ serviceId }: ServiceDetailViewProps) {
       if (!walletClient) throw new Error("Wallet provider not found.");
 
       const priceVal = parseFloat(endpoint.price || service.price_amount) || 0.001;
-      const usdcUnits = BigInt(Math.round(priceVal * 1_000_000));
+      const priceWithMarkup = isBaseService ? priceVal * 1.10 : priceVal;
+      const usdcUnits = BigInt(Math.round(priceWithMarkup * 1_000_000));
 
       if (isBaseService) {
         const baseUsdcAddress = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913" as `0x${string}`;
-        const payToAddress = "0x6302D9e6DBB22fEC3c350551568Bb39B4b35Ad57" as `0x${string}`;
-
-        const ERC20_TRANSFER_ABI = [
-          { name: "transfer", type: "function", stateMutability: "nonpayable", inputs: [{ name: "recipient", type: "address" }, { name: "amount", type: "uint256" }], outputs: [{ name: "", type: "bool" }] },
+        
+        toast.info("Checking USDC allowance on Base Mainnet...");
+        const ERC20_ABI = [
+          { name: "allowance", type: "function", stateMutability: "view", inputs: [{ name: "owner", type: "address" }, { name: "spender", type: "address" }], outputs: [{ name: "", type: "uint256" }] },
+          { name: "approve", type: "function", stateMutability: "nonpayable", inputs: [{ name: "spender", type: "address" }, { name: "amount", type: "uint256" }], outputs: [{ name: "", type: "bool" }] }
         ] as const;
 
-        const { request } = await getPublicClient(base).simulateContract({
+        const currentAllowance = await getPublicClient(base).readContract({
           address: baseUsdcAddress,
-          abi: ERC20_TRANSFER_ABI,
-          functionName: "transfer",
-          args: [payToAddress, usdcUnits],
+          abi: ERC20_ABI,
+          functionName: "allowance",
+          args: [address, validatorAddress],
+        });
+
+        if (currentAllowance < usdcUnits) {
+          // Approve a larger amount (1,000 USDC) to prevent recurring approval popups and bypass RPC sync lag on future calls
+          const approveAmount = 1000n * 1_000_000n;
+          toast.info("Approving USDC on Base Mainnet...");
+          const { request: approveReq } = await getPublicClient(base).simulateContract({
+            address: baseUsdcAddress,
+            abi: ERC20_ABI,
+            functionName: "approve",
+            args: [validatorAddress, approveAmount],
+            account: address as `0x${string}`,
+          });
+          const approveTx = await walletClient.writeContract(approveReq);
+          toast.info("USDC approval requested on Base. Waiting for confirmation...");
+          await getPublicClient(base).waitForTransactionReceipt({ hash: approveTx });
+          toast.success("USDC approved successfully on Base!");
+          
+          // Poll the allowance until the RPC node reflects the update to bypass RPC load balancer sync lag
+          toast.info("Syncing blockchain state...");
+          let retries = 15;
+          while (retries > 0) {
+            const allowanceAfter = await getPublicClient(base).readContract({
+              address: baseUsdcAddress,
+              abi: ERC20_ABI,
+              functionName: "allowance",
+              args: [address, validatorAddress],
+            });
+            if (allowanceAfter >= usdcUnits) {
+              break;
+            }
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+            retries--;
+          }
+        }
+
+        toast.info("Signing payment transaction via Base X402Validator...");
+        const { request } = await getPublicClient(base).simulateContract({
+          address: validatorAddress as `0x${string}`,
+          abi: X402_VALIDATOR_ABI,
+          functionName: "payForService",
+          args: [service.name, usdcUnits],
           account: address as `0x${string}`,
         });
 
@@ -182,11 +249,11 @@ export function ServiceDetailView({ serviceId }: ServiceDetailViewProps) {
         const receipt = await getPublicClient(base).waitForTransactionReceipt({ hash: txHash });
 
         if (receipt.status === "success") {
-          toast.success("USDC transfer confirmed on Base!");
+          toast.success("Payment confirmed on Base Mainnet!");
           setPaymentTxHashes((prev) => ({ ...prev, [endpointUrl]: txHash }));
           setPaymentVerifiedEndpoints((prev) => new Set(prev).add(endpointUrl));
         } else {
-          throw new Error("USDC transfer failed on Base.");
+          throw new Error("Payment transaction failed on Base Mainnet.");
         }
       } else {
         toast.info("Checking USDC allowance...");

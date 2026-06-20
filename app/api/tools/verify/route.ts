@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifyX402ValidatorPayment } from "@/lib/x402";
-import { getPublicClient } from "@/lib/contracts/instance";
-import { base } from "@/lib/web3/appkit-provider";
+import { verifyX402ValidatorPayment, verifyBaseValidatorPayment } from "@/lib/x402";
+import { createPublicClient, http } from "viem";
+import { base } from "viem/chains";
+import { getOpenAI } from "@/lib/utils/openAIClient";
+import { VeniceClient } from "venice-x402-client";
 
 export async function POST(req: NextRequest) {
   try {
@@ -61,7 +63,154 @@ export async function POST(req: NextRequest) {
     let mockApiResponse: any = {};
     const userInput = inputPayload || "";
 
-    if (serviceKey.includes("exa")) {
+    if (isBaseService) {
+      if (endpointUrl) {
+        // 1. Verify user's payment to our validator on Base Mainnet
+        const verification = await verifyBaseValidatorPayment(
+          txHash,
+          serviceId,
+          parseFloat(amount),
+          validatorAddress
+        );
+
+        if (!verification.success) {
+          return NextResponse.json(
+            { error: `Payment verification failed on Base Mainnet: ${verification.error || "Transaction not found"}` },
+            { status: 402 }
+          );
+        }
+        verificationDetails = verification.details;
+
+        // DEBUG: Fetch and print Base transaction details to see if payment was correct
+        try {
+          const client = createPublicClient({
+            chain: base,
+            transport: http(process.env.BASE_RPC_URL || "https://mainnet.base.org")
+          });
+          console.log(`[Base Service debug] Querying Base Mainnet for txHash: ${txHash}`);
+          const tx = await client.getTransaction({ hash: txHash as `0x${string}` });
+          const receipt = await client.getTransactionReceipt({ hash: txHash as `0x${string}` });
+          console.log(`[Base Service debug] Tx details:`, {
+            from: tx.from,
+            to: tx.to,
+            status: receipt.status,
+            input: tx.input,
+            blockNumber: receipt.blockNumber.toString()
+          });
+        } catch (err: any) {
+          console.error(`[Base Service debug] Error fetching transaction details: ${err.message}`);
+        }
+
+        // Construct the target URL by replacing path parameters and appending query parameters
+        let targetUrl = endpointUrl;
+        const pathKeysUsed = new Set<string>();
+
+        if (endpointParams) {
+          for (const [key, val] of Object.entries(endpointParams)) {
+            const placeholder = `:${key}`;
+            if (targetUrl.includes(placeholder)) {
+              targetUrl = targetUrl.replace(placeholder, encodeURIComponent(val as string));
+              pathKeysUsed.add(key);
+            }
+          }
+        }
+
+        const urlObj = new URL(targetUrl);
+        if (endpointParams) {
+          for (const [key, val] of Object.entries(endpointParams)) {
+            if (!pathKeysUsed.has(key) && val !== undefined && val !== null && val !== "") {
+              urlObj.searchParams.set(key, val as string);
+            }
+          }
+        }
+
+        const finalUrl = urlObj.toString();
+        const originUrl = urlObj.origin;
+        const pathAndSearch = urlObj.pathname + urlObj.search;
+
+        // 3. Initialize VeniceClient with private key
+        const privateKey = process.env.BASE_DEPLOYER_PRIVATE_KEY;
+        if (!privateKey) {
+          console.warn("[Base Service Proxy] BASE_DEPLOYER_PRIVATE_KEY not set. Falling back to mock response.");
+          if (serviceKey.includes("coinmarketcap")) {
+            mockApiResponse = {
+              status: "success",
+              data: {
+                bitcoin: { price: 95420.50, change_24h: 1.85, market_cap: 1870000000000 },
+                ethereum: { price: 3450.20, change_24h: -0.42, market_cap: 415000000000 },
+                usdc: { price: 1.00, change_24h: 0.00, market_cap: 35000000000 }
+              },
+              message: "BASE_DEPLOYER_PRIVATE_KEY is not configured. This is a mock response."
+            };
+          } else {
+            mockApiResponse = {
+              status: "success",
+              message: `BASE_DEPLOYER_PRIVATE_KEY is not configured. This is a mock response for service: ${serviceId}`
+            };
+          }
+        } else {
+          console.log(`[Base Service Paysponge Proxy] Calling ${finalUrl} via VeniceClient SDK`);
+          try {
+            const veniceClient = new VeniceClient(privateKey, {
+              apiUrl: originUrl,
+              autoTopUp: {
+                enabled: true,
+                amount: 5 // Top up $5 when balance is insufficient
+              }
+            });
+
+            // Forward the request body if present
+            const requestBody = endpointMethod !== "GET" && endpointMethod !== "HEAD" 
+              ? (typeof inputPayload === 'object' ? JSON.stringify(inputPayload) : inputPayload)
+              : undefined;
+
+            const apiRes = await veniceClient.requestRaw(pathAndSearch, {
+              method: endpointMethod || "GET",
+              body: requestBody
+            });
+
+            const resStatus = apiRes.status;
+            const resText = await apiRes.text();
+
+            let resBody: any;
+            try {
+              resBody = JSON.parse(resText);
+            } catch {
+              resBody = resText;
+            }
+
+            if (!apiRes.ok) {
+              console.error(`[Base Service Paysponge Proxy Error] Status ${resStatus}:`, resText);
+              return NextResponse.json(
+                { 
+                  error: `Paysponge API returned error (status ${resStatus}): ${typeof resBody === 'object' ? JSON.stringify(resBody) : resBody}`,
+                  debug: {
+                    txHash,
+                    finalUrl,
+                    resStatus,
+                    resBody
+                  }
+                },
+                { status: resStatus }
+              );
+            }
+
+            mockApiResponse = resBody;
+          } catch (e: any) {
+            console.error("[Base Service Paysponge Proxy Connection Error]:", e);
+            return NextResponse.json(
+              { error: `Failed to connect or authenticate with third-party service: ${e.message}` },
+              { status: 502 }
+            );
+          }
+        }
+      } else {
+        return NextResponse.json(
+          { error: "Endpoint URL is required for live Base service execution." },
+          { status: 400 }
+        );
+      }
+    } else if (serviceKey.includes("exa")) {
       mockApiResponse = {
         results: [
           {
@@ -87,31 +236,68 @@ export async function POST(req: NextRequest) {
         }
       };
     } else if (serviceKey.includes("openai") || serviceKey.includes("gpt")) {
-      mockApiResponse = {
-        id: "chatcmpl-x402mockopenai12345",
-        object: "chat.completion",
-        created: Math.floor(Date.now() / 1000),
-        model: "gpt-4o",
-        choices: [
-          {
-            index: 0,
-            message: {
-              role: "assistant",
-              content: `Hello! I am OpenAI's GPT-4o model. I have successfully processed your request after verifying your x402 payment of ${amount} USDC via the X402Validator contract at ${validatorAddress}.
+      if (process.env.OPENAI_API_KEY) {
+        try {
+          const openai = getOpenAI();
+          const completion = await openai.chat.completions.create({
+            model: "gpt-4o",
+            messages: [
+              {
+                role: "user",
+                content: userInput || "Hello, AI!",
+              },
+            ],
+          });
+          mockApiResponse = completion;
+        } catch (err: any) {
+          console.error("Failed to fetch real OpenAI response, falling back to mock:", err);
+          mockApiResponse = {
+            id: "chatcmpl-x402mockopenai-fallback",
+            object: "chat.completion",
+            created: Math.floor(Date.now() / 1000),
+            model: "gpt-4o",
+            choices: [
+              {
+                role: "assistant",
+                content: `Failed to fetch live response from OpenAI (Error: ${err.message}). Falling back to mock.
+
+Hello! I am OpenAI's GPT-4o model. I have successfully verified your payment of ${amount} USDC. Let me know if you need assistance with code generation, data structuring, or agent planning!`
+              }
+            ],
+            usage: {
+              prompt_tokens: 0,
+              completion_tokens: 0,
+              total_tokens: 0
+            }
+          };
+        }
+      } else {
+        mockApiResponse = {
+          id: "chatcmpl-x402mockopenai12345",
+          object: "chat.completion",
+          created: Math.floor(Date.now() / 1000),
+          model: "gpt-4o",
+          choices: [
+            {
+              index: 0,
+              message: {
+                role: "assistant",
+                content: `Hello! I am OpenAI's GPT-4o model. I have successfully processed your request after verifying your x402 payment of ${amount} USDC via the X402Validator contract at ${validatorAddress}.
 
 You asked: "${userInput || "Hello, AI!"}"
 
 Here is my response: Using decentralized payment rails on the Arc Blockchain enables true API autonomy. AI agents are now able to make decisions, execute smart contracts, and transact with other tools natively. This represents a paradigm shift in how computing resources and services are distributed. Let me know if you need assistance with code generation, data structuring, or agent planning!`
-            },
-            finish_reason: "stop"
+              },
+              finish_reason: "stop"
+            }
+          ],
+          usage: {
+            prompt_tokens: 42,
+            completion_tokens: 128,
+            total_tokens: 170
           }
-        ],
-        usage: {
-          prompt_tokens: 42,
-          completion_tokens: 128,
-          total_tokens: 170
-        }
-      };
+        };
+      }
     } else if (serviceKey.includes("anthropic") || serviceKey.includes("claude")) {
       mockApiResponse = {
         id: "msg_mockclaude98765",
@@ -184,101 +370,6 @@ Analyzing the request: Incorporating on-chain validators like X402Validator allo
           cost: `${amount} USDC`
         }
       };
-    } else if (isBaseService) {
-      if (endpointUrl) {
-        // DEBUG: Fetch and print Base transaction details to see if payment was correct
-        try {
-          const client = getPublicClient(base);
-          console.log(`[Base Service debug] Querying Base Mainnet for txHash: ${txHash}`);
-          const tx = await client.getTransaction({ hash: txHash as `0x${string}` });
-          const receipt = await client.getTransactionReceipt({ hash: txHash as `0x${string}` });
-          console.log(`[Base Service debug] Tx details:`, {
-            from: tx.from,
-            to: tx.to,
-            status: receipt.status,
-            input: tx.input,
-            blockNumber: receipt.blockNumber.toString()
-          });
-        } catch (err: any) {
-          console.error(`[Base Service debug] Error fetching transaction details: ${err.message}`);
-        }
-
-        // Construct the target URL by replacing path parameters and appending query parameters
-        let targetUrl = endpointUrl;
-        const pathKeysUsed = new Set<string>();
-
-        if (endpointParams) {
-          for (const [key, val] of Object.entries(endpointParams)) {
-            const placeholder = `:${key}`;
-            if (targetUrl.includes(placeholder)) {
-              targetUrl = targetUrl.replace(placeholder, encodeURIComponent(val as string));
-              pathKeysUsed.add(key);
-            }
-          }
-        }
-
-        const urlObj = new URL(targetUrl);
-        if (endpointParams) {
-          for (const [key, val] of Object.entries(endpointParams)) {
-            if (!pathKeysUsed.has(key) && val !== undefined && val !== null && val !== "") {
-              urlObj.searchParams.set(key, val as string);
-            }
-          }
-        }
-
-        const finalUrl = urlObj.toString();
-        console.log(`[Base Service Paysponge Proxy] Calling live endpoint: ${finalUrl} with X-PAYMENT: ${txHash}`);
-
-        try {
-          const apiRes = await fetch(finalUrl, {
-            method: endpointMethod || "GET",
-            headers: {
-              "Accept": "application/json",
-              "X-PAYMENT": txHash
-            }
-          });
-
-          const resStatus = apiRes.status;
-          const resText = await apiRes.text();
-
-          let resBody: any;
-          try {
-            resBody = JSON.parse(resText);
-          } catch {
-            resBody = resText;
-          }
-
-          if (!apiRes.ok) {
-            console.error(`[Base Service Paysponge Proxy Error] Status ${resStatus}:`, resText);
-            return NextResponse.json(
-              { 
-                error: `Paysponge API returned error (status ${resStatus}): ${typeof resBody === 'object' ? JSON.stringify(resBody) : resBody}`,
-                debug: {
-                  txHash,
-                  finalUrl,
-                  resStatus,
-                  resBody
-                }
-              },
-              { status: resStatus }
-            );
-          }
-
-          mockApiResponse = resBody;
-        } catch (e: any) {
-          console.error("[Base Service Paysponge Proxy Connection Error]:", e);
-          return NextResponse.json(
-            { error: `Failed to connect to Paysponge Base Service proxy: ${e.message}` },
-            { status: 502 }
-          );
-        }
-      } else {
-        return NextResponse.json(
-          { error: "Endpoint URL is required for live Base service execution." },
-          { status: 400 }
-        );
-      }
-    } else {
       // General service response
       mockApiResponse = {
         status: "success",
