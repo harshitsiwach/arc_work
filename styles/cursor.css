@@ -1,0 +1,40 @@
+body.smooth-cursor-active,
+body.smooth-cursor-active * {
+  cursor: none !important;
+}
+
+body.smooth-cursor-active input,
+body.smooth-cursor-active textarea,
+body.smooth-cursor-active select,
+body.smooth-cursor-active [contenteditable="true"] {
+  cursor: text !important;
+}
+
+body.smooth-cursor-active a,
+body.smooth-cursor-active button,
+body.smooth-cursor-active [role="button"],
+body.smooth-cursor-active [role="tab"],
+body.smooth-cursor-active [role="menuitem"],
+body.smooth-cursor-active [role="option"],
+body.smooth-cursor-active [role="switch"],
+body.smooth-cursor-active [role="radio"],
+body.smooth-cursor-active [role="checkbox"],
+body.smooth-cursor-active summary,
+body.smooth-cursor-active label {
+  cursor: pointer !important;
+}
+
+body.smooth-cursor-active [role="dialog"] *,
+body.smooth-cursor-active [role="listbox"] *,
+body.smooth-cursor-active [role="menu"] *,
+body.smooth-cursor-active [role="tooltip"] *,
+body.smooth-cursor-active [data-radix-dialog-content] *,
+body.smooth-cursor-active [data-radix-dropdown-content] *,
+body.smooth-cursor-active [data-radix-popover-content] *,
+body.smooth-cursor-active [data-radix-tooltip-content] *,
+body.smooth-cursor-active [data-radix-select-content] *,
+body.smooth-cursor-active [data-radix-popper-content-wrapper] *,
+body.smooth-cursor-active [data-sidebar-content] *,
+body.smooth-cursor-active [data-sheet-content] * {
+  cursor: auto !important;
+}
